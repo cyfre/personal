@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import { Route, Link, Switch } from 'react-router-dom';
+import { Route, Link, Switch, useRouteMatch } from 'react-router-dom';
 import styled from 'styled-components';
 
 const Home = styled.div`
@@ -100,14 +100,27 @@ const Title = styled.div`
 `
 
 const Links = styled.div`
-  position: absolute;
+  font-size: 1rem;
   width: 0;
 
-  top: 3rem;
-  font-size: 1rem;
+  position: fixed;
+  top: 0;
+  padding: 1rem;
   @media (min-width: 30rem) {
-    top: .25rem;
+    position: absolute;
+    padding: 0;
+    top: .5rem;
     font-size: .8rem;
+    // top: .25rem;
+  }
+  &.base {
+    position: absolute;
+    padding: 0;
+    top: 3rem;
+    @media (min-width: 30rem) {
+      font-size: .8rem;
+      top: .25rem;
+    }
   }
 
   & > a {
@@ -211,17 +224,19 @@ const Base = () => (
 )
 
 export default () => {
+  let { url } = useRouteMatch();
+  let isBase = url === '/'
   return (
     <Home>
       <div id="before"></div>
 
       <Box>
-        <Links className="left">
+        <Links className={"left " + (isBase ? "base" : "")}>
           <Link to="/">/home</Link>
           <Link to="/about">/about</Link>
           <Link to="/projects">/projects</Link>
         </Links>
-        <Links className="right">
+        <Links className={"right " + (isBase ? "base" : "")}>
           <a href="https://github.com/cfreshman">github</a>
           <a href="https://twitter.com/cyrusfreshman">twitter</a>
           <a href="https://www.linkedin.com/in/cfreshman/">linkedin</a>
