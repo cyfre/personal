@@ -101,9 +101,14 @@ const Title = styled.div`
 
 const Links = styled.div`
   position: absolute;
-  top: .25rem;
   width: 0;
-  font-size: .64rem;
+
+  top: 3rem;
+  font-size: 1rem;
+  @media (min-width: 30rem) {
+    top: .25rem;
+    font-size: .8rem;
+  }
 
   & > a {
     display: block;
@@ -128,8 +133,6 @@ const Description = styled.p`
 `
 
 const ProjectList = styled.div`
-  // font-size: .64rem;
-
   & > a {
     display: block;
     color: var(--light);
