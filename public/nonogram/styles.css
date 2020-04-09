@@ -1,0 +1,258 @@
+html {
+    /*background: black;*/
+    height: 100%;
+}
+
+body {
+    background: white;
+    max-width: 1200px;
+    height: 100%;
+    margin: 0 auto;
+}
+
+* {
+    font-family: 'Roboto Slab', serif;
+    font-size: 16px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-top: 0;
+    padding-top: .67em;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-content: stretch;
+    align-items: center;
+}
+
+img.logo {
+    height: 3em;
+    width: 3em;
+    padding-left: 2em;
+    image-rendering: pixelated;
+}
+
+hr {
+    border-top: 1px solid #8c8b8b;
+    max-width: 900px;
+}
+
+
+#inputs {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    margin: 30px;
+}
+
+input {
+    width: 700px;
+    height: 24px;
+    margin: 5px;
+    text-indent: 3px;
+    border: 1px solid rgb(121, 121, 121);
+    font-family: sans-serif;
+}
+
+label {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.label {
+    padding-right: 5px;
+}
+
+button {
+    margin: 5px;
+    border-radius: 3px;
+    background-color: black;
+    color: white;
+    border: none;
+}
+button:focus {
+    outline: none;
+}
+
+button.lg {
+    font-size: 1.25em;
+    padding: 15px;
+}
+
+button.sm {
+    font-size: 1em;
+    padding: 7px;
+}
+
+
+#slider {
+    max-width: 900px;
+    height: 8px;
+    margin: auto;
+}
+
+#custom-handle {
+    width: 4em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    margin-left: -2.075em;
+    text-align: center;
+    line-height: 1.6em;
+}
+#custom-handle:focus {
+    outline: none;
+}
+#custom-handle.ui-state-active {
+    border: 1px solid black;
+    background: black;
+}
+
+
+#board {
+    min-height: 200px;
+    margin: 40px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+table, td {
+    border-collapse: collapse;
+}
+
+tr {
+    font-size: 0;
+}
+
+td {
+    border: 1px solid #929292;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    width: 24px;
+    height: 23px;
+    font-size: 24px;
+}
+
+td.highlight {
+    border-color: #252525;
+    /*border-width: 2px;*/
+}
+
+td.highlight.down {
+    border-right-width: 3px;
+    border-left-width: 3px;
+}
+
+td.highlight.across {
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+}
+
+td.selected {
+    background: rgba(0, 0, 0, .5);
+}
+
+
+tr.numbers {
+    border: none;
+}
+td.numbers {
+    border: none;
+    justify-content: flex-end;
+    align-content: center;
+}
+td.numbers div {
+    font-size: 11px;
+    height: 1.25em;
+}
+
+td.numbers.down:not(.across) {
+    height: auto;
+    flex-direction: column;
+    vertical-align: bottom;
+    padding-bottom: 5px;
+}
+
+td.numbers.across {
+    width: 0;
+    height: 0;
+}
+td.numbers.across div {
+    padding-right: 8px;
+}
+
+td.numbers.across.down div {
+    font-size: 14px;
+}
+
+
+
+td.border {
+    padding: 0;
+    border: none;
+    background: black;
+}
+td.not.border {
+    background: none;
+}
+
+tr.border {
+    display: flex;
+}
+td.border.horizontal {
+    height: 3px;
+    flex: 1 0 auto;
+
+}
+td.not.border.horizontal {
+    flex: 0 0 2px;
+}
+
+td.border.vertical {
+    width: 3px;
+}
+
+
+.v0 {
+
+}
+.v1 {
+    background-color: black;
+    border: 1px solid #252525;
+}
+.v2 {
+    font-family: 'Coiny', 'Roboto Slab', sans-serif;
+    padding-top: 6px;
+    padding-left: 2px;
+}
+
+.guess.v1 {
+    font-family: 'Coiny', 'Roboto Slab', sans-serif;
+    padding-top: 6px;
+    padding-left: 2px;
+    color: white;
+}
+
+.guess.v2 {
+
+}
+
+
+#examples {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+button, #custom-handle {
+    cursor: pointer;
+}

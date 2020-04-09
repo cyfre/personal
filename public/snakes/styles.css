@@ -1,0 +1,59 @@
+body {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.title {
+    text-transform: uppercase;
+}
+
+.container {
+    flex-grow: 1;
+    width: 100%;
+    display: flex;
+}
+.outer.container {
+    padding: 1rem;
+}
+.inner.container {
+    justify-content: center;
+    align-items: center;
+}
+
+#gameCanvas {
+    image-rendering: pixelated;
+}
+
+.gui-container {
+    position: absolute;
+    z-index: 1000;
+}
+
+.gui {
+    width: 100%;
+    height: 100%;
+}
+
+.gui button {
+    position: absolute;
+    border: none;
+    outline: none;
+    transition: 0s;
+    image-rendering: pixelated;
+    background-repeat: no-repeat;
+    transform-origin: top left;
+}
+
+#info {
+    z-index: 100;
+    display: block;
+
+    font-family: monospace;
+}
+
+table {
+    padding: 15px 10px;
+}
+th, td {
+    padding: 0 10px;
+}
