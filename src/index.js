@@ -1,39 +1,17 @@
 import React, { Fragment, Suspense, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route, Link, Switch, Redirect, useRouteMatch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Link, Switch, useRouteMatch } from 'react-router-dom';
 import * as serviceWorker from './serviceWorker';
 import './index.css';
+
+// homepage
+import Home from 'pages/home';
 
 // static vanilla js projects
 import project from 'lib/project';
 
 // dynamic content
 import Content from 'pages/content';
-
-const Home = () => {
-  return (
-    <div id="home">
-      <div id="before"></div>
-
-      <div id="box">
-        <div id="title">
-            <img src="profile.jpeg" alt="I'm sitting on a rock"/>
-            <h1>Cyrus Freshman</h1>
-            <p>Software Developer</p>
-            <p>B.S. in Computer Science</p>
-        </div>
-
-        <a href="https://github.com/cfreshman">github.com/cfreshman</a>
-        <a href="https://www.linkedin.com/in/cfreshman/">linkedin.com/in/cfreshman</a>
-        <Link to="terrain/">terrain generation</Link>
-        <Link to="nonogram/">nonogram solver</Link>
-        <Link to="snakes/">snakes</Link>
-      </div>
-
-      <div id="after"></div>
-    </div>
-  )
-}
 
 const Header = () => {
   let { url } = useRouteMatch();
@@ -46,7 +24,6 @@ const Header = () => {
       total += '/' + part;
       crumbs.push(total);
     });
-    console.log(crumbs);
     setCrumbs(crumbs);
   }, [url]);
 
@@ -82,18 +59,16 @@ const Footer = () => (
 
 const App = () => (
   <Router>
-    <Suspense fallback={<div id="loading" className="centering">🐙<br/>Loading</div>}>
-      <Switch>
-        <Route exact path='/' component={Home} />
-        <Route path='*' component={() => (
-          <Fragment>
-            <Header />
-            <Main />
-            <Footer />
-          </Fragment>
-        )} />
-      </Switch>
-    </Suspense>
+    <Switch>
+      <Route exact path='/(|projects|about)' component={Home} />
+      <Route path='*' component={() => (
+        <Fragment>
+          <Header />
+          <Main />
+          <Footer />
+        </Fragment>
+      )} />
+    </Switch>
   </Router>
 );
 

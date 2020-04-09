@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, Link, Switch, Redirect, useRouteMatch, useParams } from 'react-router-dom';
 import { ErrorBoundary } from 'lib/error';
 
-const Loading = () => <p id="loading" className="not-found centering">🐙<br/>Loading</p>;
-const NoMatch = () => <p id="loading" className="not-found centering">🐙<br/>Page Not Found</p>;
+const Loading = () => <p id="fallback" className="centering">loading</p>;
+const NoMatch = () => <p id="fallback" className="centering">🐙<br/>there's nothing to see here</p>;
 
 export default () => {
     let { id } = useParams();
