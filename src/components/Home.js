@@ -2,20 +2,30 @@ import React, { Fragment } from 'react';
 import { Route, Link, Switch, useRouteMatch } from 'react-router-dom';
 import styled from 'styled-components';
 
+import WikiLink from './WikiLink';
+
 const Home = styled.div`
   height: 100%;
-  background: linear-gradient(15deg, rgb(255, 145, 145) 0%, rgb(255, 227, 114) 100%) fixed;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-family: 'Lato', sans-serif;
-  text-shadow: 1px 2px 4px #00000020;
 
   & #before {
     flex-grow: 4;
   }
   & #after {
     flex-grow: 5;
+  }
+
+  & .wiki-link {
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+    bottom: -1.5rem;
+    color: var(--light);
   }
 
   & p > a {
@@ -227,7 +237,7 @@ export default () => {
   let { url } = useRouteMatch();
   let isBase = url === '/'
   return (
-    <Home>
+    <Home id="home">
       <div id="before"></div>
 
       <Box>
@@ -246,6 +256,9 @@ export default () => {
           <Route exact path='/about' component={About} />
           <Route exact path='/projects' component={Projects} />
         </Switch>
+        <div>
+          <WikiLink path={url} />
+        </div>
       </Box>
 
       <div id="after"></div>

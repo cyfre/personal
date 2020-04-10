@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import api from 'lib/api';
-import { useInput } from 'lib/hooks';
+import api from '../../lib/api';
+import { useInput } from '../../lib/hooks';
 import './turt.css';
 
 const About = (props) => {
