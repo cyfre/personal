@@ -10,7 +10,7 @@ const Home = styled.div`
   flex-direction: column;
   align-items: center;
   @media (max-width: 30rem) {
-    background-color: rgba(0, 0, 0, .07);
+    background-color: rgba(0, 0, 0, .03);
   }
 
   & #before {
@@ -58,7 +58,7 @@ const Box = styled.div`
     width: 22rem;
     padding: 1rem;
     border: 2px solid var(--light);
-    background-color: rgba(0, 0, 0, .07);
+    background-color: rgba(0, 0, 0, .03);
   }
 
   & > * {
