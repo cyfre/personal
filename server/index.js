@@ -20,6 +20,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/turt', require('./turt').routes);
+app.use('/api/graffiti', require('./graffiti').routes);
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));

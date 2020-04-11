@@ -27,7 +27,7 @@ const Main = styled.div`
     }
 `
 
-const projects = ['terrain', 'nonogram', 'snakes', 'graffiti'];
+const embedded = ['terrain', 'nonogram', 'snakes'];
 const EmbeddedRoute = ({name, implicit}) => (
     <Route
         key={name + implicit}
@@ -44,7 +44,7 @@ export default () => (
             <Route path='/projects/:id' component={Page} /> */}
 
             {/* implicit projects */}
-            {projects.map(name => EmbeddedRoute({name, implicit: true}))}
+            {embedded.map(name => EmbeddedRoute({name, implicit: true}))}
             <Route path='/:id' component={Page} />
 
             <Route path='*' component={Missing} />

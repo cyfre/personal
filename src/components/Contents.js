@@ -31,7 +31,7 @@ const Page = () => {
 }
 
 const Embedded = ({ name }) => {
-    let src = `/projects/${name}/${name}.html`;
+    let src = `/projects/${name}/`;
     return (
         <iframe
             title={name}

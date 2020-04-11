@@ -20,7 +20,7 @@ const Header = styled.div`
     border: 1px solid var(--light);
     box-shadow: 1px 2px 4px #00000020;
   }
-  & a {
+  & a, & a:hover {
     color: var(--dark);
     padding-left: .25rem;
     text-shadow: 1px 2px 4px #00000020;
