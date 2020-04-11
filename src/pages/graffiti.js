@@ -149,7 +149,9 @@ const Dot = styled.div`
 
 const Wall = styled.div`
   flex-grow: 1;
-  padding: .5rem;
+  @media (min-width: 30rem) {
+    padding: .5rem;
+  }
 
   & .inner {
     flex-grow: 1;
@@ -162,6 +164,8 @@ const Wall = styled.div`
   & canvas {
     image-rendering: pixelated;
     background: #f2eee3;
+    user-select: none;
+    touch-action: none;
   }
 `
 
