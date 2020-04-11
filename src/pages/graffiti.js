@@ -3,7 +3,8 @@ import styled from 'styled-components';
 import api from '../lib/api';
 
 const WIDTH = 256, HEIGHT = 256;
-let canvas, ctx, canvasScale, reloadTimeout;
+let canvas, ctx, canvasScale;
+let drawn, draw;
 let mouse = [0, 0];
 
 const CLR = {
@@ -35,6 +36,12 @@ const copyCanvas = () => {
 const init = () => {
   canvas = document.getElementById('graffiti');
   ctx = canvas.getContext('2d');
+
+  resize();
+
+  drawn = copyCanvas();
+  draw = drawn.getContext('2d');
+
   api.read('/graffiti/', data => {
     if (data && data.dataUrl) {
       let image = new Image();
@@ -44,24 +51,29 @@ const init = () => {
     sendAndReceive();
   });
   window.addEventListener('resize', resize, false);
-  resize();
 }
 
 const sendAndReceive = () => {
   setTimeout(() => {
-    let dataUrl = canvas.toDataURL();
-    api.update('/graffiti/', { dataUrl }, data => {
+    api.read('/graffiti/', data => {
       canvas = document.getElementById('graffiti');
       if (data && data.dataUrl && canvas) {
-        let save = copyCanvas();
         let image = new Image();
         image.onload = () => {
           ctx.drawImage(image, 0, 0);
-          ctx.drawImage(save, 0, 0);
-          save.remove();
-          sendAndReceive();
-        }
+          ctx.drawImage(drawn, 0, 0);
+          draw.clearRect(0, 0, drawn.width, drawn.height);
+          let dataUrl = canvas.toDataURL();
+          api.update('/graffiti/', { dataUrl }, data => {
+            sendAndReceive();
+          });
+        };
         image.src = data.dataUrl;
+      } else if (canvas) {
+        let dataUrl = canvas.toDataURL();
+        api.update('/graffiti/', { dataUrl }, data => {
+          sendAndReceive();
+        });
       }
     });
   }, 1000);
@@ -85,10 +97,11 @@ const resize = () => {
 }
 
 const drawCircle = (mouse, size, color) => {
-  ctx.beginPath();
-  ctx.arc(mouse[0] / canvasScale, mouse[1] / canvasScale, SZ[size], 0, 2*Math.PI, true);
-  ctx.fillStyle = color;
-  ctx.fill();
+  draw.beginPath();
+  draw.arc(mouse[0] / canvasScale, mouse[1] / canvasScale, SZ[size], 0, 2*Math.PI, true);
+  draw.fillStyle = color;
+  draw.fill();
+  ctx.drawImage(drawn, 0, 0);
 }
 
 const Graffiti = styled.div`
@@ -215,9 +228,11 @@ export default () => {
         <canvas id="graffiti"
           onPointerDown={handle.down}
           onPointerUp={handle.up}
-          onPointerMove={handle.move}/>
+          onPointerMove={handle.move}>
+            <img id="backing"></img>
+        </canvas>
       </div>
     </Wall>
-    
+
   </Graffiti>)
 }
