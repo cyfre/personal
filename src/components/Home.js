@@ -180,10 +180,6 @@ const Projects = () => (
   </Title>
 
   <ProjectList>
-    <Link to="/graffiti">graffiti wall</Link>
-    <Description>
-      A graffiti wall open to everyone
-    </Description>
     <Link to="/terrain">terrain generation</Link>
     <Description>
       A procedurally generated landscape, see <a href="https://www.redblobgames.com/articles/noise/introduction.html">Red Blob Games</a> for explanation of noise functions
@@ -195,6 +191,10 @@ const Projects = () => (
     <Link to="/nonogram">nonogram solver</Link>
     <Description>
       Created to solve puzzles from the app <a href="https://apps.apple.com/us/app/picture-cross/id977150768">Picture Cross</a>, aka <a href="https://en.wikipedia.org/wiki/Nonogram">nonograms</a>
+    </Description>
+    <Link to="/graffiti">graffiti wall</Link>
+    <Description>
+      A graffiti wall open to everyone
     </Description>
     <Link to="/cloud">cloud</Link>
     <Description>
@@ -235,8 +235,8 @@ const Base = () => (
     <p>B.S. in Computer Science</p>
   </Title>
 
-  <Link to="/graffiti">graffiti wall</Link>
   <Link to="/terrain">terrain generation</Link>
+  <Link to="/nonogram">nonogram solver</Link>
   <Link to="/snakes">snakes</Link>
   </Fragment>
 )
