@@ -10,7 +10,9 @@ const Home = styled.div`
   flex-direction: column;
   align-items: center;
   @media (max-width: 30rem) {
-    background-color: rgba(0, 0, 0, .03);
+    &.darken {
+      background-color: rgba(0, 0, 0, .042);
+    }
   }
 
   & #before {
@@ -58,7 +60,9 @@ const Box = styled.div`
     width: 22rem;
     padding: 1rem;
     border: 2px solid var(--light);
-    background-color: rgba(0, 0, 0, .03);
+    &.darken {
+      background-color: rgba(0, 0, 0, .042);
+    }
   }
 
   & > * {
@@ -215,13 +219,13 @@ const About = () => (
   </Title>
 
   <Description>
-    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and after seven months working for <a href="https://en.wikipedia.org/wiki/Amazon_Robotics">Amazon Robotics</a> I'm looking to transition into <a href="https://en.wikipedia.org/wiki/Educational_technology">EdTech</a>.
+    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and after seven months working for <a href="https://en.wikipedia.org/wiki/Amazon_Robotics">Amazon Robotics</a> I'm looking to transition into <a href="https://en.wikipedia.org/wiki/Educational_technology">EdTech</a> or another way I can give back what I've learned.
   </Description>
   <Description>
     I'm passionate about <a href="https://opensource.com/education/13/4/guide-open-source-education">open-source education</a>, rich interactive media (including <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a>), and general outdoorsy things like hiking, camping, and bonfires.
   </Description>
   <Description>
-    This site is for experimental projects – all subject to change. If you're looking to reach out, my twitter DMs are open!
+    This site is for experimental projects – all subject to change. And please feel free to reach out!
   </Description>
   </Fragment>
 )
@@ -245,10 +249,10 @@ export default () => {
   let { url } = useRouteMatch();
   let isBase = url === '/'
   return (
-    <Home id="home">
+    <Home id="home" className={isBase ? "" : "darken"}>
       <div id="before"></div>
 
-      <Box>
+      <Box className={isBase ? "" : "darken"}>
         <Links className={"left " + (isBase ? "base" : "")}>
           <Link to="/">/home</Link>
           <Link to="/about">/about</Link>
