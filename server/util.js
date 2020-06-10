@@ -23,7 +23,7 @@ function genRemove(name) {
 }
 
 function genModelRoutes(model, routes) {
-    if (routes == undefined) routes = express.Router();
+    if (routes === undefined) routes = express.Router();
 
     // route configs
     [{

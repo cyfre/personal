@@ -15,9 +15,10 @@ var afterimagePass;
 function init() {
     renderer = new THREE.WebGLRenderer({canvas: document.getElementById('projectCanvas')});
     renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
+    renderer.setSize( bounds.width, bounds.height );
 
-    camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 1000 );
+    camera = new THREE.PerspectiveCamera( 70, bounds.width / bounds.height, 1, 1000 );
     camera.position.z = 400;
 
     scene = new THREE.Scene();
@@ -41,14 +42,17 @@ function init() {
 }
 
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
+    camera.aspect = bounds.width / bounds.height;
     camera.updateProjectionMatrix();
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    composer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( bounds.width, bounds.height );
+    composer.setSize( bounds.width, bounds.height );
 }
 
+let stop = false
 function animate() {
+    if (stop) return;
     requestAnimationFrame( animate );
 
     mesh.rotation.x += 0.005;
@@ -59,16 +63,23 @@ function animate() {
 
 const CanvasContainer = styled.div`
     position: relative;
+    width: 100%;
+    height: 100%;
 `
 
 export default () => {
     useEffect(() => {
+        stop = false;
         init();
         animate();
+        return () => {
+            stop = true;
+            window.removeEventListener('resize', onWindowResize, false)
+        }
     }, []);
 
     return (
-        <CanvasContainer>
+        <CanvasContainer id="canvasContainer">
             <canvas id="projectCanvas"/>
         </CanvasContainer>
     )

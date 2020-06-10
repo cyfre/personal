@@ -11,7 +11,7 @@ const Home = styled.div`
   align-items: center;
   @media (max-width: 30rem) {
     &.darken {
-      background-color: rgba(0, 0, 0, .042);
+      // background-color: rgba(0, 0, 0, .042);
     }
   }
 
@@ -61,7 +61,7 @@ const Box = styled.div`
     padding: 1rem;
     border: 2px solid var(--light);
     &.darken {
-      background-color: rgba(0, 0, 0, .042);
+      // background-color: rgba(0, 0, 0, .042);
     }
   }
 
@@ -99,6 +99,7 @@ const Title = styled.div`
   margin: 0;
   padding: 0.25rem 0 1rem 0;
   text-align: center;
+  margin-bottom: 1rem;
   & > img {
     width: 50%;
     border-radius: 50%;
@@ -165,6 +166,7 @@ const Description = styled.p`
 
 const ProjectList = styled.div`
   & > a {
+    font-size: .8rem;
     display: block;
     color: var(--light);
     text-decoration: underline;
@@ -173,7 +175,7 @@ const ProjectList = styled.div`
     }
   }
   & > p {
-    font-size: .64rem;
+    font-size: .6rem;
   }
 `
 
@@ -204,6 +206,10 @@ const Projects = () => (
     <Description>
       [WIP] to learn react-three-fiber, starting from an <a href="https://github.com/react-spring/react-three-fiber#what-does-it-look-like">example in their docs</a>
     </Description>
+    <Link to="/floating">floating</Link>
+    <Description>
+      A shifting Delaunay triangulation
+    </Description>
     <Link to="/turt">turt smurts</Link>
     <Description>
       A turtle who has some smart things to say, 50/50 mix of user content and <a href="api.quotable.io">api.quotable.io/random</a>
@@ -225,7 +231,7 @@ const About = () => (
     I'm passionate about <a href="https://opensource.com/education/13/4/guide-open-source-education">open-source education</a>, rich interactive media (including <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a>), and general outdoorsy things like hiking, camping, and bonfires.
   </Description>
   <Description>
-    This site is for experimental projects – all subject to change. And please feel free to reach out!
+    This site is for experimentation – all subject to change.
   </Description>
   </Fragment>
 )
