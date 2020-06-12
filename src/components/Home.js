@@ -225,13 +225,13 @@ const About = () => (
   </Title>
 
   <Description>
-    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and after seven months working for <a href="https://en.wikipedia.org/wiki/Amazon_Robotics">Amazon Robotics</a> I'm looking to transition into <a href="https://en.wikipedia.org/wiki/Educational_technology">EdTech</a> or another way I can give back what I've learned.
+    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and I'm currently looking for work as a software developer.
   </Description>
   <Description>
-    I'm passionate about <a href="https://opensource.com/education/13/4/guide-open-source-education">open-source education</a>, rich interactive media (including <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a>), and general outdoorsy things like hiking, camping, and bonfires.
+    I'm passionate about <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a> and general outdoorsy things like hiking, camping, and bonfires.
   </Description>
   <Description>
-    This site is for experimentation – all subject to change.
+    This site is for experimentation – all subject to change. You can reach me at cyruswfreshman@gmail.com
   </Description>
   </Fragment>
 )
