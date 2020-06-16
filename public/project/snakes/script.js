@@ -7,7 +7,7 @@ const CONSTANTS = {
         new Arc.V(1, 2),
         new Arc.V(24, 23)
     ],
-    TICK_MS: 36,
+    TICK_MS: 42,
     START_LENGTH: 6,
     NUM_FOOD: 10,
     FOOD_GROW: 4
