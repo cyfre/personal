@@ -175,7 +175,8 @@ const ProjectList = styled.div`
     }
   }
   & > p {
-    font-size: .6rem;
+    font-size: .55rem;
+    margin-bottom: .67rem;
   }
 `
 
@@ -188,19 +189,23 @@ const Projects = () => (
   <ProjectList>
     <Link to="/terrain">terrain generation</Link>
     <Description>
-      A procedurally generated landscape, see <a href="https://www.redblobgames.com/articles/noise/introduction.html">Red Blob Games</a> for explanation of noise functions
-    </Description>
-    <Link to="/snakes">snakes</Link>
-    <Description>
-      A one- or two-player co-op game of snake!
+      A procedurally generated landscape
     </Description>
     <Link to="/nonogram">nonogram solver</Link>
     <Description>
       Created to solve puzzles from the app <a href="https://apps.apple.com/us/app/picture-cross/id977150768">Picture Cross</a>, aka <a href="https://en.wikipedia.org/wiki/Nonogram">nonograms</a>
     </Description>
+    <Link to="/snakes">snakes</Link>
+    <Description>
+      A one- or two-player co-op game of snake!
+    </Description>
     <Link to="/graffiti">graffiti wall</Link>
     <Description>
       A graffiti wall open to everyone
+    </Description>
+    <Link to="/turt">turt smurts</Link>
+    <Description>
+      A wise turtle, 50/50 mix of user content and <a href="api.quotable.io">api.quotable.io/random</a>
     </Description>
     <Link to="/cloud">cloud</Link>
     <Description>
@@ -210,10 +215,7 @@ const Projects = () => (
     <Description>
       A shifting Delaunay triangulation
     </Description>
-    <Link to="/turt">turt smurts</Link>
-    <Description>
-      A turtle who has some smart things to say, 50/50 mix of user content and <a href="api.quotable.io">api.quotable.io/random</a>
-    </Description>
+
   </ProjectList>
   </Fragment>
 )
