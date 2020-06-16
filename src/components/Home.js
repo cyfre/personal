@@ -166,7 +166,7 @@ const Description = styled.p`
 
 const ProjectList = styled.div`
   & > a {
-    font-size: .8rem;
+    font-size: .75rem;
     display: block;
     color: var(--light);
     text-decoration: underline;

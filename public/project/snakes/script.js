@@ -283,7 +283,8 @@ class GameState {
 
         Arc.setGui(STATE.MENU);
         Arc.addButton(Arc.sprites.single, Arc.width/2 - 1.25, 17, .25, .25, 1, 0.5).addEventListener('click', () => this.handleButton('single'));
-        Arc.addButton(Arc.sprites.versus, Arc.width/2 + 1.25, 17, .25, .25, 0, 0.5).addEventListener('click', () => this.handleButton('versus'));
+        Arc.addButton(Arc.sprites.coop, Arc.width/2 + 1.25, 17, .25, .25, 0, 0.5).addEventListener('click', () => this.handleButton('versus'));
+        Arc.addElement(Arc.sprites.title, Arc.width/2, Arc.height/2, .25, .25, 0.5, 1)
 
         Arc.setGui(STATE.GAMEOVER);
         Arc.addButton(Arc.sprites.replay, Arc.width/2, 16.5, .25, .25, 0.5, 1).addEventListener('click', () => this.handleButton('replay'));
@@ -319,6 +320,7 @@ class GameState {
         switch (this.state) {
             case STATE.PLAY:
                 Arc.remove(this.score);
+                break;
             case STATE.ENDING:
                 break;
             case STATE.GAMEOVER:
@@ -326,6 +328,7 @@ class GameState {
                 this.players.concat(this.food).forEach(e => e.remove());
                 Arc.tickTime = CONSTANTS.TICK_MS;
                 break;
+            default:
         }
 
         this.counter = 0;
@@ -346,9 +349,7 @@ class GameState {
                         Arc.drawNumber(this.players[0].score + this.players[1].score, Arc.width - 1.5, 2.5, 0.25, 0.25, 1, 0);
                         ctx.restore();
                     }, 1000);
-                }/*if (this.n_players === 2) {
-                    this.score = Arc.command(ctx => {});
-                }*/
+                }
                 Arc.add(this.score);
                 break;
             case STATE.ENDING:
@@ -373,6 +374,7 @@ class GameState {
                 }*/
                 Arc.add(this.score);
                 break;
+            default:
         }
 
         this.state = state;
@@ -407,6 +409,7 @@ class GameState {
                             Arc.tickTime++;
                             console.log(Arc.tickTime);
                             break;
+                        default:
                     }
                 }
             }
@@ -444,6 +447,7 @@ class GameState {
                     this.setState(STATE.GAMEOVER);
                 }
                 break;
+            default:
         }
     }
 
@@ -477,6 +481,7 @@ class GameState {
             case 'replay':
                 this.setState(STATE.PLAY);
                 break;
+            default:
         }
     }
 }
@@ -490,10 +495,12 @@ let sprites = [
     ['food', 45, 1, 16, 16],
     ['single', 1, 27, 34, 10],
     ['versus', 1, 38, 34, 10],
+    ['coop', 70, 27, 34, 10],
     ['replay', 36, 27, 33, 10],
     ['menu', 36, 38, 33, 10],
     ['', 28, 18, 5, 8, 10, 4, 0],
     ['1', 33, 18, 3, 8],
+    ['title', 1, 49, 69, 28]
 ];
 Promise.all([
     Arc.loadSheet('sheet.png', sprites)

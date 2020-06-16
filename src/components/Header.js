@@ -57,7 +57,7 @@ export default () => {
   return (
     <Header id="header">
       <Link to="/">
-        <img className="profile" src="/profile.jpeg" alt="I'm sitting on a rock"/>
+        <img className="profile" src="/profile.jpeg" alt="profile"/>
       </Link>
       {/* <Link to='/'>/ home</Link> */}
       {isImplicitProject && <Link to='/projects'>/ projects</Link>}

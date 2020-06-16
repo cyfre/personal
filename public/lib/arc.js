@@ -44,7 +44,7 @@
         paint(ctx) {}
     }
 
-    Arc.PaintCommand = class PaintCommand extends Painted {
+    Arc.PaintCommand = class PaintCommand extends Arc.Painted {
         constructor(command, zIndex) {
             super(zIndex)
             this.paint = command;
@@ -73,7 +73,7 @@
         }
     }
 
-    Arc.GraphicsObject = class GraphicsObject extends Painted {
+    Arc.GraphicsObject = class GraphicsObject extends Arc.Painted {
         constructor(position, angle, scale, zIndex) {
             super(zIndex);
             this.position = position || new V(0, 0);
@@ -142,7 +142,7 @@
         Arc.width = width;
         Arc.height = height;
 
-        Arc.scene = new GraphicsObject();
+        Arc.scene = new Arc.GraphicsObject();
         Arc.img = {};
         Arc.sprites = {};
 
@@ -266,7 +266,7 @@
         let repaint = false;
 
         let paintCallback = () => {
-            repaint && paint();
+            repaint && Arc.paint();
             requestAnimationFrame(paintCallback);
         }
         paintCallback();
@@ -285,7 +285,7 @@
 
     Arc.add = function(child) {
         if (child instanceof Function) {
-            child = new PaintCommand(child);
+            child = new Arc.PaintCommand(child);
         }
         return Arc.scene.add(child);
     };
@@ -336,6 +336,7 @@
         button.innerHTML = `
         <style type="text/css">
             #${button.getAttribute('id')} {
+                background-color: transparent;
                 background-image: url(${img.src});
                 background-position: -${sX}px -${sY}px;
                 width: ${sWidth}px;
@@ -352,6 +353,32 @@
         </style>`;
         Arc.gui.appendChild(button);
         return button;
+    }
+
+    Arc.addElement = function(sprite, x, y, xScale=1, yScale=1, xLerp=0, yLerp=0) {
+        if (typeof(sprite) === 'string') {
+            sprite = Arc.sprites[sprite];
+        }
+
+        let [img, sX, sY, sWidth, sHeight] = sprite;
+        let width = sWidth * xScale;
+        let height = sHeight * yScale;
+        let element = document.createElement('div');
+        element.setAttribute('id', `element${Arc.newId()}`);
+        element.innerHTML = `
+        <style type="text/css">
+            #${element.getAttribute('id')} {
+                background-color: transparent;
+                background-image: url(${img.src});
+                background-position: -${sX}px -${sY}px;
+                width: ${sWidth}px;
+                height: ${sHeight}px;
+                transform: translate(${x - xLerp*width}px, ${y - yLerp*height}px)
+                           scale(${xScale}, ${yScale});
+            }
+        </style>`;
+        Arc.gui.appendChild(element);
+        return element;
     }
 
     window.Arc = Arc;

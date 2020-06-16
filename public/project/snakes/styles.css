@@ -34,7 +34,7 @@ body {
     height: 100%;
 }
 
-.gui button {
+.gui button, .gui div {
     position: absolute;
     border: none;
     outline: none;
