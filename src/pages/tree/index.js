@@ -29,7 +29,7 @@ function init() {
     // from three.js OrbitControls example
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controls.dampingFactor = 0.75;
     controls.screenSpacePanning = false;
     controls.minDistance = SCALE/2;
     controls.maxDistance = SCALE*5;
@@ -39,11 +39,11 @@ function init() {
     // scene.add(axesHelper);
 
     scene.add(new THREE.AmbientLight(0xd9b3ff));
-    var directionalLight = new THREE.DirectionalLight(0xffffbf, 1.25);
+    var directionalLight = new THREE.DirectionalLight(0xffffbf, 1);
     directionalLight.position.set(-0.5, 0.5, -0.75);
     directionalLight.position.normalize();
     scene.add(directionalLight);
-    var directionalLight = new THREE.DirectionalLight(0x3300ff, 0.75);
+    var directionalLight = new THREE.DirectionalLight(0x3300ff, 1.25);
     directionalLight.position.set(0.5, -0.5, -1.5);
     directionalLight.position.normalize();
     scene.add(directionalLight);
@@ -52,7 +52,7 @@ function init() {
     {
         const skyColor = 0xB1E1FF;  // light blue
         const groundColor = 0xB97A20;  // brownish orange
-        const intensity = 1.2;
+        const intensity = 1;
         const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
         scene.add(light);
     }
