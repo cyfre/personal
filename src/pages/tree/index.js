@@ -26,11 +26,7 @@ function init() {
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
 
-    // from three.js OrbitControls example
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.75;
-    controls.screenSpacePanning = false;
     controls.minDistance = SCALE/2;
     controls.maxDistance = SCALE*5;
     controls.maxPolarAngle = Math.PI / 2 - .1;
@@ -52,7 +48,7 @@ function init() {
     {
         const skyColor = 0xB1E1FF;  // light blue
         const groundColor = 0xB97A20;  // brownish orange
-        const intensity = 1;
+        const intensity = 1.25;
         const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
         scene.add(light);
     }
@@ -60,7 +56,7 @@ function init() {
     var circle = new THREE.Mesh(
         new THREE.CircleBufferGeometry( SCALE/4, 16 ),
         new THREE.MeshBasicMaterial({ 
-            color: 0x070707, 
+            color: 0x0c0c0c, 
             side: THREE.DoubleSide
         }));
     circle.lookAt(0, 1, 0);
@@ -83,7 +79,7 @@ let stop = false
 function animate() {
     if (stop) return;
     requestAnimationFrame(animate);
-
+    controls.update();
     renderer.render(scene, camera);
 }
 
