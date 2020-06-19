@@ -35,11 +35,11 @@ function init() {
     // scene.add(axesHelper);
 
     scene.add(new THREE.AmbientLight(0xd9b3ff));
-    var directionalLight = new THREE.DirectionalLight(0xffffbf, 1);
+    var directionalLight = new THREE.DirectionalLight(0xffffbf, 2);
     directionalLight.position.set(-0.5, 0.5, -0.75);
     directionalLight.position.normalize();
     scene.add(directionalLight);
-    var directionalLight = new THREE.DirectionalLight(0x3300ff, 1.25);
+    var directionalLight = new THREE.DirectionalLight(0x3300ff, 3);
     directionalLight.position.set(0.5, -0.5, -1.5);
     directionalLight.position.normalize();
     scene.add(directionalLight);
@@ -48,15 +48,15 @@ function init() {
     {
         const skyColor = 0xB1E1FF;  // light blue
         const groundColor = 0xB97A20;  // brownish orange
-        const intensity = 1.25;
+        const intensity = 2.;
         const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
         scene.add(light);
     }
 
     var circle = new THREE.Mesh(
         new THREE.CircleBufferGeometry( SCALE/4, 16 ),
-        new THREE.MeshBasicMaterial({ 
-            color: 0x0c0c0c, 
+        new THREE.MeshBasicMaterial({
+            color: 0x0c0c0c,
             side: THREE.DoubleSide
         }));
     circle.lookAt(0, 1, 0);
