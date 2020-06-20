@@ -27,7 +27,7 @@ const Main = styled.div`
     }
 `
 
-const embedded = ['terrain', 'nonogram', 'snakes'];
+const embedded = ['terrain', 'nonogram', 'snakes', 'snackman'];
 const EmbeddedRoute = ({name, implicit}) => (
     <Route
         key={name + implicit}

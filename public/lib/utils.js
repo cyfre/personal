@@ -18,6 +18,10 @@ function dist2(x1, y1, x2, y2) {
     return mag2(x2 - x1, y2 - y1);
 }
 
+function bounded(value, lower, upper) {
+    return lower <= value && value <= upper;
+}
+
 function randi(n) {
     return Math.floor(Math.random() * Math.floor(n));
 }
@@ -57,9 +61,21 @@ function randpop(array) {
 }
 
 function sample(n, method, constraint) {
-    samples = new Array(n);
+    let samples = new Array(n);
     do {
         for (let i = 0; i < n; i++) samples[i] = method(i);
     } while (!constraint(...samples));
     return samples;
+}
+
+Array.matrix = function(numrows, numcols, initial) {
+    var arr = [];
+    for (var i = 0; i < numrows; ++i) {
+        var columns = [];
+        for (var j = 0; j < numcols; ++j) {
+            columns[j] = initial;
+        }
+        arr[i] = columns;
+    }
+    return arr;
 }
