@@ -1,15 +1,4 @@
 export class Character {
-    x
-    y
-    speed
-    tileX
-    tileY
-    face
-    anim
-    tryFace
-    level
-    skin
-
     constructor(tileX, tileY, level) {
         this.x = tileX;
         this.y = tileY;
@@ -34,5 +23,5 @@ export class Character {
         this.speed = speed;
     }
 
-    draw(ctx) {};
+    draw(ctx) {}
 }

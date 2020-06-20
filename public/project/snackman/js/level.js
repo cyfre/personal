@@ -22,6 +22,17 @@ let exitCount = [
 let exitTime = [5, 4, 3];
 let afterCount = [0, 7, 17, 32];
 
+let keyToDir = {
+    'w': 0,
+    'd': 1,
+    's': 2,
+    'a': 3,
+    'ArrowUp': 0,
+    'ArrowRight': 1,
+    'ArrowDown': 2,
+    'ArrowLeft': 3,
+}
+
 export class Level {
     constructor(highscore) {
         this.highscore = highscore;
@@ -329,20 +340,10 @@ export class Level {
         this.scoreTime = 300;
     }
 
-    keyToDir = {
-        'w': 0,
-        'd': 1,
-        's': 2,
-        'a': 3,
-        'ArrowUp': 0,
-        'ArrowRight': 1,
-        'ArrowDown': 2,
-        'ArrowLeft': 3,
-    }
     press(key) {
         console.log(key);
-        if (this.keyToDir.hasOwnProperty(key)) {
-            this.player.press(this.keyToDir[key]);
+        if (keyToDir.hasOwnProperty(key)) {
+            this.player.press(keyToDir[key]);
         } else switch(key) {
             case '1': if (this.level < 12) this.level++; break;
             case '2': this.lives++; break;

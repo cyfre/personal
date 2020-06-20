@@ -2,9 +2,6 @@ import Arc from '/lib/arcm.js';
 import { Character } from './character.js';
 
 export class Player extends Character {
-    skip
-    isDead
-
     constructor(x, y, level) {
         super(x, y, level);
         this.face = 3;
