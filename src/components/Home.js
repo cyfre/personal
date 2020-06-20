@@ -166,7 +166,7 @@ const Description = styled.p`
 
 const ProjectList = styled.div`
   & > a {
-    font-size: .75rem;
+    font-size: .8rem;
     display: block;
     color: var(--light);
     text-decoration: underline;
@@ -175,7 +175,7 @@ const ProjectList = styled.div`
     }
   }
   & > p {
-    font-size: .55rem;
+    font-size: .6rem;
     margin-bottom: .67rem;
   }
 `
@@ -198,6 +198,10 @@ const Projects = () => (
     <Link to="/snakes">snakes</Link>
     <Description>
       A one- or two-player co-op game of snake!
+    </Description>
+    <Link to="/snackman">snackman</Link>
+    <Description>
+      It's kinda like Pac-Man!
     </Description>
     <Link to="/graffiti">graffiti wall</Link>
     <Description>
