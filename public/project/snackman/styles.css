@@ -1,4 +1,5 @@
 .container {
+    user-select: none;
     flex-grow: 1;
     width: 100%;
     display: flex;
@@ -11,8 +12,23 @@
     align-items: center;
 }
 
+#joystick {
+    visibility: hidden;
+    width: 16rem;
+    height: 16rem;
+    margin-bottom: 2rem;
+    position: absolute;
+}
+@media only screen and (max-width: 768px) {
+    #joystick {
+        visibility: visible;
+        position: relative;
+    }
+}
+
 #gameCanvas {
     image-rendering: pixelated;
+    user-select: none;
 }
 
 .gui-container {
