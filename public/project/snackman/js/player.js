@@ -35,8 +35,8 @@ export class Player extends Character {
         }
 
         // wrap through tunnel
-        if (this.tileY < 0) this.y = 20.49;
-        else if (this.tileY >= 21) this.y = -.49;
+        if (this.y < -0.4) this.y = 20.4;
+        else if (this.y > 20.4) this.y = -.4;
 
         // eat pellets
         if (this.level.map[this.tileY][this.tileX] === 2) {
@@ -90,7 +90,6 @@ export class Player extends Character {
 
     press(face) {
         this.tryFace = face;
-        console.log('press', face)
     }
 
     draw(ctx) {

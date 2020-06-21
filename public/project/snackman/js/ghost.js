@@ -120,8 +120,8 @@ export class Ghost extends Character {
         if (this.tileX === 14) {
             if (this.tileY < 4 || this.tileY > 17) {
                 this.speed = this.level.getTunnelSpeed(true);
-                if (this.tileY < 0) this.y = 20.49;
-                else if (this.tileY >= 21) this.y = -.49;
+                if (this.tileY < -.4) this.y = 20.4;
+                else if (this.y > 20.4) this.y = -.4;
             } else if (this.tileY === 4 || this.tileY === 17) {
                 this.speed = this.level.getTunnelSpeed(false);
             }

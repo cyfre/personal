@@ -44,13 +44,17 @@ export class Level {
         this.scoreTime = new Countdown(300); // fruit score lifetime
         this.blueTime = new Countdown(50); // pause when ghost is eaten
         this.finishTime = new Countdown(200); // life end wait period
+        this.blueCount = new Countdown(500); // period for blue ghosts
+        this.dieTime = new Countdown(250); // death animation
 
         this.tickers = [
             this.startTime,
             this.fruitTime,
             this.scoreTime,
             this.blueTime,
-            this.finishTime
+            this.finishTime,
+            this.blueCount,
+            this.dieTime
         ];
 
         this.counter = new Counter(); // generic, used for large dot blink
@@ -90,7 +94,7 @@ export class Level {
             this.lives++;
         }
         this.blueEat = 0;
-        this.dotTot = 197;
+        this.remainingDots = 197;
         this.levelDeath = false;
         this.fruits = 0;
 
@@ -103,9 +107,7 @@ export class Level {
     }
 
     nextLife() {
-        this.dead = false;
         this.levelDeath = true;
-
         this.genStart();
     }
 
@@ -137,11 +139,8 @@ export class Level {
     genStart() {
         this.mode = 0;
         this.modeCount = 0;
-        this.blue = false;
-        this.blueCount = 0;
         this.dots = 0;
         this.out = 0;
-        this.fruit = false;
 
         this.tickers.forEach(ticker => ticker.reset());
         this.startTime.start();
@@ -160,115 +159,108 @@ export class Level {
     update() {
         this.tickers.forEach(ticker => ticker.tick());
 
-        if (!this.gameOver
-            && this.startTime.isDone()
-            && this.blueTime.isDone()
-            && this.finishTime.isDone()) {
-            // snackman death animation
-            if (this.dieTime > 0) {
-                this.player.update();
-                this.dieTime--;
-                if (this.dieTime === 0) {
-                    if (this.lives === 0) {
-                        this.gameOver = true;
-                    } else
-                        this.nextLife();
-                }
-            // regular events
+        if (this.gameOver
+                || this.startTime.isActive()
+                || this.blueTime.isActive()
+                || this.finishTime.isActive()) {
+            return;
+        }
+
+        if (this.finishTime.isTriggered()) {
+            this.nextLevel();
+        } else if (this.dieTime.isActive()) {
+            this.player.update();
+        } else if (this.dieTime.isTriggered()) {
+            if (this.lives === 0) {
+                this.gameOver = true;
             } else {
-                this.counter.tick();
-                // player update
-                this.player.update();
-                // ghosts update
-                this.ghosts.forEach(ghost => {
-                    // set targets
-                    if (!ghost.blue) {
-                        if (this.mode%2 === 0) {
-                            ghost.targetCorner();
-                        } else {
-                            ghost.targetPlayer(this.player, this.ghosts[0])
-                        }
+                this.nextLife();
+            }
+        } else {
+            this.counter.tick();
+            this.player.update();
+            this.ghosts.forEach(ghost => {
+                // set targets
+                if (!ghost.blue) {
+                    if (this.mode%2 === 0) {
+                        ghost.targetCorner();
+                    } else {
+                        ghost.targetPlayer(this.player, this.ghosts[0])
                     }
-                    ghost.update();
-                    // check collision with player
-                    if (!ghost.isEaten() && this.player.checkGhost(ghost)) {
-                        if (ghost.blue) {
-                            ghost.eat();
-                            this.eatBlue();
-                        } else {
-                            this.dead = true;
-                            this.player.kill();
-                            this.lives--;
-                            this.dieTime = 250;
-                        }
+                }
+                ghost.update();
+                // check collision with player
+                if (!ghost.isEaten() && this.player.checkGhost(ghost)) {
+                    if (ghost.blue) {
+                        ghost.eat();
+                        this.eatBlue();
+                    } else {
+                        this.player.kill();
+                        this.lives--;
+                        this.dieTime.start();
                     }
-                });
+                }
+            });
 
-                if (this.fruit && this.player.checkFruit()) this.eatFruit();
+            // did player eat fruit
+            if (this.fruitTime.isActive() && this.player.checkFruit()) this.eatFruit();
 
-                if ((this.dotTot === 140 && this.fruits === 0)
-                        || (this.dotTot === 60 && this.fruits === 1)) {
-                    this.fruit = true;
-                    this.fruitTime.start();
-                    this.fruits++;
-                } else if (this.fruitTime.isDone()) {
-                    this.fruit = false;
+            // should fruit spawn
+            if ((this.remainingDots === 140 && this.fruits === 0)
+                    || (this.remainingDots === 60 && this.fruits === 1)) {
+                this.fruitTime.start();
+                this.fruits++;
+            }
+
+            if (this.dieTime.isDone()) {
+                if (this.blueCount.isDone()) {
+                    if (this.blueCount.isTriggered()) {
+                        this.blueEat = 0;
+                        this.modeSwitch(true);
+                        this.setSpeed(0);
+                    }
+
+                    if (this.modeCount === 84*modeTime[this.difficulty][this.mode]) {
+                        this.mode++;
+                        this.modeSwitch(false);
+                        this.modeCount = 0;
+                    } else {
+                        this.modeCount++;
+                    }
                 }
 
-                if (!this.dead) {
-                    if (this.blueCount > 0) {
-                        this.blueCount--;
-                    } else {
-                        if (this.blue) {
-                            this.blue = false;
-                            this.blueEat = 0;
-                            this.modeSwitch(true);
-                            this.setSpeed(0);
-                        }
-
-                        if (this.modeCount === 84*modeTime[this.difficulty][this.mode]) {
-                            this.mode++;
-                            this.modeSwitch(false);
-                            this.modeCount = 0;
-                        } else {
-                            this.modeCount++;
-                        }
-                    }
-
-                    // when to release each ghost
-                    if (this.levelDeath) {
-                        for (let i = this.out; i < 4; i++)
-                            if (afterCount[i] <= this.dots) {
-                                this.ghosts[i].exit();
-                                this.out++;
-                                this.eatTime.reset();
-                            }
-                    } else {
-                        for (let i = this.out; i < 4; i++)
-                            if (exitCount[this.difficulty][i] <= this.dots) {
-                                this.ghosts[i].exit();
-                                this.out++;
-                                this.eatTime.reset();
-                                break;
-                            }
-                    }
-
-                    if (this.eatTime.count === 84*exitTime[this.difficulty]) {
-                        if (this.out < 4) {
-                            this.ghosts[this.out].exit();
-                            this.eatTime.reset();
+                // when to release each ghost
+                if (this.levelDeath) {
+                    for (let i = this.out; i < 4; i++)
+                        if (afterCount[i] <= this.dots) {
+                            this.ghosts[i].exit();
                             this.out++;
+                            this.eatTime.reset();
                         }
-                    }
+                } else {
+                    for (let i = this.out; i < 4; i++)
+                        if (exitCount[this.difficulty][i] <= this.dots) {
+                            this.ghosts[i].exit();
+                            this.out++;
+                            this.eatTime.reset();
+                            break;
+                        }
+                }
 
-                    if (this.dotTot === 0) {
-                        this.finishTime.start();
-                        this.player.anim = 0;
+                if (this.eatTime.count === 84*exitTime[this.difficulty]) {
+                    if (this.out < 4) {
+                        this.ghosts[this.out].exit();
+                        this.eatTime.reset();
+                        this.out++;
                     }
+                }
+
+                // end level
+                if (this.remainingDots === 0) {
+                    this.finishTime.start();
+                    this.player.anim.reset();
                 }
             }
-        } else if (this.finishTime.isTriggered()) {
-            this.nextLevel();
         }
 
         if (this.score > this.highscore) this.highscore = this.score;
@@ -276,7 +268,7 @@ export class Level {
 
     modeSwitch(isBlue) {
         this.ghosts.forEach(ghost => {
-            isBlue ? ghost.setBlue(this.blue) : ghost.setMode(this.mode%2 === 0);
+            isBlue ? ghost.setBlue(this.blueCount.isActive()) : ghost.setMode(this.mode%2 === 0);
         });
     }
 
@@ -296,21 +288,20 @@ export class Level {
         if (isInside)
             return charSpeed[0][0][this.difficulty] /32;
         else
-            return 2*charSpeed[1][this.blue ? 1 : 0][this.difficulty] /32;
+            return 2*charSpeed[1][this.blueCount.isActive() ? 1 : 0][this.difficulty] /32;
     }
 
     eatPellet(type, x, y) {
         this.map[y][x] = 0;
         this.dots++;
-        this.dotTot--;
+        this.remainingDots--;
         switch (type) {
             case 0:
                 this.score += 10;
                 break;
             case 1:
                 this.score += 50;
-                this.blueCount = 500;
-                this.blue = true;
+                this.blueCount.start();
                 this.setSpeed(1);
                 this.modeSwitch(true);
                 break;
@@ -323,7 +314,6 @@ export class Level {
         this.blueTime.start();
     }
     eatFruit() {
-        this.fruit = false;
         this.fruitTime.reset();
         this.score += fruitPoint[this.level-1];
         this.scoreTime.start();
@@ -332,11 +322,14 @@ export class Level {
     press(key) {
         if (keyToDir.hasOwnProperty(key)) {
             this.player.press(keyToDir[key]);
-        } else switch(key) {
-            case '1': if (this.level < 12) this.level++; break;
-            case '2': this.lives++; break;
-            case '3': this.eatPellet(1, 0, 0);
-            default:
+        } else {
+            switch(key) {
+                case '1': if (this.level < 12) this.level++; break;
+                case '2': this.lives++; break;
+                case '3': this.eatPellet(1, 0, 0); break;
+                case '4': this.remainingDots = 0; break;
+                default:
+            }
         }
     }
 
@@ -344,7 +337,7 @@ export class Level {
         Arc.drawScaledSprite('map', 0, 0, 1/4);
 
         for (let i = 0; i < CONSTANTS.ROWS; i++)
-        for (let j = 0; j < CONSTANTS.COLS; j++) {
+        for (let j = 0; j < CONSTANTS.COLS; j++)
             switch (this.map[i][j]) {
                 case 2:
                     Arc.drawScaledSprite(Arc.sprites.dot[0], j+.5, i+.5, 1/16, .5, .5);
@@ -356,7 +349,6 @@ export class Level {
                     break;
                 default:
             }
-        }
 
         if (this.gameOver) {
             Arc.drawScaledSprite(Arc.sprites.gameOver, 11.75, 14.2, 1/8);
@@ -371,14 +363,14 @@ export class Level {
             }
             if (this.blueTime.isActive()) {
                 Arc.drawNumber(bluePoint[this.blueEat-1], this.player.x+.5, this.player.y+.5, 1/16, 1/16, 0.5, 0.5);
-                if (!this.dead) this.ghosts.forEach(ghost => {
+                if (this.dieTime.isDone()) this.ghosts.forEach(ghost => {
                     if (!this.player.checkGhost(ghost)) ghost.draw(ctx)
                 });
             } else {
                 this.player.draw(ctx);
-                if (!this.dead) this.ghosts.forEach(ghost => ghost.draw(ctx));
+                if (this.dieTime.isDone()) this.ghosts.forEach(ghost => ghost.draw(ctx));
             }
-            if (this.fruit) {
+            if (this.fruitTime.isActive()) {
                 Arc.drawScaledSprite(Arc.sprites.fruit[this.level-1], 14+1/8, 14+1/8, 1/8);
             }
         }
