@@ -8,11 +8,14 @@ Arc.V = class V {
     }
 
     // Manhattan distance
-    dist(other) {
+    manhat(other) {
         return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
     }
+    dist(other) {
+        return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+    }
     equals(other) {
-        return this.dist(other) === 0;
+        return this.x === other.x && this.y === other.y;
     }
     add(other) {
         return new V(this.x + other.x, this.y + other.y);
@@ -26,6 +29,9 @@ Arc.V = class V {
     angle(other) {
         let diff = (other) ? other.sub(this) : this;
         return Math.atan2(diff.y, diff.x);
+    }
+    clone() {
+        return new V(this.x, this.y);
     }
 }
 
@@ -283,12 +289,13 @@ Arc.loop = function() {
 
     let prevstamp = Date.now();
     let updateCallback = () => {
-        if (Date.now() > prevstamp + Arc.tickTime) {
-            prevstamp = Date.now();
+        let now = Date.now();
+        if (now > prevstamp + Arc.tickTime) {
+            prevstamp = now;
             Arc.update();
             repaint = true;
         }
-        setTimeout(updateCallback);
+        setTimeout(updateCallback, (prevstamp + Arc.tickTime) - now);
     }
     updateCallback();
 }

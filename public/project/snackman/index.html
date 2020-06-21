@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <script src="/lib/joy.js"></script>
     <div id="joystick"></div>
+    <script src="/lib/joy.js"></script>
     <script type="text/javascript">
       var joy = new JoyStick('joystick', {
         internalFillColor: '#aa0000',
@@ -28,6 +28,7 @@
         let y = joy.GetY();
         let dir = joy.GetDir();
 
+        // determine 'wasd' key to press from joystick direction
         let key = '';
         if (dir !== 'C') {
           if (Math.abs(x) > Math.abs(y)) {

@@ -1,5 +1,6 @@
-import Arc from '/lib/arcm.js';
-import { Character } from './character.js';
+import Arc from '/lib/modules/arcm.js'
+import { Counter } from '/lib/modules/counter.js'
+import { Character } from './character.js'
 
 export class Ghost extends Character {
     constructor(x, y, type, level) {
@@ -12,6 +13,7 @@ export class Ghost extends Character {
 
         this.tarX = this.x;
         this.tarY = this.y;
+        this.anim = new Counter();
     }
 
     targetBox() {
@@ -36,42 +38,14 @@ export class Ghost extends Character {
             case 0: // red targets player
                 break;
             case 1: // pink targets 3 spaces ahead
-                switch (pFace) {
-                    case 0:
-                        this.tarY -= 3;
-                        break;
-                    case 1:
-                        this.tarX += 3;
-                        break;
-                    case 2:
-                        this.tarY += 3;
-                        break;
-                    case 3:
-                        this.tarX -= 3;
-                        break;
-                    default:
-                }
+                [this.tarX, this.tarY] = this.addToFace(this.tarX, this.tarY, pFace, 3);
                 break;
             case 2: // cyan is complicated, uses red's position
-                switch (pFace) {
-                    case 0:
-                        this.tarY -= 2;
-                        break;
-                    case 1:
-                        this.tarX += 2;
-                        break;
-                    case 2:
-                        this.tarY += 2;
-                        break;
-                    case 3:
-                        this.tarX -= 2;
-                        break;
-                    default:
-                }
+                [this.tarX, this.tarY] = this.addToFace(this.tarX, this.tarY, pFace, 2);
                 this.tarX = (this.tarX-red.tileX)*2 + red.tileX;
                 this.tarY = (this.tarY-red.tileY)*2 + red.tileY;
                 break;
-            case 3:
+            case 3: // orange targets corner if closer than 6 tiles
                 if (dist(this.tileX, this.tileY, pX, pY) < 6) {
                     this.tarX = 0;
                     this.tarY = 20;
@@ -82,30 +56,27 @@ export class Ghost extends Character {
     }
 
     update() {
-        this.anim++;
+        this.anim.tick();
 
         this.tileX = Math.round(this.x);
         this.tileY = Math.round(this.y);
         this.inBox = bounded(this.tileX, 13, 15) && bounded(this.tileY, 10, 12);
 
+        // if centered, make decision on next move
         if (this.isCentered()) {
             if (this.inBox) {
                 if (this.eaten) {
-                    if (this.tileY > 10) {
-                        this.eaten = false;
-                        this.speed = this.level.getSpeed(1, this.blue);
-                        this.toExit = true;
-                    }
+                    // if eaten returns to box, revive
+                    if (this.tileY > 10) this.revive();
                 } else if (this.toExit) {
-                    if (this.tileX === 13)
-                        this.tryFace = 1;
-                    else if (this.tileX === 15)
-                        this.tryFace = 3;
-                    else
-                        this.tryFace = 0;
+                    // if leaving, navigate based on y
+                    if (this.tileX === 13) this.face = 1;
+                    else if (this.tileX === 15) this.face = 3;
+                    else this.face = 0;
                 } else {
-                    if ([1, 3].includes(this.face)) this.tryFace = 0;
-                    else this.tryFace = (this.face+2) % 4;
+                    // else, bounce based on y
+                    if (this.tileY === 11) this.face = 2;
+                    else if (this.tileY === 12) this.face = 0;
                 }
             } else {
                 if (this.eaten) {
@@ -113,110 +84,39 @@ export class Ghost extends Character {
                     this.speed = 3.5 /32;
                 }
 
-                let tryTurn = false;
-                switch (this.face) {
-                    case 0:
-                    case 2:
-                        if (this.tryMove(1) || this.tryMove(3)) {
-                            tryTurn = true;
-                        }
-                        break;
-                    case 1:
-                    case 3:
-                        if (this.tryMove(0) || this.tryMove(2)) {
-                            tryTurn = true;
-                        }
-                        break;
-                    default:
-                }
-
-                // console.log(this.type, 'centered', tryTurn);
-                this.tryFace = this.face;
-                if (tryTurn) {
+                // if unblocked in adjacent direction, try to turn
+                if (this.canMove((this.face+1)%4) || this.canMove((this.face+3)%4)) {
+                    let tryFace;
+                    // if blue, choose random option
                     if (this.blue) {
-                        let tryFace;
                         do {
                             tryFace = randi(4);
-                        } while (!this.tryMove(tryFace));
-                        this.tryFace = tryFace;
+                        } while (!this.canMove(tryFace));
+                    // else, choose option closest to target
                     } else {
-                        let shortest = 100;
-                        for (let i = 0; i < 4; i++) {
-                            let nextX = this.tileX, nextY = this.tileY;
-                            if (this.tryMove(i)) {
-                                switch (i) {
-                                    case 0: nextY -= 1; break;
-                                    case 1: nextX += 1; break;
-                                    case 2: nextY += 1; break;
-                                    case 3: nextX -= 1; break;
-                                    default:
-                                }
-
-                                let distance = dist(this.tarX, this.tarY, nextX, nextY)
-                                if (distance < shortest) {
-                                    if (this.tileX === 14 && (i === 0 || i === 2)) {
-                                        if (this.tarX === 14 && !this.eaten) {
-                                            shortest = distance;
-                                            this.tryFace = i;
-                                        }
-                                    } else {
-                                        shortest = distance;
-                                        this.tryFace = i;
-                                    }
+                        let min_dist = 100;
+                        for (let currFace = 0; currFace < 4; currFace++) {
+                            if (this.canMove(currFace)) {
+                                let [nextX, nextY] = this.addToFace(this.tileX, this.tileY, currFace, 1);
+                                let curr_dist = dist(this.tarX, this.tarY, nextX, nextY)
+                                if (curr_dist < min_dist) {
+                                    min_dist = curr_dist;
+                                    tryFace = currFace;
                                 }
                             }
                         }
                     }
+                    this.face = tryFace;
                 }
             }
 
-            if (this.eaten && this.tileX === 14 && this.tileY === 9)
-                this.tryFace = 2;
-
-            if (this.tryMove(this.tryFace)) {
-                this.face = this.tryFace;
-                switch (this.face) {
-                    case 0:
-                        this.y -= this.speed;
-                        this.x = this.tileX;
-                        break;
-                    case 1:
-                        this.x += this.speed;
-                        this.y = this.tileY;
-                        break;
-                    case 2:
-                        this.y += this.speed;
-                        this.x = this.tileX;
-                        break;
-                    case 3:
-                        this.x -= this.speed;
-                        this.y = this.tileY;
-                        break;
-                    default:
-                }
-            }
-        } else {
-            switch (this.face) {
-                case 0:
-                    this.y -= this.speed;
-                    this.x = this.tileX;
-                    break;
-                case 1:
-                    this.x += this.speed;
-                    this.y = this.tileY;
-                    break;
-                case 2:
-                    this.y += this.speed;
-                    this.x = this.tileX;
-                    break;
-                case 3:
-                    this.x -= this.speed;
-                    this.y = this.tileY;
-                    break;
-                default:
-            }
+            // if eaten & above box entrance, move down
+            if (this.eaten && this.tileX === 14 && this.tileY === 9) this.face = 2;
         }
 
+        this.doMove(this.face);
+
+        // wrap through tunnel
         if (this.tileX === 14) {
             if (this.tileY < 4 || this.tileY > 17) {
                 this.speed = this.level.getTunnelSpeed(true);
@@ -228,7 +128,7 @@ export class Ghost extends Character {
         }
     }
 
-    tryMove(tryFace) {
+    canMove(tryFace) {
         // allow return into box when eaten
         if (this.eaten && this.tileX === 14 && bounded(this.tileY, 9, 11)) return true;
         // if in box, move up/down
@@ -246,23 +146,7 @@ export class Ghost extends Character {
             if (this.tileY === 9 && bounded(this.tileX, 13, 15) && tryFace === 0) return false;
             // otherwise, allow direction switch from center of tile obeying walls
             if (this.isCentered()) {
-                let x = this.tileX,
-                    y = this.tileY;
-                switch (tryFace) {
-                    case 0:
-                        y = this.tileY - 1;
-                        break;
-                    case 1:
-                        x = this.tileX + 1;
-                        break;
-                    case 2:
-                        y = this.tileY + 1;
-                        break;
-                    case 3:
-                        x = this.tileX - 1;
-                        break;
-                    default:
-                }
+                let [x, y] = this.addToFace(this.tileX, this.tileY, tryFace, 1);
                 if (this.level.map[y][x] !== 1) return true;
             }
             return false;
@@ -285,7 +169,7 @@ export class Ghost extends Character {
         if (isBlue && !this.eaten) {
             // reverse direction
             this.face = (this.face+2) % 4;
-            this.anim = 0;
+            this.anim.reset();
         }
     }
 
@@ -303,20 +187,26 @@ export class Ghost extends Character {
         return this.eaten;
     }
 
+    revive() {
+        this.eaten = false;
+        this.speed = this.level.getSpeed(1, this.blue);
+        this.toExit = true;
+    }
+
     draw(ctx) {
         let eyes = Arc.sprites.eyes[this.face];
         let skin;
         if (this.blue) {
-            if (this.anim > 300) {
-                skin = Arc.sprites.blue[2*Math.floor(this.anim%50/25) + Math.floor(this.anim%20/10)];
+            if (this.anim.count > 300) {
+                // flash white
+                skin = Arc.sprites.blue[2*this.anim.modSplit(50, 2) + this.anim.modSplit(20, 2)];
             } else {
-                skin = Arc.sprites.blue[Math.floor(this.anim%20/10)];
+                skin = Arc.sprites.blue[0 + this.anim.modSplit(20, 2)];
             }
             Arc.drawScaledSprite(skin, this.x+.5, this.y+.5, 1/8, .5, .5);
         } else {
-            this.anim %= 20;
             if (!this.eaten) {
-                skin = Arc.sprites.ghost[this.type*2 + Math.floor(this.anim/10)]
+                skin = Arc.sprites.ghost[this.type*2 + this.anim.modSplit(20, 2)];
                 Arc.drawScaledSprite(skin, this.x+.5, this.y+.5, 1/8, .5, .5);
             }
             Arc.drawScaledSprite(eyes, this.x+.5, this.y+.5, 1/8, .5, .5);

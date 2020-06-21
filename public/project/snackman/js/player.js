@@ -1,5 +1,6 @@
-import Arc from '/lib/arcm.js';
-import { Character } from './character.js';
+import Arc from '/lib/modules/arcm.js'
+import { Counter, Countdown } from '/lib/modules/counter.js'
+import { Character } from './character.js'
 
 export class Player extends Character {
     constructor(x, y, level) {
@@ -10,10 +11,13 @@ export class Player extends Character {
 
         this.skip = 0;
         this.isDead = false;
+        this.anim = new Counter();
+        this.pelletTime = new Countdown();
     }
 
     update() {
-        this.anim++;
+        this.anim.tick();
+        this.pelletTime.tick();
         if (this.isDead) return;
 
         this.tileX = Math.round(this.x);
@@ -21,62 +25,27 @@ export class Player extends Character {
 
         if (this.tryMove(this.tryFace)) this.face = this.tryFace;
 
-        if (this.skip <= 1) {
+        if (this.pelletTime.isDone()) {
             if (this.isCentered()) {
                 // don't move if blocked by wall
-                if (this.tryMove(this.face)) {
-                    switch (this.face) {
-                        case 0:
-                            this.y -= this.speed;
-                            break;
-                        case 1:
-                            this.x += this.speed;
-                            break;
-                        case 2:
-                            this.y += this.speed;
-                            break;
-                        case 3:
-                            this.x -= this.speed;
-                            break;
-                        default:
-                    }
-                }
+                if (this.tryMove(this.face)) this.doMove(this.face);
             } else {
-                switch (this.face) {
-                    case 0:
-                        this.y -= this.speed;
-                        this.x = this.tileX;
-                        break;
-                    case 1:
-                        this.x += this.speed;
-                        this.y = this.tileY;
-                        break;
-                    case 2:
-                        this.y += this.speed;
-                        this.x = this.tileX;
-                        break;
-                    case 3:
-                        this.x -= this.speed;
-                        this.y = this.tileY;
-                        break;
-                    default:
-                }
+                this.doMove(this.face);
             }
         }
 
-        if (this.tileY < 0)
-            this.y = 20.49;
-        else if (this.tileY >= 21)
-            this.y = -.49;
-        else if (this.level.map[this.tileY][this.tileX] === 2) {
+        // wrap through tunnel
+        if (this.tileY < 0) this.y = 20.49;
+        else if (this.tileY >= 21) this.y = -.49;
+
+        // eat pellets
+        if (this.level.map[this.tileY][this.tileX] === 2) {
             this.level.eatPellet(0, this.tileX, this.tileY);
-            this.skip = 4;
+            this.pelletTime.start(2);
         } else if (this.level.map[this.tileY][this.tileX] === 3) {
             this.level.eatPellet(1, this.tileX, this.tileY);
-            this.skip = 8;
+            this.pelletTime.start(6);
         }
-
-        if (this.skip > 0) this.skip--;
     }
 
     tryMove(face) {
@@ -116,7 +85,7 @@ export class Player extends Character {
 
     kill() {
         this.isDead = true;
-        this.anim = 0;
+        this.anim.reset();
     }
 
     press(face) {
@@ -127,18 +96,15 @@ export class Player extends Character {
     draw(ctx) {
         let skin;
         if (this.isDead) {
-            if (this.anim < 104) {
-                skin = Arc.sprites.pDie[Math.floor(this.anim/15)];
+            if (this.anim.count < 104) {
+                skin = Arc.sprites.pDie[this.anim.divide(15)];
                 Arc.drawScaledSprite(skin, this.x+.5, this.y+.5, 1/8, .5, .5);
             }
         } else {
-            if (this.anim > 14)
-                this.anim = 0;
-
             if (this.face === 4)
                 skin = Arc.sprites.player;
             else
-                skin = Arc.sprites[`pMove${this.face}${Math.floor(this.anim/5)}`];
+                skin = Arc.sprites[`pMove${this.face}${this.anim.modSplit(15, 3)}`];
 
             Arc.drawScaledSprite(skin, this.x+.5, this.y+.5, 1/8, .5, .5);
         }

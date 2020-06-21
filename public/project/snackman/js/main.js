@@ -1,4 +1,5 @@
-import Arc from '/lib/arcm.js'
+import Arc from '/lib/modules/arcm.js'
+import { Counter } from '/lib/modules/counter.js'
 import { Level } from './level.js'
 import sprites from './sprites.js'
 
@@ -16,7 +17,6 @@ let background = '#070c0d';
 const STATE = {
     MENU: 'menu',
     PLAY: 'play',
-    PAUSE: 'pause',
     END: 'end'
 };
 
@@ -37,10 +37,11 @@ class GameState {
         document.addEventListener('keydown', event => this.handleKey(event.key, true), false);
         document.addEventListener('keyup', event => this.handleKey(event.key, false), false);
 
-        canvas.style.background = background;
-
-        this.board = Arc.add(this.draw.bind(this));
         this.highscore = this.fetchHighscore();
+        this.counter = new Counter();
+
+        canvas.style.background = background;
+        Arc.add(this.draw.bind(this));
 
         this.setState(STATE.MENU);
     }
@@ -50,7 +51,7 @@ class GameState {
             default:
         }
 
-        this.counter = 0;
+        this.counter.reset();
         switch (state) {
             case STATE.PLAY:
                 this.level = new Level(this.highscore);
@@ -59,13 +60,11 @@ class GameState {
         }
 
         this.state = state;
-        Arc.setGui(state);
         this.tick();
     }
 
     tick() {
-        this.counter++;
-
+        this.counter.tick();
         switch (this.state) {
             case STATE.PLAY:
                 this.level.update();
@@ -90,8 +89,8 @@ class GameState {
         }
         return 0;
     }
-
     saveHighscore(score) {
+        // save cookie for ten years
         document.cookie = `snackmanHighscore=${score}; max-age=${60*60*24*365*10}`;
     }
 
@@ -99,7 +98,7 @@ class GameState {
         switch (this.state) {
             case STATE.MENU:
                 Arc.drawScaledSprite('title', CONSTANTS.COLS/2, CONSTANTS.ROWS/2 - 3, 1/2, .5, .5);
-                if (this.counter%100 < 50) {
+                if (this.counter.modSplit(100, 2) === 0) {
                     Arc.drawScaledSprite('pressKey', CONSTANTS.COLS/2, CONSTANTS.ROWS*5/7, 1/8, .5, .5);
                 }
                 break;

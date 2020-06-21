@@ -1,7 +1,8 @@
-import Arc from '/lib/arcm.js';
-import { CONSTANTS } from './main.js';
-import { Player } from './player.js';
-import { Ghost } from './ghost.js';
+import Arc from '/lib/modules/arcm.js'
+import { Counter, Countdown } from '/lib/modules/counter.js'
+import { CONSTANTS } from './main.js'
+import { Player } from './player.js'
+import { Ghost } from './ghost.js'
 
 let bluePoint = [200, 400, 800, 1600];
 let fruitPoint = [100, 200, 400, 700, 1100, 1600, 2200, 3000, 4000, 5500, 7500, 10000];
@@ -38,7 +39,22 @@ export class Level {
         this.highscore = highscore;
         this.constructMap()
 
-        this.finishTime = 0;
+        this.startTime = new Countdown(100); // life start wait period
+        this.fruitTime = new Countdown(840); // fruit lifetime
+        this.scoreTime = new Countdown(300); // fruit score lifetime
+        this.blueTime = new Countdown(50); // pause when ghost is eaten
+        this.finishTime = new Countdown(200); // life end wait period
+
+        this.tickers = [
+            this.startTime,
+            this.fruitTime,
+            this.scoreTime,
+            this.blueTime,
+            this.finishTime
+        ];
+
+        this.counter = new Counter(); // generic, used for large dot blink
+        this.eatTime = new Counter(); // current life time
 
         this.lives = 2;
         this.score = 0;
@@ -68,42 +84,32 @@ export class Level {
     }
 
     nextLevel() {
-        this.counter = 0;
+        this.counter.reset();
         if (this.level < 12) {
             this.level++;
             this.lives++;
         }
-        this.mode = this.modeCount = 0;
-        this.blue = false;
-        this.blueCount = this.blueTime = this.blueEat = 0;
-        this.startTime = 100;
-        this.dots = 0;
+        this.blueEat = 0;
         this.dotTot = 197;
-        this.out = 0;
-        this.eatTime = 0;
         this.levelDeath = false;
         this.fruits = 0;
-        this.fruit = false;
-        this.fruitTime = 0;
-        this.scoreTime = 0;
 
         if (this.level === 1) this.difficulty = 0;
         else if (this.level > 1 && this.level < 5) this.difficulty = 1;
         else this.difficulty = 2;
 
-        this.regen();
-        this.modeSwitch(false);
-        this.setSpeed(0);
+        this.genDots();
+        this.genStart();
     }
 
-    regen() {
-        this.player = new Player(14, 16, this);
-        this.ghosts = [
-            new Ghost(14, 9, 0, this),
-            new Ghost(14, 12, 1, this),
-            new Ghost(13, 11, 2, this),
-            new Ghost(15, 11, 3, this)];
+    nextLife() {
+        this.dead = false;
+        this.levelDeath = true;
 
+        this.genStart();
+    }
+
+    genDots() {
         for (let i = 1; i < 28; i++)
         for (let j = 2; j < 20; j++)
             if (this.map[j][i] === 0) this.map[j][i] = 2;
@@ -128,8 +134,36 @@ export class Level {
         this.map[14][26] = 3;
     }
 
+    genStart() {
+        this.mode = 0;
+        this.modeCount = 0;
+        this.blue = false;
+        this.blueCount = 0;
+        this.dots = 0;
+        this.out = 0;
+        this.fruit = false;
+
+        this.tickers.forEach(ticker => ticker.reset());
+        this.startTime.start();
+
+        this.player = new Player(14, 16, this);
+        this.ghosts = [
+            new Ghost(14, 9, 0, this),
+            new Ghost(14, 12, 1, this),
+            new Ghost(13, 11, 2, this),
+            new Ghost(15, 11, 3, this)];
+
+        this.modeSwitch(false);
+        this.setSpeed(false);
+    }
+
     update() {
-        if (!this.gameOver && this.finishTime === 0 && this.blueTime === 0) {
+        this.tickers.forEach(ticker => ticker.tick());
+
+        if (!this.gameOver
+            && this.startTime.isDone()
+            && this.blueTime.isDone()
+            && this.finishTime.isDone()) {
             // snackman death animation
             if (this.dieTime > 0) {
                 this.player.update();
@@ -140,12 +174,9 @@ export class Level {
                     } else
                         this.nextLife();
                 }
-            // life start animation
-            } else if (this.startTime > 0) {
-                this.startTime--;
             // regular events
             } else {
-                this.counter++;
+                this.counter.tick();
                 // player update
                 this.player.update();
                 // ghosts update
@@ -178,11 +209,10 @@ export class Level {
                 if ((this.dotTot === 140 && this.fruits === 0)
                         || (this.dotTot === 60 && this.fruits === 1)) {
                     this.fruit = true;
-                    this.fruitTime = 840;
+                    this.fruitTime.start();
                     this.fruits++;
-                } else if (this.fruitTime > 0) {
-                    this.fruitTime--;
-                    if (this.fruitTime === 0) this.fruit = false;
+                } else if (this.fruitTime.isDone()) {
+                    this.fruit = false;
                 }
 
                 if (!this.dead) {
@@ -211,78 +241,37 @@ export class Level {
                             if (afterCount[i] <= this.dots) {
                                 this.ghosts[i].exit();
                                 this.out++;
-                                this.eatTime = 0;
+                                this.eatTime.reset();
                             }
                     } else {
                         for (let i = this.out; i < 4; i++)
                             if (exitCount[this.difficulty][i] <= this.dots) {
                                 this.ghosts[i].exit();
                                 this.out++;
-                                this.eatTime = 0;
+                                this.eatTime.reset();
                                 break;
                             }
                     }
 
-                    if (this.eatTime === 84*exitTime[this.difficulty]) {
+                    if (this.eatTime.count === 84*exitTime[this.difficulty]) {
                         if (this.out < 4) {
                             this.ghosts[this.out].exit();
-                            this.eatTime = 0;
+                            this.eatTime.reset();
                             this.out++;
                         }
-                    } else {
-                        this.eatTime++;
                     }
 
-                    if (this.scoreTime > 0)
-                        this.scoreTime--;
-
                     if (this.dotTot === 0) {
-                        this.finishTime = 200;
+                        this.finishTime.start();
                         this.player.anim = 0;
                     }
                 }
             }
-        } else {
-            if (this.finishTime > 0) {
-                this.finishTime--;
-                if (this.finishTime === 0)
-                    this.nextLevel();
-            }
-            if (this.blueTime > 0) {
-                this.blueTime--;
-            }
+        } else if (this.finishTime.isTriggered()) {
+            this.nextLevel();
         }
 
         if (this.score > this.highscore) this.highscore = this.score;
-    }
-
-    nextLife() {
-        this.dead = false;
-        this.levelDeath = true;
-        this.mode = 0;
-        this.modeCount = 0;
-        this.blue = false;
-        this.blueCount = 0;
-        this.blueTime = 0;
-        this.startTime = 100;
-        this.dots = 0;
-        this.out = 0;
-        this.eatTime = 0;
-        this.fruit = false;
-        this.fruitTime = 0;
-        this.scoreTime = 0;
-
-        delete this.player;
-        delete this.ghosts;
-        this.player = new Player(14, 16, this);
-        this.ghosts = [
-            new Ghost(14, 9, 0, this),
-            new Ghost(14, 12, 1, this),
-            new Ghost(13, 11, 2, this),
-            new Ghost(15, 11, 3, this)];
-
-        this.modeSwitch(false);
-        this.setSpeed(false);
     }
 
     modeSwitch(isBlue) {
@@ -331,17 +320,16 @@ export class Level {
     eatBlue() {
         this.blueEat++;
         this.score += bluePoint[this.blueEat-1];
-        this.blueTime = 50;
+        this.blueTime.start();
     }
     eatFruit() {
         this.fruit = false;
-        this.fruitTime = 0;
+        this.fruitTime.reset();
         this.score += fruitPoint[this.level-1];
-        this.scoreTime = 300;
+        this.scoreTime.start();
     }
 
     press(key) {
-        console.log(key);
         if (keyToDir.hasOwnProperty(key)) {
             this.player.press(keyToDir[key]);
         } else switch(key) {
@@ -362,8 +350,9 @@ export class Level {
                     Arc.drawScaledSprite(Arc.sprites.dot[0], j+.5, i+.5, 1/16, .5, .5);
                     break;
                 case 3:
-                    if (this.counter%30 < 15)
+                    if (this.counter.modSplit(30, 2) === 0) {
                         Arc.drawScaledSprite(Arc.sprites.dot[1], j+.5, i+.5, 1/8, .5, .5);
+                    }
                     break;
                 default:
             }
@@ -371,12 +360,16 @@ export class Level {
 
         if (this.gameOver) {
             Arc.drawScaledSprite(Arc.sprites.gameOver, 11.75, 14.2, 1/8);
-        } else if (this.finishTime > 0) {
+        } else if (this.finishTime.isActive()) {
             this.player.draw(ctx);
         } else {
-            if (this.startTime > 0) Arc.drawScaledSprite(Arc.sprites.ready, 12.925, 14.2, 1/8);
-            if (this.scoreTime > 0) Arc.drawNumber(fruitPoint[this.level-1], 14.5, 14.5, 1/16, 1/16, 0.5, 0.5);
-            if (this.blueTime > 0) {
+            if (this.startTime.isActive()) {
+                Arc.drawScaledSprite(Arc.sprites.ready, 12.925, 14.2, 1/8);
+            }
+            if (this.scoreTime.isActive()) {
+                Arc.drawNumber(fruitPoint[this.level-1], 14.5, 14.5, 1/16, 1/16, 0.5, 0.5);
+            }
+            if (this.blueTime.isActive()) {
                 Arc.drawNumber(bluePoint[this.blueEat-1], this.player.x+.5, this.player.y+.5, 1/16, 1/16, 0.5, 0.5);
                 if (!this.dead) this.ghosts.forEach(ghost => {
                     if (!this.player.checkGhost(ghost)) ghost.draw(ctx)
@@ -385,14 +378,18 @@ export class Level {
                 this.player.draw(ctx);
                 if (!this.dead) this.ghosts.forEach(ghost => ghost.draw(ctx));
             }
-            if (this.fruit) Arc.drawScaledSprite(Arc.sprites.fruit[this.level-1], 14+1/8, 14+1/8, 1/8);
+            if (this.fruit) {
+                Arc.drawScaledSprite(Arc.sprites.fruit[this.level-1], 14+1/8, 14+1/8, 1/8);
+            }
         }
 
-        for (let i = 0; i < this.level; i++)
+        for (let i = 0; i < this.level; i++) {
             Arc.drawScaledSprite(Arc.sprites.fruit[i], 27+1/6 - i*5/6, 20+1/8, 1/8);
+        }
 
-        for (let i = 1; i < this.lives; i++)
+        for (let i = 1; i < this.lives; i++) {
             Arc.drawScaledSprite(Arc.sprites.pMove32, 7/6 + i, 20+1/8, 1/8);
+        }
 
         Arc.drawScaledSprite(Arc.sprites.score, 6, 1.5, 1/8, 1, .5);
         Arc.drawNumber(this.score, 6.5, 1.5, 1/8, 1/8, 0, 0.5);
