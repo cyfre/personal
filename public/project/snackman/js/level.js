@@ -59,6 +59,7 @@ export class Level {
 
         this.counter = new Counter(); // generic, used for large dot blink
         this.eatTime = new Counter(); // current life time
+        this.modeCount = new Counter(); // for scatter modes
 
         this.lives = 2;
         this.score = 0;
@@ -138,12 +139,13 @@ export class Level {
 
     genStart() {
         this.mode = 0;
-        this.modeCount = 0;
         this.dots = 0;
         this.out = 0;
 
         this.tickers.forEach(ticker => ticker.reset());
         this.startTime.start();
+        this.eatTime.reset();
+        this.modeCount.reset();
 
         this.player = new Player(14, 16, this);
         this.ghosts = [
@@ -152,13 +154,14 @@ export class Level {
             new Ghost(13, 11, 2, this),
             new Ghost(15, 11, 3, this)];
 
-        this.modeSwitch(false);
+        this.setScatter(false);
         this.setSpeed(false);
     }
 
     update() {
         this.tickers.forEach(ticker => ticker.tick());
 
+        // skip update during these conditions
         if (this.gameOver
                 || this.startTime.isActive()
                 || this.blueTime.isActive()
@@ -190,7 +193,7 @@ export class Level {
                 }
                 ghost.update();
                 // check collision with player
-                if (!ghost.isEaten() && this.player.checkGhost(ghost)) {
+                if (!ghost.eaten && this.player.checkGhost(ghost)) {
                     if (ghost.blue) {
                         ghost.eat();
                         this.eatBlue();
@@ -216,16 +219,16 @@ export class Level {
                 if (this.blueCount.isDone()) {
                     if (this.blueCount.isTriggered()) {
                         this.blueEat = 0;
-                        this.modeSwitch(true);
+                        this.setBlue(false);
                         this.setSpeed(0);
                     }
 
-                    if (this.modeCount === 84*modeTime[this.difficulty][this.mode]) {
+                    if (this.modeCount.count === 84*modeTime[this.difficulty][this.mode]) {
                         this.mode++;
-                        this.modeSwitch(false);
-                        this.modeCount = 0;
+                        this.setScatter(this.mode%2 === 0);
+                        this.modeCount.reset()
                     } else {
-                        this.modeCount++;
+                        this.modeCount.tick();
                     }
                 }
 
@@ -266,10 +269,11 @@ export class Level {
         if (this.score > this.highscore) this.highscore = this.score;
     }
 
-    modeSwitch(isBlue) {
-        this.ghosts.forEach(ghost => {
-            isBlue ? ghost.setBlue(this.blueCount.isActive()) : ghost.setMode(this.mode%2 === 0);
-        });
+    setBlue(isBlue) {
+        this.ghosts.forEach(ghost => !ghost.eaten && ghost.setBlue(isBlue));
+    }
+    setScatter(doScatter) {
+        this.ghosts.forEach(ghost => ghost.setScatter(doScatter));
     }
 
     setSpeed(isBlue) {
@@ -280,9 +284,7 @@ export class Level {
         );
     }
     getSpeed(charType, isBlue) {
-        if (isBlue)
-            return 2*charSpeed[charType][1][this.difficulty] /32;
-        return 2*charSpeed[charType][0][this.difficulty] /32;
+        return 2*charSpeed[charType][isBlue ? 1 : 0][this.difficulty] /32;
     }
     getTunnelSpeed(isInside) {
         if (isInside)
@@ -291,7 +293,7 @@ export class Level {
             return 2*charSpeed[1][this.blueCount.isActive() ? 1 : 0][this.difficulty] /32;
     }
 
-    eatPellet(type, x, y) {
+    eatDot(type, x, y) {
         this.map[y][x] = 0;
         this.dots++;
         this.remainingDots--;
@@ -303,7 +305,7 @@ export class Level {
                 this.score += 50;
                 this.blueCount.start();
                 this.setSpeed(1);
-                this.modeSwitch(true);
+                this.setBlue(true);
                 break;
             default:
         }
@@ -326,7 +328,7 @@ export class Level {
             switch(key) {
                 case '1': if (this.level < 12) this.level++; break;
                 case '2': this.lives++; break;
-                case '3': this.eatPellet(1, 0, 0); break;
+                case '3': this.eatDot(1, 0, 0); break;
                 case '4': this.remainingDots = 0; break;
                 default:
             }

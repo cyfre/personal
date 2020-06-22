@@ -40,10 +40,10 @@ export class Player extends Character {
 
         // eat pellets
         if (this.level.map[this.tileY][this.tileX] === 2) {
-            this.level.eatPellet(0, this.tileX, this.tileY);
+            this.level.eatDot(0, this.tileX, this.tileY);
             this.pelletTime.start(2);
         } else if (this.level.map[this.tileY][this.tileX] === 3) {
-            this.level.eatPellet(1, this.tileX, this.tileY);
+            this.level.eatDot(1, this.tileX, this.tileY);
             this.pelletTime.start(6);
         }
     }

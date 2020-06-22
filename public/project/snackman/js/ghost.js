@@ -158,7 +158,7 @@ export class Ghost extends Character {
         return (tryFace+2) % 4 === this.face;
     }
 
-    setMode(isScatter) {
+    setScatter(isScatter) {
         this.scatter = isScatter;
         // reverse direction
         if (!this.eaten) this.face = (this.face+2) % 4;
@@ -181,10 +181,6 @@ export class Ghost extends Character {
         this.eaten = true;
         this.blue = false;
         this.toExit = false;
-    }
-
-    isEaten() {
-        return this.eaten;
     }
 
     revive() {
