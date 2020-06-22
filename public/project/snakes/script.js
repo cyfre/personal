@@ -71,7 +71,7 @@ class Entity extends Drawn {
     collide(ents) {}
 
     hits(other) {
-        return this.position.dist(other.position) < 1;
+        return this.position.manhat(other.position) < 1;
     }
 
     safe() {

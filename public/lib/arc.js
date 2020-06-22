@@ -8,11 +8,14 @@
         }
 
         // Manhattan distance
-        dist(other) {
+        manhat(other) {
             return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
         }
+        dist(other) {
+            return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+        }
         equals(other) {
-            return this.dist(other) === 0;
+            return this.x === other.x && this.y === other.y;
         }
         add(other) {
             return new V(this.x + other.x, this.y + other.y);
@@ -26,6 +29,9 @@
         angle(other) {
             let diff = (other) ? other.sub(this) : this;
             return Math.atan2(diff.y, diff.x);
+        }
+        clone() {
+            return new V(this.x, this.y);
         }
     }
 
@@ -76,9 +82,9 @@
     Arc.GraphicsObject = class GraphicsObject extends Arc.Painted {
         constructor(position, angle, scale, zIndex) {
             super(zIndex);
-            this.position = position || new V(0, 0);
+            this.position = position || new Arc.V(0, 0);
             this.angle = angle || 0;
-            this.scale = scale || new V(1, 1);
+            this.scale = scale || new Arc.V(1, 1);
 
             this.children = new Set();
         }
@@ -174,7 +180,7 @@
             let contentScale = Arc.scale || Math.pow(2, Math.floor(Math.log2(canvasScale)));
             canvas.width = Arc.width * contentScale;
             canvas.height = Arc.height * contentScale;
-            Arc.scene.scale = new V(contentScale, contentScale);
+            Arc.scene.scale = new Arc.V(contentScale, contentScale);
 
             Arc.ctx.imageSmoothingEnabled = false;
             Arc.ctx.drawImage(save, 0, 0, canvas.width, canvas.height);
@@ -236,6 +242,16 @@
         Arc.ctx.drawImage(...sprite,
             x - xLerp*width, y - yLerp*height, width, height);
     }
+    Arc.drawScaledSprite = function(sprite, x, y, scale, xLerp=0, yLerp=0) {
+        if (typeof(sprite) === 'string') {
+            sprite = Arc.sprites[sprite];
+        }
+        let width = scale * sprite[3];
+        let height = scale * sprite[4];
+
+        Arc.ctx.drawImage(...sprite,
+            x - xLerp*width, y - yLerp*height, width, height);
+    }
 
     Arc.drawNumber = function(num, x, y, xScale, yScale, xLerp=0, yLerp=0) {
         let sprites = String(num).split('').map(digit => Arc.sprites[digit]);
@@ -273,12 +289,13 @@
 
         let prevstamp = Date.now();
         let updateCallback = () => {
-            if (Date.now() > prevstamp + Arc.tickTime) {
-                prevstamp = Date.now();
+            let now = Date.now();
+            if (now > prevstamp + Arc.tickTime) {
+                prevstamp = now;
                 Arc.update();
                 repaint = true;
             }
-            setTimeout(updateCallback);
+            setTimeout(updateCallback, (prevstamp + Arc.tickTime) - now);
         }
         updateCallback();
     }
