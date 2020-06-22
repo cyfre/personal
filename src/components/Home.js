@@ -219,6 +219,10 @@ const Projects = () => (
     <Description>
       A shifting Delaunay triangulation
     </Description>
+    <Link to="/tree">tree</Link>
+    <Description>
+      A simple 3d tree created in Blender
+    </Description>
 
   </ProjectList>
   </Fragment>
