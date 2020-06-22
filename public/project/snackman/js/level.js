@@ -40,23 +40,26 @@ export class Level {
         this.constructMap()
 
         this.startTime = new Countdown(100); // life start wait period
-        this.fruitTime = new Countdown(840); // fruit lifetime
-        this.scoreTime = new Countdown(300); // fruit score lifetime
         this.blueTime = new Countdown(50); // pause when ghost is eaten
         this.finishTime = new Countdown(200); // life end wait period
-        this.blueCount = new Countdown(500); // period for blue ghosts
-        this.dieTime = new Countdown(250); // death animation
-
-        this.tickers = [
+        this.pausers = [
             this.startTime,
-            this.fruitTime,
-            this.scoreTime,
             this.blueTime,
             this.finishTime,
+        ]
+        
+        this.fruitTime = new Countdown(840); // fruit lifetime
+        this.scoreTime = new Countdown(300); // fruit score lifetime
+        this.blueCount = new Countdown(500); // period for blue ghosts
+        this.dieTime = new Countdown(250); // death animation
+        this.tickers = [
+            this.fruitTime,
+            this.scoreTime,
             this.blueCount,
             this.dieTime
         ];
 
+        // special cases
         this.counter = new Counter(); // generic, used for large dot blink
         this.eatTime = new Counter(); // current life time
         this.modeCount = new Counter(); // for scatter modes
@@ -142,6 +145,7 @@ export class Level {
         this.dots = 0;
         this.out = 0;
 
+        this.pausers.forEach(pauser => pauser.reset());
         this.tickers.forEach(ticker => ticker.reset());
         this.startTime.start();
         this.eatTime.reset();
@@ -159,15 +163,14 @@ export class Level {
     }
 
     update() {
-        this.tickers.forEach(ticker => ticker.tick());
+        this.pausers.forEach(pauser => pauser.tick());
 
         // skip update during these conditions
-        if (this.gameOver
-                || this.startTime.isActive()
-                || this.blueTime.isActive()
-                || this.finishTime.isActive()) {
+        if (this.gameOver || this.pausers.some(pauser => pauser.isActive())) {
             return;
         }
+
+        this.tickers.forEach(ticker => ticker.tick());
 
         if (this.finishTime.isTriggered()) {
             this.nextLevel();
