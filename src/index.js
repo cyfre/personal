@@ -14,13 +14,11 @@ const App = () => (
   <Router>
     <Switch>
       <Route exact path='/(|projects|about)' component={Home} />
-      <Route path='*' component={() => (
-        <Fragment>
-          <Header />
-          <Main />
-          <Footer />
-        </Fragment>
-      )} />
+      <Route path='*'>
+        <Header />
+        <Main />
+        <Footer />
+      </Route>
     </Switch>
   </Router>
 );

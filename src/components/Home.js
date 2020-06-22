@@ -33,7 +33,7 @@ const Home = styled.div`
     color: var(--light);
   }
 
-  & p > a {
+  & p > a, & span > a {
     color: #c0fbcd; // #6e7f90
     text-decoration: none;
     &:hover {
@@ -167,16 +167,31 @@ const Description = styled.p`
 const ProjectList = styled.div`
   & > a {
     font-size: .8rem;
-    display: block;
+    // display: block;
     color: var(--light);
     text-decoration: underline;
+    width: 40%;
+    display: inline-block;
+    float: left;
     &:hover {
       color: var(--light);
     }
   }
-  & > p {
+  & > span, & > p {
     font-size: .6rem;
     margin-bottom: .67rem;
+    // margin-right: .5rem;
+    // position: relative;
+    // left: .5rem;
+    width: 60%;
+    display: inline-block;
+    margin-top: .1rem;
+    vertical-align: top;
+
+    &::after {
+      content: '';
+      display: block;
+    }
   }
 `
 
