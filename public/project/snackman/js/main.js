@@ -21,14 +21,13 @@ const STATE = {
 };
 
 let canvas = document.querySelector('#gameCanvas');
-Arc.init(canvas, CONSTANTS.COLS, CONSTANTS.ROWS);
-
-Promise.all([
-    Arc.loadSheet('sheet.png', sprites)
-]).then(() => {
-    Arc.loop();
-    new GameState();
-});
+setTimeout(() => {
+    Arc.init(canvas, CONSTANTS.COLS, CONSTANTS.ROWS);
+    Arc.loadSheet('sheet.png', sprites).then(() => {
+        Arc.loop();
+        new GameState();
+    });
+}, 150);
 
 class GameState {
     constructor() {
