@@ -3,6 +3,12 @@
     width: 100%;
 }
 
+#canvas {
+    /* background: radial-gradient(white, rgb(100, 100, 100)); */
+    background: radial-gradient(rgb(40, 40, 40), rgb(10, 10, 10));
+    /* rgb(244, 241, 232) */
+}
+
 #modelList {
     position: absolute;
     top: .5rem;

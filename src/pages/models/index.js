@@ -11,7 +11,8 @@ var camera, scene, renderer, controls, loader;
 function init() {
     renderer = new THREE.WebGLRenderer({
         canvas: document.querySelector('#canvas'),
-        antialias: true
+        antialias: true,
+        alpha: true,
     });
     renderer.setPixelRatio(window.devicePixelRatio);
     let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
@@ -28,23 +29,41 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.minDistance = SCALE/2;
     controls.maxDistance = SCALE*5;
-    controls.maxPolarAngle = Math.PI / 2 - .1;
+    // controls.maxPolarAngle = Math.PI / 2 - .1;
 
-    scene.add(new THREE.AmbientLight(0xd9b3ff));
-    var directionalLight = new THREE.DirectionalLight(0xffffbf, 2);
-    directionalLight.position.set(-0.5, 0.5, -0.75);
+    // scene.add(new THREE.AmbientLight(0xd9b3ff));
+    scene.add(new THREE.AmbientLight(0xffffff, .3));
+    var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 0);
     directionalLight.position.normalize();
     scene.add(directionalLight);
-    var directionalLight = new THREE.DirectionalLight(0x3300ff, 1);
-    directionalLight.position.set(0.5, -0.5, -1.5);
+    var directionalLight = new THREE.DirectionalLight(0xad9ede, 4);
+    directionalLight.position.set(1, .2, 0);
     directionalLight.position.normalize();
     scene.add(directionalLight);
+    var directionalLight = new THREE.DirectionalLight(0x9ecdde, 1);
+    directionalLight.position.set(-1, -.5, 0);
+    directionalLight.position.normalize();
+    scene.add(directionalLight);
+
+    // var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    // directionalLight.position.set(-0.5, -0.5, 0);
+    // directionalLight.position.normalize();
+    // scene.add(directionalLight);
+    // var directionalLight = new THREE.DirectionalLight(0xffffbf, 1);
+    // directionalLight.position.set(-0.5, 0.5, -0.75);
+    // directionalLight.position.normalize();
+    // scene.add(directionalLight);
+    // var directionalLight = new THREE.DirectionalLight(0x3300ff, 1);
+    // directionalLight.position.set(0.5, -0.5, -1.5);
+    // directionalLight.position.normalize();
+    // scene.add(directionalLight);
 
     // from https://threejsfundamentals.org/threejs/lessons/threejs-load-gltf.html
     {
-        const skyColor = 0xB1E1FF;  // light blue
-        const groundColor = 0xB97A20;  // brownish orange
-        const intensity = 2.;
+        const skyColor = 0xB1E1FF; //0xB1E1FF;  // light blue
+        const groundColor = 0xB97A20; //0xB97A20;  // brownish orange
+        const intensity = .5;
         const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
         scene.add(light);
     }
@@ -52,11 +71,11 @@ function init() {
     var circle = new THREE.Mesh(
         new THREE.CircleBufferGeometry( SCALE/4, 16 ),
         new THREE.MeshBasicMaterial({
-            color: 0x0c0c0c,
+            color: 0x3c3c3c, // color: 0x0c0c0c,
             side: THREE.DoubleSide
         }));
     circle.lookAt(0, 1, 0);
-    scene.add( circle );
+    // scene.add( circle );
 
     window.addEventListener('resize', onWindowResize, false);
     onWindowResize();
@@ -88,6 +107,14 @@ function loadModel(name) {
             `/project/models/${name}.glb`,
             (gltf) => {
                 model = gltf.scene;
+
+                const box = new THREE.Box3().setFromObject( model );
+                const center = box.getCenter( new THREE.Vector3() );
+                model.position.x += ( model.position.x - center.x );
+                model.position.y += ( model.position.y - center.y );
+                model.position.z += ( model.position.z - center.z );
+
+                console.log(model);
                 scene.add(model);
             }
         );
