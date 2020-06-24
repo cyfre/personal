@@ -1,4 +1,5 @@
-import React, { useEffect, Fragment } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
+import { useRouteMatch } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -78,38 +79,54 @@ function onWindowResize() {
     renderer.setSize(bounds.width, bounds.height);
 }
 
+let modelNames = ['tree', 'palm'];
 let model = false;
 function loadModel(name) {
     model && scene.remove(model);
-    loader.load(
-        `/project/models/${name}.glb`,
-        (gltf) => {
-            model = gltf.scene;
-            scene.add(model);
-        }
-    );
+    if (name && modelNames.includes(name)) {
+        loader.load(
+            `/project/models/${name}.glb`,
+            (gltf) => {
+                model = gltf.scene;
+                scene.add(model);
+            }
+        );
+    }
 }
 
-let modelNames = ['tree', 'palm'];
-export default () => {
+export default (props) => {
+    let match = useRouteMatch('/models/:initialModel');
+    let [ modelName, setModelName ] = useState('');
+
     useEffect(() => {
         stop = false
         init();
         animate();
-        loadModel(modelNames[0]);
+
+        let initialModel = match && match.params.initialModel;
+        if (!initialModel || modelNames.includes[initialModel]) {
+            initialModel = modelNames[0];
+        }
+        setModelName(initialModel);
+        
         return () => {
             stop = true;
             window.removeEventListener('resize', onWindowResize, false)
         }
     }, []);
 
+    useEffect(() => {
+        loadModel(modelName);
+        window.history.replaceState({}, null, `/models/${modelName}`);
+    }, [modelName]);
+
     return (
         <Fragment>
             <div id="canvasContainer">
                 <canvas id="canvas"/>
             </div>
-            <select id="modelList" onChange={e => loadModel(e.target.value)}>
-                {modelNames.map(name => <option value={name}>{name}</option>)}
+            <select id="modelList" value={modelName} onChange={e => setModelName(e.target.value)}>
+                {modelNames.map(name => <option value={name} key={name}>{name}</option>)}
             </select>
         </Fragment>
     )
