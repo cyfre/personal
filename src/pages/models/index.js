@@ -21,7 +21,7 @@ function init() {
     camera = new THREE.PerspectiveCamera( 70, bounds.width / bounds.height, 1, 1000 );
     camera.position.x = SCALE*2/3;
     camera.position.z = 0;
-    camera.position.y = SCALE*1/4;
+    camera.position.y = SCALE*1/12;
 
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
