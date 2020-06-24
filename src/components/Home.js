@@ -234,9 +234,9 @@ const Projects = () => (
     <Description>
       A shifting Delaunay triangulation
     </Description>
-    <Link to="/tree">tree</Link>
+    <Link to="/models">models</Link>
     <Description>
-      A simple 3d tree created in Blender
+      Simple 3d trees & things created in Blender
     </Description>
 
   </ProjectList>

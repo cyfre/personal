@@ -19,8 +19,8 @@ function init() {
     renderer.setSize(bounds.width, bounds.height);
 
     camera = new THREE.PerspectiveCamera( 70, bounds.width / bounds.height, 1, 1000 );
-    camera.position.x = -SCALE/2;
-    camera.position.z = -SCALE/2;
+    camera.position.x = SCALE*2/3;
+    camera.position.z = 0;
     camera.position.y = SCALE*2/5;
 
     scene = new THREE.Scene();
@@ -64,7 +64,7 @@ function init() {
 
     var loader = new GLTFLoader();
     loader.load(
-        '/project/tree/tree.glb',
+        '/project/models/tree.glb',
         (gltf) => {
             console.log(gltf);
             scene.add(gltf.scene);
