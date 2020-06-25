@@ -5,7 +5,10 @@ const db = require('./db');
 
 const app = express();
 const port = 5000;
-app.use(bodyParser.json()); // parses JSON requests
+app.use(bodyParser.json({
+    extended: true,
+    limit: '50mb'
+})); // parses JSON requests
 
 // log errors
 app.use((err, req, res, next) => {
@@ -21,6 +24,7 @@ app.use((req, res, next) => {
 
 app.use('/api/turt', require('./turt').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
+app.use('/api/cityhall', require('./cityhall').routes);
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));
