@@ -6,6 +6,8 @@
 #canvas {
     /* background: radial-gradient(white, rgb(100, 100, 100)); */
     background: radial-gradient(rgb(40, 40, 40), rgb(10, 10, 10));
+    background: radial-gradient(rgb(90, 90, 90), rgb(40, 40, 40));
+    background: radial-gradient(rgb(240, 240, 240), rgb(140, 140, 140));
     /* rgb(244, 241, 232) */
 }
 

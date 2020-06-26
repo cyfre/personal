@@ -27,55 +27,32 @@ function init() {
     scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
 
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = SCALE/2;
+    controls.minDistance = SCALE/5;
     controls.maxDistance = SCALE*5;
-    // controls.maxPolarAngle = Math.PI / 2 - .1;
 
     // scene.add(new THREE.AmbientLight(0xd9b3ff));
-    scene.add(new THREE.AmbientLight(0xffffff, .3));
+    scene.add(new THREE.AmbientLight(0xffffff, .125));
     var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(1, 1, 0);
     directionalLight.position.normalize();
     scene.add(directionalLight);
-    var directionalLight = new THREE.DirectionalLight(0xad9ede, 4);
+    var directionalLight = new THREE.DirectionalLight(0xad9ede, .5);
     directionalLight.position.set(1, .2, 0);
     directionalLight.position.normalize();
     scene.add(directionalLight);
-    var directionalLight = new THREE.DirectionalLight(0x9ecdde, 1);
+    var directionalLight = new THREE.DirectionalLight(0x9ecdde, .25);
     directionalLight.position.set(-1, -.5, 0);
     directionalLight.position.normalize();
     scene.add(directionalLight);
 
-    // var directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    // directionalLight.position.set(-0.5, -0.5, 0);
-    // directionalLight.position.normalize();
-    // scene.add(directionalLight);
-    // var directionalLight = new THREE.DirectionalLight(0xffffbf, 1);
-    // directionalLight.position.set(-0.5, 0.5, -0.75);
-    // directionalLight.position.normalize();
-    // scene.add(directionalLight);
-    // var directionalLight = new THREE.DirectionalLight(0x3300ff, 1);
-    // directionalLight.position.set(0.5, -0.5, -1.5);
-    // directionalLight.position.normalize();
-    // scene.add(directionalLight);
-
     // from https://threejsfundamentals.org/threejs/lessons/threejs-load-gltf.html
     {
-        const skyColor = 0xB1E1FF; //0xB1E1FF;  // light blue
-        const groundColor = 0xB97A20; //0xB97A20;  // brownish orange
+        const skyColor = 0xffffff; //0xB1E1FF;  // light blue
+        const groundColor = 0xffffff; //0xB97A20;  // brownish orange
         const intensity = .5;
         const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
         scene.add(light);
     }
-
-    var circle = new THREE.Mesh(
-        new THREE.CircleBufferGeometry( SCALE/4, 16 ),
-        new THREE.MeshBasicMaterial({
-            color: 0x3c3c3c, // color: 0x0c0c0c,
-            side: THREE.DoubleSide
-        }));
-    circle.lookAt(0, 1, 0);
-    // scene.add( circle );
 
     window.addEventListener('resize', onWindowResize, false);
     onWindowResize();
@@ -98,7 +75,7 @@ function onWindowResize() {
     renderer.setSize(bounds.width, bounds.height);
 }
 
-let modelNames = ['tree', 'palm'];
+let modelNames = ['tree', 'palm', 'desk'];
 let model = false;
 function loadModel(name) {
     model && scene.remove(model);
@@ -121,7 +98,7 @@ function loadModel(name) {
     }
 }
 
-export default (props) => {
+export default () => {
     let match = useRouteMatch('/models/:initialModel');
     let [ modelName, setModelName ] = useState('');
 
