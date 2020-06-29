@@ -75,7 +75,7 @@ function onWindowResize() {
     renderer.setSize(bounds.width, bounds.height);
 }
 
-let modelNames = ['tree', 'palm', 'desk'];
+let modelNames = ['tree', 'palm', 'desk', 'octopus'];
 let model = false;
 function loadModel(name) {
     model && scene.remove(model);
@@ -109,7 +109,7 @@ export default () => {
 
         let initialModel = match && match.params.initialModel;
         if (!initialModel || modelNames.includes[initialModel]) {
-            initialModel = modelNames[0];
+            initialModel = 'octopus';
         }
         setModelName(initialModel);
         
