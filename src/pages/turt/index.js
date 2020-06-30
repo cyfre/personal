@@ -95,7 +95,7 @@ function animate() {
         let angleZ = (animZ < 1) ? -5 + 10*animZ : 5 - 10*(animZ - 1);
         model.rotation.z = angleZ * Math.PI/180;
 
-        let animX = elapsedTime / 6000 % 2;
+        let animX = elapsedTime / 1500 % 2;
         let angleX = (animX < 1) ? -3 + 6*animX : 3 - 6*(animX - 1);
         model.rotation.x = angleX * Math.PI/180;
     }
@@ -105,7 +105,7 @@ function animate() {
 
     if (trees) {
         trees.forEach(t => {
-            t.position.x -= .2*dt;
+            t.position.x -= .35*dt;
             if (t.position.x < -SCALE*4.5) {
                 t.position.x = SCALE*4.5;
             }
@@ -113,7 +113,7 @@ function animate() {
         });
     }
 
-    ground.rotateY(.005*dt);
+    ground.rotateY(.0075*dt);
 
     renderer.render(scene, camera);
 }
