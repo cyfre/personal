@@ -58,7 +58,6 @@ function init() {
         '/project/models/turtle.glb',
         (gltf) => {
             model = gltf.scene;
-            model.scale.setScalar(2);
             model.castShadow = true;
             scene.add(gltf.scene);
         }
