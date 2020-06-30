@@ -20,7 +20,7 @@ function init() {
 
     camera = new THREE.PerspectiveCamera( 70, bounds.width / bounds.height, 1, 1000 );
     camera.position.x = SCALE*2/3;
-    camera.position.z = 0;
+    camera.position.z = -SCALE*2/3;
     camera.position.y = SCALE*1/12;
 
     scene = new THREE.Scene();
@@ -75,7 +75,7 @@ function onWindowResize() {
     renderer.setSize(bounds.width, bounds.height);
 }
 
-let modelNames = ['tree', 'palm', 'desk', 'octopus'];
+let modelNames = ['tree', 'palm', 'desk', 'octopus', 'turtle'];
 let model = false;
 function loadModel(name) {
     model && scene.remove(model);

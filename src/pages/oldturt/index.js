@@ -3,149 +3,7 @@ import api from '../../lib/api';
 import { useInput } from '../../lib/hooks';
 import './turt.css';
 
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
-let SCALE = 16, DESCALE = 1;
-let camera, scene, renderer;
-let model;
-let tree, trees;
-let ground;
-
-function init() {
-    renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector('#canvas'),
-        antialias: true,
-        alpha: true
-    });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
-    renderer.setSize(bounds.width/DESCALE, bounds.height/DESCALE);
-    renderer.shadowMap.enabled = true;
-
-    camera = new THREE.PerspectiveCamera( 70, bounds.width / bounds.height, 1, 1000 );
-    camera.position.x = 0;
-    camera.position.y = SCALE/4;
-    camera.position.z = -SCALE*3/2;
-    camera.lookAt(0, SCALE/2, 0);
-
-    scene = new THREE.Scene();
-    scene.fog = new THREE.Fog( 0x000000, 1, 1000 );
-
-    scene.add(new THREE.AmbientLight(0xffffff, .6));
-    var directionalLight = new THREE.DirectionalLight(0xffffff, 1.6);
-    directionalLight.position.set(0.5, 0.5, -0.75);
-    directionalLight.position.normalize();
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
-
-    var geometry = new THREE.SphereBufferGeometry(SCALE*5, 32, 12);
-    // var material = new THREE.MeshToonMaterial({ color: 0x94795d });
-    // var material = new THREE.MeshToonMaterial({ color: 0x416b38 });
-    var material = new THREE.MeshStandardMaterial({
-        color: 0x416b38,
-        flatShading: true
-    });
-    ground = new THREE.Mesh(geometry, material);
-    ground.position.y = -SCALE*5 + SCALE/32;
-    ground.position.z = SCALE/4;
-    ground.rotateX(Math.PI/2);
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    var loader = new GLTFLoader();
-    loader.load(
-        '/project/models/turtle.glb',
-        (gltf) => {
-            model = gltf.scene;
-            model.scale.setScalar(2);
-            model.castShadow = true;
-            scene.add(gltf.scene);
-        }
-    );
-    loader.load(
-        '/project/models/tree.glb',
-        (gltf) => {
-            tree = gltf.scene;
-            trees = [1,2,3,4,5,6].map(i => tree.clone());
-            trees.forEach((t, i) => {
-                t.position.x += 1.5*SCALE*(3-i);
-                t.position.z += SCALE;
-                t.rotateY(Math.PI/2);
-                t.scale.setScalar(7);
-                scene.add(t);
-            });
-        }
-    );
-
-    window.addEventListener('resize', onWindowResize, false);
-    onWindowResize();
-}
-
-let stop = false
-let startTime = Date.now();
-let previousTime = startTime;
-function animate() {
-    if (stop) return;
-    requestAnimationFrame(animate);
-
-    let elapsedTime = Date.now() - startTime;
-    if (model) {
-        let animZ = elapsedTime / 3000 % 2;
-        let angleZ = (animZ < 1) ? -5 + 10*animZ : 5 - 10*(animZ - 1);
-        model.rotation.z = angleZ * Math.PI/180;
-
-        let animX = elapsedTime / 6000 % 2;
-        let angleX = (animX < 1) ? -3 + 6*animX : 3 - 6*(animX - 1);
-        model.rotation.x = angleX * Math.PI/180;
-    }
-
-    let dt = (Date.now() - previousTime)/1000;
-    previousTime = Date.now();
-
-    if (trees) {
-        trees.forEach(t => {
-            t.position.x -= .2*dt;
-            if (t.position.x < -SCALE*4.5) {
-                t.position.x = SCALE*4.5;
-            }
-            t.position.y = Math.min(-Math.abs(t.position.x)/4, -SCALE/8);
-        });
-    }
-
-    ground.rotateY(.005*dt);
-
-    renderer.render(scene, camera);
-}
-
-function onWindowResize() {
-    let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
-    camera.aspect = bounds.width / bounds.height;
-    camera.updateProjectionMatrix();
-    renderer.setSize(bounds.width/DESCALE, bounds.height/DESCALE);
-}
-
-const CanvasContainer = () => {
-    useEffect(() => {
-        stop = false
-        init();
-        animate();
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
-    }, []);
-
-    return (
-        <div id="canvasContainerContainer">
-            <div id="canvasContainer">
-                <canvas id="canvas"/>
-            </div>
-        </div>
-    )
-}
-
-const About = () => {
+const About = (props) => {
     const [open, setOpen] = useState(false);
 
     return (
@@ -214,7 +72,7 @@ const Wisput = (props) => {
     )
 }
 
-export default () => {
+export default (props) => {
     const [wisdom, setWisdom] = useState('Tap me for some wisdom :-)');
     const [author, setAuthor] = useState('Turt Smurts');
     const [visible, setVisible] = useState(true);
@@ -276,9 +134,8 @@ export default () => {
                     </p>
                 </div>
             </div>
-            <div className="turtle" onClick={handle.turtle}></div>
+            <p className="turtle" onClick={handle.turtle}>🐢</p>
             <Wisput onWisput={handle.wisput} />
-            <CanvasContainer />
         </div>
     );
 }

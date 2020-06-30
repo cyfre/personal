@@ -228,7 +228,7 @@ const Projects = () => (
     </Description>
     <Link to="/cloud">cloud</Link>
     <Description>
-      [WIP] to learn react-three-fiber, starting from an <a href="https://github.com/react-spring/react-three-fiber#what-does-it-look-like">example in their docs</a>
+      A pretty rotating cube
     </Description>
     <Link to="/floating">floating</Link>
     <Description>
