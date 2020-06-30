@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -32,8 +32,12 @@ const Page = () => {
 
 const Embedded = ({ name }) => {
     let src = `/project/${name}/index.html`;
+    
+    useEffect(() => document.getElementById('embedded').focus(), []);
+
     return (
         <iframe
+            id="embedded"
             title={name}
             allowFullScreen
             frameBorder="0"
