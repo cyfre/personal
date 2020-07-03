@@ -1,3 +1,7 @@
+body {
+    background: #f0e6cc;
+}
+
 .container {
     user-select: none;
     flex-grow: 1;
@@ -5,7 +9,7 @@
     display: flex;
 }
 .outer.container {
-    /* padding: 1rem; */
+    padding: 1rem;
 }
 .inner.container {
     justify-content: center;
