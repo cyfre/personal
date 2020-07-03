@@ -66,6 +66,10 @@ export class Countdown extends Counter {
         }
     }
 
+    percent() {
+        return 1 - this.count / this.ticks;
+    }
+
     isActive() {
         return this.count > 0;
     }
