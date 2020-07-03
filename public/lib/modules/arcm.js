@@ -30,8 +30,32 @@ Arc.V = class V {
         let diff = (other) ? other.sub(this) : this;
         return Math.atan2(diff.y, diff.x);
     }
+    length() { return this.mag(); }
+    mag() {
+        return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+    }
+    normalize() { return this.norm(); }
+    norm() {
+        let mag = this.mag();
+        return new V(this.x / mag, this.y / mag);
+    }
+    apply(func) {
+        return new V(func(this.x, 0), func(this.y, 1));
+    }
     clone() {
         return new V(this.x, this.y);
+    }
+    closest(points) {
+        let min_dist = Infinity;
+        let min_point = false;
+        points.forEach(p => {
+            let dist = this.dist(p);
+            if (dist < min_dist) {
+                min_dist = dist;
+                min_point = p;
+            }
+        });
+        return min_point;
     }
 }
 

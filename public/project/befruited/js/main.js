@@ -144,17 +144,28 @@ class Board {
     }
 
     click(pos) {
-        if (this.active && pos.manhat(this.active) === 1) {
-            this.matchesForSwap = 0;
-            let dir = this.active.sub(pos);
-            this.swap(pos, dir);
-            this.undo = { pos, dir };
-            this.active = false;
-        } else if (this.active && pos.equals(this.active)) {
+        if (this.active) {
+            if (pos.manhat(this.active) === 1) {
+                this.matchesForSwap = 0;
+                let dir = this.active.sub(pos);
+                this.swap(pos, dir);
+                this.undo = { pos, dir };
+            }
             this.active = false;
         } else {
             this.active = pos;
         }
+        // if (this.active && pos.manhat(this.active) === 1) {
+        //     this.matchesForSwap = 0;
+        //     let dir = this.active.sub(pos);
+        //     this.swap(pos, dir);
+        //     this.undo = { pos, dir };
+        //     this.active = false;
+        // } else if (this.active && pos.equals(this.active)) {
+        //     this.active = false;
+        // } else {
+        //     this.active = pos;
+        // }
     }
     hover(pos) {
         this.hoverPos = pos;
@@ -287,6 +298,8 @@ class GameState {
         Arc.setGui(STATE.PLAY);
         Arc.gui.addEventListener('click', e => this.handleClick(e));
         Arc.gui.addEventListener('mousemove', e => this.handleHover(e));
+        Arc.gui.addEventListener('touchstart', e => this.handleTouch(e, true));
+        Arc.gui.addEventListener('touchend', e => this.handleTouch(e, false));
 
         this.setState(STATE.MENU);
     }
@@ -355,6 +368,8 @@ class GameState {
     }
 
     handleClick(e) {
+        if (this.isTouch) return;
+
         let gX = Math.floor((e.offsetX - CNST.GRID_FRAME) / CNST.GRID_SCALE);
         let gY = Math.floor((e.offsetY - CNST.GRID_FRAME) / CNST.GRID_SCALE);
         let pos = new Arc.V(gX, gY);
@@ -369,6 +384,31 @@ class GameState {
         let pos = new Arc.V(gX, gY);
         if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
             this.board.hover(pos);
+        }
+    }
+    handleTouch(e, isDown) {
+        console.log(e);
+        this.isTouch = true;
+        let guiRect = e.target.getBoundingClientRect();
+        let pos = new Arc.V(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+            .sub(new Arc.V(guiRect.x, guiRect.y))
+            .scale(CNST.WIDTH / guiRect.width)
+            .apply(x => Math.floor((x - CNST.GRID_FRAME) / CNST.GRID_SCALE));
+        console.log(pos);
+        if (isDown) {
+            if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
+                this._pointer = pos;
+            } else {
+                this._pointer = false;
+            }
+        } else {
+            if (this._pointer && !pos.equals(this._pointer)) {
+                let dir = pos.sub(this._pointer).norm().closest([DIR.LEFT, DIR.RIGHT, DIR.UP, DIR.DOWN]);
+                // this.board.click(pos);
+                this.board.click(this._pointer);
+                this.board.click(this._pointer.add(dir));
+            }
+            this._pointer = false;
         }
     }
 }
