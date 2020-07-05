@@ -218,6 +218,10 @@ const Projects = () => (
     <Description>
       It's kinda like Pac-Man!
     </Description>
+    <Link to="/befruited">befruited</Link>
+    <Description>
+      Bejeweled but with fruit!
+    </Description>
     <Link to="/graffiti">graffiti wall</Link>
     <Description>
       A graffiti wall open to everyone
