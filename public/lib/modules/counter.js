@@ -53,6 +53,7 @@ export class Countdown extends Counter {
         this.ticks = n || this.ticks;
         this.count = this.ticks;
         this.triggered = false;
+        return this;
     }
 
     tick() {

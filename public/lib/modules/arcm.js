@@ -1,4 +1,3 @@
-
 let Arc = {};
 
 Arc.V = class V {
@@ -30,11 +29,9 @@ Arc.V = class V {
         let diff = (other) ? other.sub(this) : this;
         return Math.atan2(diff.y, diff.x);
     }
-    length() { return this.mag(); }
     mag() {
         return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
-    normalize() { return this.norm(); }
     norm() {
         let mag = this.mag();
         return new V(this.x / mag, this.y / mag);
@@ -64,14 +61,13 @@ Arc.Painted = class Painted {
         this.parent = false;
         this.zIndex = zIndex || 0;
     }
-
+    
+    paint(ctx) {}
     _paint(ctx) {
         ctx.save();
         this.paint(ctx);
         ctx.restore();
     }
-
-    paint(ctx) {}
 }
 
 Arc.PaintCommand = class PaintCommand extends Arc.Painted {
@@ -82,25 +78,6 @@ Arc.PaintCommand = class PaintCommand extends Arc.Painted {
 }
 Arc.command = function(command, zIndex) {
     return new Arc.PaintCommand(command, zIndex || 1);
-}
-
-Arc.Drawn = class Drawn {
-    constructor() {
-        this.command = Arc.command(ctx => this.draw(ctx), this.zIndex);
-        this.add();
-    }
-
-    add() {
-        this.command && Arc.add(this.command);
-    }
-
-    remove() {
-        this.command && Arc.remove(this.command);
-    }
-
-    isAdded() {
-        return this.command && this.command.parent;
-    }
 }
 
 Arc.GraphicsObject = class GraphicsObject extends Arc.Painted {
@@ -151,15 +128,34 @@ Arc.GraphicsObject = class GraphicsObject extends Arc.Painted {
     }
 }
 
+Arc.Drawn = class Drawn {
+    constructor() {
+        this.command = Arc.command(ctx => this.draw(ctx), this.zIndex);
+        this.add();
+    }
+
+    add() {
+        this.command && Arc.add(this.command);
+    }
+
+    remove() {
+        this.command && Arc.remove(this.command);
+    }
+
+    isAdded() {
+        return this.command && this.command.parent;
+    }
+}
+
 Arc.throttled = function(func, rate) {
     rate = rate || 16; // 60 fps
 
     let funcTimeout;
     return () => {
         if (!funcTimeout) {
+            func();
             funcTimeout = setTimeout(() => {
                 funcTimeout = false;
-                func();
             }, rate);
         }
     }
@@ -214,16 +210,13 @@ Arc.init = function(canvas, width, height) {
     resize();
 }
 
-Arc.load = function(files) {
+Arc.loadImages = function(files) {
     var loading = [];
     files.forEach(item => {
         let [name, src] = item;
-        loading.push(new Promise((resolve, reject) => {
+        loading.push(new Promise(resolve => {
             var img = new Image();
-            img.onload = function () {
-                Arc.ctx.imageSmoothingEnabled = false;
-                resolve(true);
-            };
+            img.onload = () => resolve(true);
             img.src = src;
             Arc.img[name] = img;
         }));
@@ -232,23 +225,36 @@ Arc.load = function(files) {
     return Promise.all(loading);
 }
 
-Arc.loadSheet = function(sheet, sprites) {
-    return new Promise((resolve, reject) => {
+Arc.Sprite = class Sprite {
+    constructor(img, x, y, width, height) {
+        Object.assign(this, { img, x, y, width, height });
+        this.parts = [img, x, y, width, height];
+    }
+
+    drawScaled(x, y, width, height, xLerp=0, yLerp=0) {
+        Arc.ctx.drawImage(...this.parts, x - xLerp*width, y - yLerp*height, width, height);
+    }
+    draw(x, y, scale=1, xLerp=0, yLerp=0) {
+        this.drawScaled(x, y, scale * this.width, scale * this.height, xLerp, yLerp);
+    }
+}
+
+Arc.loadSheet = function(sheet, spriteLayout) {
+    return new Promise(resolve => {
         var img = new Image();
-        img.onload = function () {
-            Arc.ctx.imageSmoothingEnabled = false;
-            sprites.forEach(sprite => {
-                let [name, sX, sY, sWidth, sHeight, ...anim] = sprite;
+        img.onload = () => {
+            spriteLayout.forEach(layout => {
+                let [name, sX, sY, sWidth, sHeight, ...anim] = layout;
                 if (anim[0]) {
                     let [count, xOff, yOff] = anim;
                     Arc.sprites[name] = [];
                     for (let i = 0; i < count; i++) {
-                        let entry = [img, sX + i*xOff, sY + i*yOff, sWidth, sHeight, ];
+                        let entry = new Arc.Sprite(img, sX + i*xOff, sY + i*yOff, sWidth, sHeight);
                         Arc.sprites[name].push(entry);
                         Arc.sprites[name + String(i)] = entry;
                     }
                 } else {
-                    Arc.sprites[name] = [img, sX, sY, sWidth, sHeight];
+                    Arc.sprites[name] = new Arc.Sprite(img, sX, sY, sWidth, sHeight);
                 }
             });
             resolve(true);
@@ -263,29 +269,29 @@ Arc.drawSprite = function(sprite, x, y, width, height, xLerp=0, yLerp=0) {
         sprite = Arc.sprites[sprite];
     }
 
-    Arc.ctx.drawImage(...sprite,
+    Arc.ctx.drawImage(...sprite.parts,
         x - xLerp*width, y - yLerp*height, width, height);
 }
 Arc.drawScaledSprite = function(sprite, x, y, scale, xLerp=0, yLerp=0) {
     if (typeof(sprite) === 'string') {
         sprite = Arc.sprites[sprite];
     }
-    let width = scale * sprite[3];
-    let height = scale * sprite[4];
+    let width = scale * sprite.width;
+    let height = scale * sprite.height;
 
-    Arc.ctx.drawImage(...sprite,
+    Arc.ctx.drawImage(...sprite.parts,
         x - xLerp*width, y - yLerp*height, width, height);
 }
 
 Arc.drawNumber = function(num, x, y, xScale, yScale, xLerp=0, yLerp=0) {
     let sprites = String(num).split('').map(digit => Arc.sprites[digit]);
-    let sWidth = sprites.reduce((acc, val) => acc + val[3]-1, 1);
+    let sWidth = sprites.reduce((acc, val) => acc + val.width-1, 1);
     let width = sWidth * xScale;
 
     let currWidth = 0;
     sprites.forEach((sprite, i) => {
         let isLast = i === sprites.length-1;
-        let [img, sX, sY, sW, sH] = sprite;
+        let [img, sX, sY, sW, sH] = sprite.parts;
         let xPercent = currWidth / sWidth;
         Arc.ctx.drawImage(img, sX, sY, isLast ? sW : sW-1, sH,
                             x - xLerp*width + xPercent*width,
@@ -301,27 +307,10 @@ Arc.setUpdate = function(updateFunc, tickTime) {
     Arc.update = updateFunc;
     Arc.tickTime = tickTime || Arc.tickTime;
 }
-
 Arc.loop = function() {
-    let repaint = false;
-
-    let paintCallback = () => {
-        repaint && Arc.paint();
-        requestAnimationFrame(paintCallback);
-    }
-    paintCallback();
-
-    let prevstamp = Date.now();
-    let updateCallback = () => {
-        let now = Date.now();
-        if (now > prevstamp + Arc.tickTime) {
-            prevstamp = now;
-            Arc.update();
-            repaint = true;
-        }
-        setTimeout(updateCallback, (prevstamp + Arc.tickTime) - now);
-    }
-    updateCallback();
+    Arc.update(Arc.tickTime);
+    requestAnimationFrame(() => Arc.paint());
+    setTimeout(Arc.loop, Arc.tickTime);
 }
 
 Arc.add = function(child) {
@@ -369,25 +358,24 @@ Arc.addButton = function(sprite, x, y, xScale=1, yScale=1, xLerp=0, yLerp=0) {
         sprite = Arc.sprites[sprite];
     }
 
-    let [img, sX, sY, sWidth, sHeight] = sprite;
-    let width = sWidth * xScale;
-    let height = sHeight * yScale;
+    let width = sprite.width * xScale;
+    let height = sprite.height * yScale;
     let button = document.createElement('button');
     button.setAttribute('id', `button${Arc.newId()}`);
     button.innerHTML = `
     <style type="text/css">
         #${button.getAttribute('id')} {
             background-color: transparent;
-            background-image: url(${img.src});
-            background-position: -${sX}px -${sY}px;
-            width: ${sWidth}px;
-            height: ${sHeight}px;
+            background-image: url(${sprite.img.src});
+            background-position: -${sprite.x}px -${sprite.y}px;
+            width: ${sprite.width}px;
+            height: ${sprite.height}px;
             transform: translate(${x - xLerp*width}px, ${y - yLerp*height}px)
                         scale(${xScale}, ${yScale});
         }
 
         #${button.getAttribute('id')}:active {
-            height: ${sHeight - 1}px;
+            height: ${sprite.height - 1}px;
             transform: translate(${x - xLerp*width}px, ${y - yLerp*height + yScale}px)
                         scale(${xScale}, ${yScale});
         }
@@ -401,19 +389,18 @@ Arc.addElement = function(sprite, x, y, xScale=1, yScale=1, xLerp=0, yLerp=0) {
         sprite = Arc.sprites[sprite];
     }
 
-    let [img, sX, sY, sWidth, sHeight] = sprite;
-    let width = sWidth * xScale;
-    let height = sHeight * yScale;
+    let width = sprite.width * xScale;
+    let height = sprite.height * yScale;
     let element = document.createElement('div');
     element.setAttribute('id', `element${Arc.newId()}`);
     element.innerHTML = `
     <style type="text/css">
         #${element.getAttribute('id')} {
             background-color: transparent;
-            background-image: url(${img.src});
-            background-position: -${sX}px -${sY}px;
-            width: ${sWidth}px;
-            height: ${sHeight}px;
+            background-image: url(${sprite.img.src});
+            background-position: -${sprite.x}px -${sprite.y}px;
+            width: ${sprite.width}px;
+            height: ${sprite.height}px;
             transform: translate(${x - xLerp*width}px, ${y - yLerp*height}px)
                         scale(${xScale}, ${yScale});
         }

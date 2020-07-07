@@ -1,6 +1,6 @@
 import Arc from '/lib/modules/arcm.js'
 import { Counter, Countdown } from '/lib/modules/counter.js'
-import sprites from './sprites.js'
+import { bounded, randi, matrix } from '/lib/modules/utils.js'
 
 const CNST = {
     TICK_MS: 12,
@@ -25,13 +25,28 @@ const DIR = {
 
 const STATE = {
     MENU: 'menu',
-    PLAY: 'play',
-    END: 'end'
+    PLAY: 'play'
 };
 
 setTimeout(() => {
     Arc.init(document.querySelector('#befruitedCanvas'), CNST.WIDTH, CNST.HEIGHT);
-    Arc.loadSheet('sheet.png', sprites).then(() => {
+    Arc.loadSheet('sheet.png', [
+        ['frame', 0, 0, 72, 80],
+        ['title', 77, 13, 42, 16],
+        ['newGame', 78, 30, 40, 11],
+        ['score', 100, 7, 22, 5],
+        ['highscore', 78, 7, 44, 5],
+        ['active', 77, 42, 8, 8],
+        ['fruit', 77, 51, 12, 12, 9, 14, 0],
+        ['', 72, 7, 5, 5, 10, 0, 6],
+        ['noMoreMoves', 119, 24, 35, 15],
+        ['gameOver', 119, 40, 45, 9],
+        ['bonus', 141, 15, 26, 7, 2, 0, -8],
+        ['meterStart', 168, 15, 2, 7],
+        ['meterMiddle', 170, 15, 1, 7],
+        ['meterEnd', 171, 15, 2, 7],
+        ['meterFill', 174, 15, 1, 7, 2, 0, -8],
+    ]).then(() => {
         Arc.loop();
         new GameState();
     });
@@ -41,8 +56,7 @@ class MatchScore {
     constructor(tile, points) {
         this.tile = tile;
         this.points = points;
-        this.counter = new Countdown(80);
-        this.counter.start();
+        this.counter = new Countdown(80).start();
     }
 
     tick() { this.counter.tick(); }
@@ -59,10 +73,97 @@ class MatchScore {
     }
 }
 
+class ScoreManager {
+    constructor(board) {
+        this.board = board;
+        this.baseMatchValue = 10;
+        this.score = 0;
+        this.scores = [];
+        this.bonusMeterFill = 0;
+        this.BONUS_METER_MULT = 50;
+        this.bonusMeterTarget = this.baseMatchValue * this.BONUS_METER_MULT;
+        this.bonusTime = new Countdown(250);
+        this.active = false;
+    }
+    setActive(isActive) { this.active = isActive; }
+
+    endCombo() { this.combo = 0; }
+    scoreMatch(fruits) {
+        if (this.active) {
+            this.combo += 1;
+            let matchValue = Math.pow(2, fruits.length - 3) * this.baseMatchValue; // 1, 2, 4
+            let points = matchValue * this.combo;
+            this.score += points;
+            if (!this.bonusTime.isActive()) {
+                this.bonusMeterFill += points;
+            }
+            let pos = new Arc.V(0, 0);
+            fruits.forEach(fruit => {
+                fruit.hide();
+                pos = pos.add(fruit.tile.scale(1/fruits.length));
+            });
+            this.scores.push(new MatchScore(pos, points));
+        } else {
+            fruits.forEach(fruit => fruit.hide());
+        }
+    }
+    scoreBonus(fruit) {
+        this.score += this.baseMatchValue;
+        fruit.hide();
+        this.scores.push(new MatchScore(fruit.tile, this.baseMatchValue));
+    }
+
+    checkBonusMeter() {
+        if (this.bonusMeterFill >= this.bonusMeterTarget) {
+            this.bonusMeterFill -= this.bonusMeterTarget;
+            this.baseMatchValue += 5;
+            this.bonusMeterTarget = this.baseMatchValue * this.BONUS_METER_MULT;
+            this.bonusTime.start();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    isBonusTime() {
+        return this.bonusTime.isActive();
+    }
+
+    tick() {
+        this.scores.forEach(score => score.tick());
+        this.scores = this.scores.filter(s => !s.isDone());
+        if (this.isBonusTime()) {
+            if (this.bonusTime.count % 25 === 0) {
+                let fruit;
+                do {
+                    fruit = this.board.get(new Arc.V(randi(CNST.GRID_SIZE), randi(CNST.GRID_SIZE)));
+                } while (!fruit || fruit.isHiding());
+                this.scoreBonus(fruit);
+            }
+            this.bonusTime.tick();
+        }
+    }
+    draw(ctx) {
+        this.scores.forEach(score => score.draw(ctx));
+        
+        let scoreBoxY = CNST.GRID_HEIGHT + 2*CNST.GRID_FRAME;
+        Arc.sprites.score.draw(CNST.GRID_FRAME + .25, scoreBoxY + 1.25, .5);
+        Arc.drawNumber(this.score, CNST.GRID_FRAME + .25 + Arc.sprites.score.width/2 + 2.5, scoreBoxY + 1.25, 0.5, .5);
+
+        let b_i = (this.isBonusTime()) ? this.bonusTime.modSplit(25, 2) : 0;
+        Arc.sprites.bonus[b_i].draw(CNST.GRID_FRAME + CNST.GRID_WIDTH, scoreBoxY + .75, .5, 1, 0);
+        let meterX = [CNST.WIDTH/2, CNST.GRID_FRAME + CNST.GRID_WIDTH - Arc.sprites.bonus[0].width/2 - .5];
+        Arc.sprites.meterMiddle.drawScaled(meterX[0], scoreBoxY + .75, meterX[1] - meterX[0], 3.5, 0, 0);
+        Arc.sprites.meterEnd.draw(meterX[1], scoreBoxY + .75, .5, 1, 0);
+        Arc.sprites.meterStart.draw(meterX[0], scoreBoxY + .75, .5, 0, 0);
+        let meterFillX = (meterX[1] - meterX[0] - 1) * (this.isBonusTime() ? 1 - this.bonusTime.percent() : Math.min(this.bonusMeterFill / this.bonusMeterTarget, 1));
+        Arc.sprites.meterFill[b_i].drawScaled(meterX[0] + .5, scoreBoxY + .75, meterFillX, 3.5, 0, 0);
+    }
+}
+
 class Fruit {
-    constructor(tile, type) {
+    constructor(tile) {
         this.tile = tile;
-        this.type = type;
+        this.type = randi(CNST.N_TYPES);
         this.moving = new Countdown(10);
         this.hiding = new Countdown(20);
     }
@@ -71,7 +172,6 @@ class Fruit {
         this.moves = [this.tile, target]
         this.moving.start();
     }
-
     isMoving() {
         return this.moving.isActive();
     }
@@ -79,7 +179,6 @@ class Fruit {
     hide() {
         this.hiding.start();
     }
-
     isHiding() {
         return this.hiding.isActive();
     }
@@ -88,7 +187,7 @@ class Fruit {
     }
 
     tick() {
-        if (!this.moving.isDone()) {
+        if (this.moving.isActive()) {
             this.moving.tick();
             let percent = this.moving.percent();
             this.tile = this.moves[0].scale(1 - percent).add(this.moves[1].scale(percent));
@@ -100,46 +199,64 @@ class Fruit {
         let sprite = Arc.sprites.fruit[this.type]
         let coord = CNST.GRID2COORD(this.tile)
         let percent = (this.hiding.isActive()) ? 1 - this.hiding.percent() : 1;
-        Arc.drawScaledSprite(sprite, coord[0]+CNST.GRID_SCALE/2, coord[1]+CNST.GRID_SCALE/2, .5 * percent, .5, .5);
+        sprite.draw(coord[0]+CNST.GRID_SCALE/2, coord[1]+CNST.GRID_SCALE/2, .5 * percent, .5, .5);
+    }
+}
+
+class FruitManager {
+    constructor(board) {
+        this.board = board;
+        this.fruits = [];
+    }
+    spawn(pos) {
+        let fruit = new Fruit(pos);
+        this.fruits.push(fruit);
+        return fruit;
+    }
+    hasMovement() {
+        return this.fruits.some(fruit => fruit.isMoving() || fruit.isHiding());
+    }
+    isEmpty() {
+        return this.fruits.length === 0;
+    }
+    tick() {
+        this.fruits.forEach(fruit => {
+            fruit.tick();
+            fruit.isHidden() && this.board.set(fruit.tile, false);
+        });
+        this.fruits = this.fruits.filter(f => !f.isHidden());
+    }
+    draw(ctx) {
+        this.fruits.forEach(fruit => fruit.draw(ctx));
     }
 }
 
 class Board {
     constructor() {
-        this.active = false;
-        this.grid = Array.matrix(CNST.GRID_SIZE, CNST.GRID_SIZE, 0)
-        this.fruits = []
-        for (let row = 0; row < CNST.GRID_SIZE; row++) {
-            for (let col = 0; col < CNST.GRID_SIZE; col++) {
-                let fruit = new Fruit(new Arc.V(col, row), randi(CNST.N_TYPES));
-                this.fruits.push(fruit);
-                this.grid[row][col] = fruit;
-            }
-        }
+        this.grid = matrix(CNST.GRID_SIZE, CNST.GRID_SIZE, 0);
+        this.fruitManager = new FruitManager(this);
+        this.scoreManager = new ScoreManager(this);
         this.moves = [];
-        this.matchesForSwap = 0;
+        this.active = false;
         this.undo = false;
         this.gameOver = false;
-        this.baseMatchValue = 10;
-        this.bonusMeterFill = 0;
-        this.bonusMeterTarget = this.baseMatchValue * 50;
-        this.bonusTime = new Countdown(250);
+
+        // fill board
+        for (let row = 0; row < CNST.GRID_SIZE; row++) {
+            for (let col = 0; col < CNST.GRID_SIZE; col++) {
+                this.grid[row][col] = this.fruitManager.spawn(new Arc.V(col, row));
+            }
+        }
         
-        this.scores = [];
+        // clear any matches
         do {
             this.tick();
-        } while (this.isMovement())
-        this.score = 0;
-        this.scores = [];
-        this.bonusMeterFill = 0;
+        } while (!this.isSettled());
+        this.scoreManager.setActive(true);
     }
 
     get(pos) {
-        if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
-            return this.grid[pos.y][pos.x];
-        } else {
-            return null;
-        }
+        return (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) ? this.grid[pos.y][pos.x] : false;
     }
     set(pos, fruit) {
         fruit && fruit.move(pos);
@@ -153,20 +270,12 @@ class Board {
         this.set(pos.add(dir), a);
     }
 
-    addScore(points) {
-        this.score += points;
-        if (!this.bonusTime.isActive()) {
-            this.bonusMeterFill += points;
-        }
-    }
-
     click(pos) {
-        if (this.isMovement() || this.gameOver || this.bonusTime.isActive()) return;
-        if (!this.get(pos)) {
+        let ignoreInput = !this.isSettled() || this.gameOver || this.scoreManager.isBonusTime();
+        if (ignoreInput || !this.get(pos)) {
             this.active = false;
         } else if (this.active) {
             if (pos.manhat(this.active) === 1) {
-                this.matchesForSwap = 0;
                 let dir = this.active.sub(pos);
                 this.swap(pos, dir);
                 this.undo = { pos, dir };
@@ -176,11 +285,19 @@ class Board {
             this.active = pos;
         }
     }
-    hover(pos) {
-        this.hoverPos = pos;
+
+    getScore() {
+        return this.scoreManager.score;
+    }
+    isSettled() {
+        return !this.fruitManager.hasMovement();
+    }
+    isGameover() {
+        return this.gameOver && this.fruitManager.isEmpty();
     }
 
-    calculateMatches() {
+    getMatches() {
+        // return straight lines of >= 3 fruit
         let matches = [];
         [DIR.RIGHT, DIR.DOWN].forEach(dir => {
             let used = new Set();
@@ -205,24 +322,10 @@ class Board {
         return matches;
     }
     removeMatches(matches) {
-        this.matchesForSwap += matches.length;
-        // let removeFruits = new Set();
-        matches.forEach(fruits => {
-            let matchValue = Math.pow(2, fruits.length - 3) * this.baseMatchValue; // 1, 2, 4
-            let points = matchValue * this.matchesForSwap;
-            this.addScore(points);
-            let pos = new Arc.V(0, 0);
-            fruits.forEach(fruit => {
-                fruit.hide();
-                pos = pos.add(fruit.tile.scale(1/fruits.length));
-                // this.set(fruit.tile, false);
-                // removeFruits.add(fruit);
-            });
-            this.scores && this.scores.push(new MatchScore(pos, points));
-        });
-        // this.fruits = this.fruits.filter(fruit => !removeFruits.has(fruit));
+        matches.forEach(fruits => this.scoreManager.scoreMatch(fruits));
     }
-    moveFruits() {
+    dropFruits() {
+        // from bottom row to second from top: if tile is empty, swap with above
         for (let row = CNST.GRID_SIZE-1; row >= 1; row--) {
             for (let col = 0; col < CNST.GRID_SIZE; col++) {
                 let pos = new Arc.V(col, row);
@@ -231,50 +334,40 @@ class Board {
                 }
             }
         }
-
+    }
+    spawnFruits() {
+        // spawn fruit for any empty tiles in top row
         let row = 0;
         for (let col = 0; col < CNST.GRID_SIZE; col++) {
             let pos = new Arc.V(col, row);
             if (!this.get(pos)) {
-                let fruit = new Fruit(new Arc.V(col, -1), randi(CNST.N_TYPES));
-                this.set(pos, fruit);
-                this.fruits.push(fruit);
+                this.set(pos, this.fruitManager.spawn(new Arc.V(col, -1)));
             }
         }
     }
-    isMovement() {
-        return this.fruits.some(fruit => fruit.isMoving() || fruit.isHiding());
-    }
-    checkMoves() {
+    getMoveableFruits() {
+        // check each possible move for match of 3
         let moves = new Set();
-        [DIR.RIGHT, DIR.DOWN].forEach(dir => {
+        [DIR.RIGHT, DIR.DOWN].forEach(matchOrientation => {
             for (let x = 0; x < CNST.GRID_SIZE; x++) {
                 for (let y = 0; y < CNST.GRID_SIZE; y++) {
                     for (let t = 0; t < 3; t++) {
-                        [DIR.LEFT, DIR.RIGHT, DIR.UP, DIR.DOWN].forEach(move => {
+                        [DIR.LEFT, DIR.RIGHT, DIR.UP, DIR.DOWN].forEach(moveDir => {
                             let pos = new Arc.V(x, y);
-                            let start = this.get(pos);
                             let tiles = [];
-                            let moveFruit;
+                            let start, movedFruit;
                             for (let i = 0; i < 3; i++) {
-                                let tile;
-                                if (i === t) {
-                                    moveFruit = this.get(pos.add(move));
-                                    if (i === 0) {
-                                        start = moveFruit;
-                                    }
-                                    tile = moveFruit;
-                                } else {
-                                    tile = this.get(pos);
-                                }
+                                let tile = this.get((i === t) ? pos.add(moveDir) : pos);
+                                if (i === 0) start = tile;
+                                if (i === t) movedFruit = tile;
                                 if (!tile || tile.type !== start.type) {
                                     break;
                                 }
                                 tiles.push(tile);
-                                pos = pos.add(dir);
+                                pos = pos.add(matchOrientation);
                             }
-                            if (new Set(tiles).size >= 3) {
-                                moves.add(moveFruit)
+                            if (new Set(tiles).size === 3) {
+                                moves.add(movedFruit)
                             }
                         });
                     }
@@ -286,139 +379,74 @@ class Board {
     emptyFruits() {
         let row = CNST.GRID_SIZE-1;
         for (let col = 0; col < CNST.GRID_SIZE; col++) {
-            let pos = new Arc.V(col, row);
-            let fruit = this.get(pos);
-            if (fruit && !fruit.isMoving()) {
-                fruit.hide();
-            }
+            let fruit = this.get(new Arc.V(col, row));
+            fruit && fruit.hide();
         }
 
-        for (let row = CNST.GRID_SIZE-1; row >= 1; row--) {
-            for (let col = 0; col < CNST.GRID_SIZE; col++) {
-                let pos = new Arc.V(col, row);
-                if (!this.get(pos)) {
-                    this.swap(pos, DIR.UP);
-                }
-            }
-        }
+        this.dropFruits();
     }
 
     tick() {
-        this.fruits.forEach(fruit => {
-            fruit.tick();
-            if (fruit.isHidden()) {
-                this.set(fruit.tile, false);
-            }
-        });
-        this.fruits = this.fruits.filter(f => !f.isHidden());
+        this.fruitManager.tick();
+        this.scoreManager.tick();
+
         if (this.gameOver) {
-            this.gameOverCounter.tick();
-            if (this.gameOverCounter.count > 200) {
-                if (!this.isMovement()) {
-                    this.emptyFruits();
-                }
+            this.gameOver.tick();
+            if (this.gameOver.count > 150) {
+                this.isSettled() && this.emptyFruits();
             }
-        } else if (this.bonusTime.isActive()) {
-            if (this.bonusTime.count % 25 === 0) {
-                let fruit;
-                do {
-                    fruit = this.get(new Arc.V(randi(CNST.GRID_SIZE), randi(CNST.GRID_SIZE)));
-                } while (!fruit || fruit.isHiding());
-                this.addScore(this.baseMatchValue);
-                fruit.hide();
-                this.scores.push(new MatchScore(fruit.tile, this.baseMatchValue));
-            }
-            this.bonusTime.tick();
-        } else {
-            if (this.isMovement()) {
+        } else if (!this.scoreManager.isBonusTime()) {
+            if (!this.isSettled()) {
                 this.moves = []
-            } else {
-                this.moveFruits();
-                if (!this.isMovement()) {
-                    let matches = this.calculateMatches();
+            } else if (this.moves.length === 0) {
+                this.dropFruits();
+                this.spawnFruits();
+                if (this.isSettled()) {
+                    let matches = this.getMatches();
                     if (matches.length > 0) {
                         this.removeMatches(matches);
                         this.undo = false;
                     } else if (this.undo) {
                         this.swap(this.undo.pos, this.undo.dir);
                         this.undo = false;
-                    }
-                    if (!this.isMovement() && this.moves.length === 0) {
-                        this.matchesForSwap = 0;
-                        if (this.bonusMeterFill >= this.bonusMeterTarget) {
-                            this.bonusMeterFill -= this.bonusMeterTarget;
-                            this.baseMatchValue += 5;
-                            this.bonusMeterTarget = this.baseMatchValue * 50;
-                            this.bonusTime.start();
-                        } else {
-                            this.moves = this.checkMoves();
-                            console.log(this.moves.length);
+                    } else {
+                        this.scoreManager.endCombo();
+                        if (!this.scoreManager.checkBonusMeter()) {
+                            this.moves = this.getMoveableFruits();
                             if (this.moves.length === 0) {
-                                this.gameOver = true;
-                                this.gameOverCounter = new Counter();
+                                this.gameOver = new Counter();
                             }
                         }
                     }
                 }
             }
-            
         }
-        this.scores.forEach(score => score.tick());
-        this.scores = this.scores.filter(s => !s.isDone());
-    }
-    isOver() {
-        // return this.gameOver && this.gameOverCounter.count > 150;
-        return this.gameOver && this.fruits.length === 0;
     }
 
     draw(ctx) {
         if (this.active) {
             let coord = CNST.GRID2COORD(this.active);
-            Arc.drawScaledSprite('active', coord[0], coord[1], 1);
+            Arc.sprites.active.draw(coord[0], coord[1], 1);
         }
-        if (this.hoverPos) {
-            let coord = CNST.GRID2COORD(this.hoverPos);
-            ctx.save();
-            ctx.globalAlpha = .3;
-            // Arc.drawScaledSprite('active', coord[0], coord[1], 1);
-            ctx.restore();
-        }
-        this.fruits.forEach(fruit => fruit.draw(ctx));
-        this.scores.forEach(score => score.draw(ctx));
+        this.fruitManager.draw(ctx);
+        this.scoreManager.draw(ctx);
         // this.moves && this.moves.forEach(move => {
         //     let coord = CNST.GRID2COORD(move.tile);
-        //     Arc.drawScaledSprite('active', coord[0], coord[1], 1);
+        //     Arc.sprites.active.draw(coord[0], coord[1], 1);
         // });
 
-        let scoreBoxY = CNST.GRID_HEIGHT + 2*CNST.GRID_FRAME;
-        Arc.drawScaledSprite(Arc.sprites.score, CNST.GRID_FRAME + .25, scoreBoxY + 1.25, .5);
-        Arc.drawNumber(this.score, CNST.GRID_FRAME + .25 + Arc.sprites.score[3]/2 + 2.5, scoreBoxY + 1.25, 0.5, .5);
-
-        let b_i = (this.bonusTime.isActive()) ? this.bonusTime.modSplit(25, 2) : 0;
-        Arc.drawScaledSprite(Arc.sprites.bonus[b_i], CNST.GRID_FRAME + CNST.GRID_WIDTH, scoreBoxY + .75, .5, 1, 0);
-        let meterX = [CNST.WIDTH/2, CNST.GRID_FRAME + CNST.GRID_WIDTH - Arc.sprites.bonus[0][3]/2 - .5];
-        Arc.drawSprite(Arc.sprites.meterMiddle, meterX[0], scoreBoxY + .75, meterX[1] - meterX[0], 3.5, 0, 0);
-        Arc.drawScaledSprite(Arc.sprites.meterEnd, meterX[1], scoreBoxY + .75, .5, 1, 0);
-        Arc.drawScaledSprite(Arc.sprites.meterStart, meterX[0], scoreBoxY + .75, .5, 0, 0);
-        let meterFillX = (meterX[1] - meterX[0] - 1) * ((this.bonusTime.isActive()) ? 1 : Math.min(this.bonusMeterFill / this.bonusMeterTarget, 1));
-        Arc.drawSprite(Arc.sprites.meterFill[b_i], meterX[0] + .5, scoreBoxY + .75, meterFillX, 3.5, 0, 0);
-
-        // Arc.drawScaledSprite(Arc.sprites.bonus[0], CNST.GRID_FRAME )
-
         if (this.gameOver) {
-            this.gameOverCounter.count > 50 && Arc.drawScaledSprite(Arc.sprites.noMoreMoves, CNST.WIDTH / 2, CNST.GRID_FRAME + Math.round(.45*CNST.GRID_SIZE*CNST.GRID_SCALE), 1, .5, 1);
-            this.gameOverCounter.count > 200 && Arc.drawScaledSprite(Arc.sprites.gameOver, CNST.WIDTH / 2, CNST.GRID_FRAME + Math.round(.55*CNST.GRID_SIZE*CNST.GRID_SCALE), 1, .5, 0);
+            this.gameOver.count > 75 && Arc.sprites.noMoreMoves.draw(CNST.WIDTH / 2, CNST.GRID_FRAME + Math.round(.45*CNST.GRID_SIZE*CNST.GRID_SCALE), 1, .5, 1);
+            this.gameOver.count > 150 && Arc.sprites.gameOver.draw(CNST.WIDTH / 2, CNST.GRID_FRAME + Math.round(.55*CNST.GRID_SIZE*CNST.GRID_SCALE), 1, .5, 0);
         }
     }
 }
 
 class GameState {
     constructor() {
-        Arc.setUpdate(() => this.tick(), CNST.TICK_MS);
-
         this.highscore = this.fetchHighscore();
-        this.counter = new Counter();
 
+        Arc.setUpdate(() => this.tick(), CNST.TICK_MS);
         Arc.add(ctx => this.draw(ctx));
 
         Arc.setGui(STATE.MENU);
@@ -426,7 +454,6 @@ class GameState {
         Arc.addButton(Arc.sprites.newGame, Arc.width/2, Arc.height*3/5, .75, .75, 0.5, 0).addEventListener('click', () => this.handleButton('newGame'));
         Arc.setGui(STATE.PLAY);
         Arc.gui.addEventListener('click', e => this.handleClick(e));
-        Arc.gui.addEventListener('mousemove', e => this.handleHover(e));
         Arc.gui.addEventListener('touchstart', e => this.handleTouch(e, true));
         Arc.gui.addEventListener('touchend', e => this.handleTouch(e, false));
 
@@ -438,7 +465,6 @@ class GameState {
             default:
         }
 
-        this.counter.reset();
         switch (state) {
             case STATE.PLAY:
                 this.board = new Board();
@@ -452,13 +478,12 @@ class GameState {
     }
 
     tick() {
-        this.counter.tick();
         switch (this.state) {
             case STATE.PLAY:
                 this.board.tick();
-                if (this.board.isOver()) {
-                    if (this.board.score > this.highscore) {
-                        this.setHighscore(this.board.score);
+                if (this.board.isGameover()) {
+                    if (this.board.getScore() > this.highscore) {
+                        this.setHighscore(this.board.getScore());
                     }
                     this.setState(STATE.MENU);
                 }
@@ -471,10 +496,7 @@ class GameState {
         let scoreCookie = document.cookie
             .split(';')
             .find(cookie => cookie.startsWith('befruitedHighscore'));
-        if (scoreCookie) {
-            return Number(scoreCookie.split('=')[1]);
-        }
-        return 0;
+        return (scoreCookie) ? Number(scoreCookie.split('=')[1]) : 0;
     }
     setHighscore(score) {
         // save cookie for ten years
@@ -483,12 +505,12 @@ class GameState {
     }
 
     draw(ctx) {
-        Arc.drawScaledSprite('frame', 0, 0, 1);
+        Arc.sprites.frame.draw(0, 0, 1);
         switch (this.state) {
             case STATE.MENU:
                 let scoreBoxY = CNST.GRID_SIZE*CNST.GRID_SCALE + 2*CNST.GRID_FRAME;
-                Arc.drawScaledSprite(Arc.sprites.highscore, CNST.GRID_FRAME + .25, scoreBoxY + 1.25, .5);
-                Arc.drawNumber(this.highscore, CNST.GRID_FRAME + .25 + Arc.sprites.highscore[3]/2 + 2.5, scoreBoxY + 1.25, .5, .5);
+                Arc.sprites.highscore.draw(CNST.GRID_FRAME + .25, scoreBoxY + 1.25, .5);
+                Arc.drawNumber(this.highscore, CNST.GRID_FRAME + .25 + Arc.sprites.highscore.width/2 + 2.5, scoreBoxY + 1.25, .5, .5);
                 break;
             case STATE.PLAY:
                 this.board.draw(ctx);
@@ -510,28 +532,18 @@ class GameState {
         let gX = Math.floor((e.offsetX - CNST.GRID_FRAME) / CNST.GRID_SCALE);
         let gY = Math.floor((e.offsetY - CNST.GRID_FRAME) / CNST.GRID_SCALE);
         let pos = new Arc.V(gX, gY);
-        console.log(e, pos)
         if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
             this.board.click(pos);
         }
     }
-    handleHover(e) {
-        let gX = Math.floor((e.offsetX - CNST.GRID_FRAME) / CNST.GRID_SCALE);
-        let gY = Math.floor((e.offsetY - CNST.GRID_FRAME) / CNST.GRID_SCALE);
-        let pos = new Arc.V(gX, gY);
-        if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
-            this.board.hover(pos);
-        }
-    }
     handleTouch(e, isDown) {
-        console.log(e);
         this.isTouch = true;
+
         let guiRect = e.target.getBoundingClientRect();
         let pos = new Arc.V(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
             .sub(new Arc.V(guiRect.x, guiRect.y))
             .scale(CNST.WIDTH / guiRect.width)
             .apply(x => Math.floor((x - CNST.GRID_FRAME) / CNST.GRID_SCALE));
-        console.log(pos);
         if (isDown) {
             if (bounded(pos.x, 0, CNST.GRID_SIZE-1) && bounded(pos.y, 0, CNST.GRID_SIZE-1)) {
                 this._pointer = pos;
@@ -541,7 +553,6 @@ class GameState {
         } else {
             if (this._pointer && !pos.equals(this._pointer)) {
                 let dir = pos.sub(this._pointer).norm().closest([DIR.LEFT, DIR.RIGHT, DIR.UP, DIR.DOWN]);
-                // this.board.click(pos);
                 this.board.click(this._pointer);
                 this.board.click(this._pointer.add(dir));
             }

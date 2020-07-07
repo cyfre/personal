@@ -77,7 +77,7 @@ export class Level {
         cv.height = 84;
         let ctx = cv.getContext('2d');
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(...Arc.sprites['map'], 0, 0, 116, 84);
+        ctx.drawImage(...Arc.sprites.map.parts, 0, 0, 116, 84);
         let imageData = ctx.getImageData(0, 0, 116, 84)
         for (let col = 0; col < CONSTANTS.COLS; col++) {
             for (let row = 0; row < CONSTANTS.ROWS; row++) {
