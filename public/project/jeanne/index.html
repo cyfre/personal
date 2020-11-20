@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>fuck u</title>
+    <style>
+      #insult-container {
+        margin-left: .5rem;
+        white-space: pre;
+      }
+      #insult {
+        padding: .35rem;
+      }
+      #insult::after {
+        content: "↻";
+        margin-left: .25rem;
+        opacity: .5;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="insult-container">you are <span id="a">a</span> <button id="insult">error</button> </p><!-- <button id="reload">↻</button> -->
+
+    <script>
+      const q = (s) => document.querySelector(s);
+      const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
+      const encode = (s) => s.replaceAll(' ', '+');
+      const decode = (s) => s.replaceAll('+', ' ');
+
+      const insultElem = q('#insult');
+      const aElem = q('#a');
+
+      Promise.all(['nouns.txt', 'adjectives.txt'].map(url =>
+        fetch(url).then(resp => resp.text())
+      )).then(texts => {
+        const [nouns, adjs] = texts.map(text => text.split('\n'));
+
+        const doInsult = (insult) => {
+          insult = insult ||  sample(adjs) + ' ' + sample(nouns);
+          insultElem.textContent = insult;
+          // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
+          window.location.hash = '#' + encode(insult);
+        }
+        doInsult(decode(window.location.hash.slice(1)));
+        q('#insult').addEventListener('click', () => doInsult());
+      });
+    </script>
+  </body>
+</html>
