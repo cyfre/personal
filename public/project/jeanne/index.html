@@ -37,18 +37,19 @@
       const insultElem = q('#insult');
       const aElem = q('#a');
 
+      let nouns, adjs;
+      const doInsult = (insult) => {
+        insult = insult ||  sample(adjs) + ' ' + sample(nouns);
+        insultElem.textContent = insult;
+        // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
+        window.location.hash = '#' + encode(insult);
+      }
+      doInsult(decode(window.location.hash.slice(1)));
+
       Promise.all(['nouns.txt', 'adjectives.txt'].map(url =>
         fetch(url).then(resp => resp.text())
       )).then(texts => {
-        const [nouns, adjs] = texts.map(text => text.split('\n'));
-
-        const doInsult = (insult) => {
-          insult = insult ||  sample(adjs) + ' ' + sample(nouns);
-          insultElem.textContent = insult;
-          // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
-          window.location.hash = '#' + encode(insult);
-        }
-        doInsult(decode(window.location.hash.slice(1)));
+        [nouns, adjs] = texts.map(text => text.split('\n'));
         q('#insult').addEventListener('click', () => doInsult());
       });
     </script>
