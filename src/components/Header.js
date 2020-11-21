@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Link, useRouteMatch } from 'react-router-dom';
+import { Link, useRouteMatch, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { embedded } from './Contents';
@@ -43,6 +43,7 @@ const Header = styled.div`
 
 export default () => {
   let { url } = useRouteMatch();
+  let location = useLocation();
 
   const isImplicitProject = useMemo(() => {
     let subdomain = url.split('/').filter(p => p)[0];
@@ -74,7 +75,7 @@ export default () => {
         {crumbs.map(crumb => <Link to={crumb} key={crumb}>/ {crumb.split('/').pop()}</Link>)}
       </div>
       <div>
-        {isEmbeddedProject && <a className='raw-link' href={`/project${crumbs[0]}`}>[ view raw ]</a>}
+        {isEmbeddedProject && <a className='raw-link' href={`/project${crumbs[0]}${location.hash}`}>[ view raw ]</a>}
         <WikiLink path={url} />
       </div>
     </Header>
