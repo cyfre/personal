@@ -39,7 +39,7 @@
         insult = insult ||  sample(adjs) + ' ' + sample(nouns);
         insultElem.textContent = insult;
         // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
-        window.location.hash = '#' + encode(insult);
+        window.location[window.location.hash[0] ? 'assign' : 'replace'](`#${encode(insult)}`);
       }
 
       const handleHash = () => {
