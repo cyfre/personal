@@ -17,12 +17,15 @@
         margin-left: .25rem;
         opacity: .5;
       }
+      .wait-for-it {
+        opacity: .5;
+      }
     </style>
   </head>
   <body>
     <div id="insult-container">
       <span class="d-inline-block align-middle">you are <span id="a">a</span></span>
-      <button id="insult" class="btn btn-light"></button>
+      <button id="insult" class="btn btn-light wait-for-it">wait for it</button>
     </p><!-- <button id="reload">↻</button> -->
 
     <script>
@@ -38,6 +41,7 @@
       const doInsult = (insult) => {
         insult = insult ||  sample(adjs) + ' ' + sample(nouns);
         insultElem.textContent = insult;
+        insultElem.classList.remove('wait-for-it');
         // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
         window.location[window.location.hash[0] ? 'assign' : 'replace'](`#${encode(insult)}`);
       }
