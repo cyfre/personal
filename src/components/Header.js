@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Link, useRouteMatch } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { embedded } from './Contents';
 import WikiLink from './WikiLink';
 
 const Header = styled.div`
@@ -10,9 +11,16 @@ const Header = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   padding-left: .25rem;
   position: relative;
+
+  & > div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
 
   & .profile {
     height: 2rem;
@@ -25,46 +33,50 @@ const Header = styled.div`
     padding-left: .25rem;
     text-shadow: 1px 2px 4px #00000020;
   }
-  & .wiki-link {
+
+  & .wiki-link, & .raw-link {
     font-size: 0.8rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 .5rem;
-    position: absolute;
-    right: 0;
+    opacity: .5;
+    margin-right: .5rem;
   }
 `
 
 export default () => {
   let { url } = useRouteMatch();
-  let [crumbs, setCrumbs] = useState([]);
 
-  let subdomain = url.split('/').filter(p => p)[0];
-  let isImplicitProject = ['projects', 'api'].indexOf(subdomain) === -1;
+  const isImplicitProject = useMemo(() => {
+    let subdomain = url.split('/').filter(p => p)[0];
+    return subdomain !== 'projects';
+  }, [url]);
 
-  useEffect(() => {
-    // if (isImplicitProject) url = '/projects' + url
+  const crumbs = useMemo(() => {
     let total = '';
     let crumbs = [];
     url.split('/').filter(p => p).forEach(part => {
       total += '/' + part;
       crumbs.push(total);
     });
-    setCrumbs(crumbs);
+    return crumbs;
+  }, [url]);
+
+  const isEmbeddedProject = useMemo(() => {
+    let project = url.split('/').filter(p => p && p !== 'projects')[0];
+    return embedded.includes(project);
   }, [url]);
 
   return (
     <Header id="header">
-      <Link to="/">
-        <img className="profile" src="/profile.jpeg" alt="profile"/>
-      </Link>
-      {/* <Link to='/'>/ home</Link> */}
-      {isImplicitProject && <Link to='/projects'>/ projects</Link>}
-      {crumbs.map(crumb => {
-        return <Link to={crumb} key={crumb}>/ {crumb.split('/').pop()}</Link>
-      })}
-      <WikiLink path={url} />
+      <div>
+        <Link to="/">
+          <img className="profile" src="/profile.jpeg" alt="profile"/>
+        </Link>
+        {isImplicitProject && <Link to='/projects'>/ projects</Link>}
+        {crumbs.map(crumb => <Link to={crumb} key={crumb}>/ {crumb.split('/').pop()}</Link>)}
+      </div>
+      <div>
+        {isEmbeddedProject && <a className='raw-link' href={`/project${crumbs[0]}`}>[ view raw ]</a>}
+        <WikiLink path={url} />
+      </div>
     </Header>
   )
 }

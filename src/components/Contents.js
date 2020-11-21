@@ -1,4 +1,5 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { Route } from 'react-router-dom';
 import { useParams, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -20,6 +21,7 @@ const Missing = () => <Fallback className="centering">🐙<br/>there's nothing t
 const Page = () => {
     let { id } = useParams();
     let Page = React.lazy(() => import('../pages/' + id));
+    useEffect(() => { document.title = id; }, [id]);
 
     return (
         <Suspense fallback={<Loading />}>
@@ -48,8 +50,9 @@ const Embedded = ({ name }) => {
         let eventId = window.addEventListener('hashchange', () =>
             handle.hash(window.location.hash));
 
-        // bring hash updates up
+        // bring hash & title updates up
         let intervalId = setInterval(() => {
+            document.title = ifr.current.contentWindow.window.document.title;
             let ifrHash = ifr.current.contentWindow.window.location.hash;
             if (window.location.hash !== ifrHash) {
                 history.replace(ifrHash);
@@ -72,9 +75,19 @@ const Embedded = ({ name }) => {
     )
 }
 
+const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited', 'jeanne'];
+const EmbeddedRoute = ({name, implicit}) => (
+    <Route
+        key={name + implicit}
+        path={`${implicit ? '/' : '/projects/'}${name}`}
+        component={() => <Embedded name={name} />} />
+)
+
 export {
     Loading,
     Missing,
     Page,
-    Embedded
+    Embedded,
+    EmbeddedRoute,
+    embedded
 }

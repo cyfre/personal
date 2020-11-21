@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Switch, Redirect } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { Embedded, Page, Missing  } from './Contents';
+import { embedded, EmbeddedRoute, Page, Missing  } from './Contents';
 
 const Main = styled.div`
     width: 100%;
@@ -26,14 +26,6 @@ const Main = styled.div`
         width: 100%;
     }
 `
-
-const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited', 'jeanne'];
-const EmbeddedRoute = ({name, implicit}) => (
-    <Route
-        key={name + implicit}
-        path={`${implicit ? '/' : '/projects/'}${name}`}
-        component={() => <Embedded name={name} />} />
-)
 
 export default () => (
     <Main id='main'>

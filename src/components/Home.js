@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
 import { Route, Link, Switch, useRouteMatch } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -282,7 +282,8 @@ const Base = () => (
 
 export default () => {
   let { url } = useRouteMatch();
-  let isBase = url === '/'
+  let isBase = url === '/';
+  useEffect(() => { document.title = 'Cyrus Freshman'; }, []);
   return (
     <Home id="home" className={isBase ? "" : "darken"}>
       <div id="before"></div>
