@@ -27,11 +27,11 @@ const Main = styled.div`
     }
 `
 
-const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited'];
+const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited', 'jeanne'];
 const EmbeddedRoute = ({name, implicit}) => (
     <Route
         key={name + implicit}
-        exact path={`${implicit ? '/' : '/projects/'}${name}`}
+        path={`${implicit ? '/' : '/projects/'}${name}`}
         component={() => <Embedded name={name} />} />
 )
 

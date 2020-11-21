@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { useParams, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 
 import ErrorBoundary from './ErrorBoundary';
@@ -31,19 +31,44 @@ const Page = () => {
 }
 
 const Embedded = ({ name }) => {
-    let src = `/project/${name}/index.html`;
-    
-    useEffect(() => document.getElementById('embedded').focus(), []);
+    let [src, setSrc] = useState();
+    let history = useHistory();
+    let ifr = useRef();
+
+    const handle = {
+        hash: (hash) => setSrc(`/project/${name}/index.html${hash}`),
+    };
+
+    useEffect(() => {
+        // focus & set src
+        ifr.current.focus();
+        handle.hash(window.location.hash);
+
+        // send hash updates down
+        let eventId = window.addEventListener('hashchange', () =>
+            handle.hash(window.location.hash));
+
+        // bring hash updates up
+        let intervalId = setInterval(() => {
+            let ifrHash = ifr.current.contentWindow.window.location.hash;
+            if (window.location.hash !== ifrHash) {
+                history.replace(ifrHash);
+            }
+        }, 500);
+
+        return () => {
+            window.removeEventListener('hashchange', eventId);
+            clearInterval(intervalId);
+        };
+    }, []);
 
     return (
         <iframe
             id="embedded"
             title={name}
-            allowFullScreen
             frameBorder="0"
-            height="100%"
-            width="100%"
-            src={src} />
+            src={src}
+            ref={ifr} />
     )
 }
 

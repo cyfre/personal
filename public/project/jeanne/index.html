@@ -44,13 +44,20 @@
         // a.textContent = 'aeiou'.includes(insult[0]) ? 'an' : 'a ';
         window.location.hash = '#' + encode(insult);
       }
-      doInsult(decode(window.location.hash.slice(1)));
+
+      const handleHash = () => {
+        let hash = window.location.hash;
+        hash.length && doInsult(decode(hash.slice(1)));
+      }
+      handleHash();
+      window.addEventListener('hashchange', handleHash);
 
       Promise.all(['nouns.txt', 'adjectives.txt'].map(url =>
         fetch(url).then(resp => resp.text())
       )).then(texts => {
         [nouns, adjs] = texts.map(text => text.split('\n'));
         q('#insult').addEventListener('click', () => doInsult());
+        window.location.hash || doInsult();
       });
     </script>
   </body>
