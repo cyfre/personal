@@ -29,14 +29,14 @@ const Header = styled.div`
     box-shadow: 1px 2px 4px #00000020;
   }
   & a, & a:hover {
-    color: var(--dark);
+    color: var(--light);
     padding-left: .25rem;
     text-shadow: 1px 2px 4px #00000020;
   }
 
   & .wiki-link, & .raw-link {
     font-size: 0.8rem;
-    opacity: .5;
+    opacity: .9;
     margin-right: .5rem;
   }
 `

@@ -1,9 +1,35 @@
-import React, { useEffect, useState, Fragment } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouteMatch } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import './models.css';
+import { useAnimate, useEventListener } from '../lib/hooks';
+import styled from 'styled-components';
+
+const Models = styled.div`
+    height: 100%;
+    width: 100%;
+
+    & #canvasContainer {
+        height: 100%;
+        width: 100%;
+    }
+
+    & #canvas {
+        /* background: radial-gradient(white, rgb(100, 100, 100)); */
+        background: radial-gradient(rgb(40, 40, 40), rgb(10, 10, 10));
+        background: radial-gradient(rgb(90, 90, 90), rgb(40, 40, 40));
+        background: radial-gradient(rgb(240, 240, 240), rgb(140, 140, 140));
+        /* rgb(244, 241, 232) */
+    }
+
+    & #modelList {
+        position: absolute;
+        top: .5rem;
+        right: .5rem;
+        min-width: 7rem;
+    }
+`
 
 var SCALE = 16;
 var camera, scene, renderer, controls, loader;
@@ -54,16 +80,12 @@ function init() {
         scene.add(light);
     }
 
-    window.addEventListener('resize', onWindowResize, false);
     onWindowResize();
 
     loader = new GLTFLoader();
 }
 
-let stop = false
 function animate() {
-    if (stop) return;
-    requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
 }
@@ -101,21 +123,16 @@ export default () => {
     let [ modelName, setModelName ] = useState('');
 
     useEffect(() => {
-        stop = false
         init();
-        animate();
-
         let initialModel = match && match.params.initialModel;
         if (!initialModel || modelNames.includes[initialModel]) {
             initialModel = 'octopus';
         }
         setModelName(initialModel);
-        
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
     }, []);
+
+    useAnimate(animate);
+    useEventListener(window, 'resize', onWindowResize, false);
 
     useEffect(() => {
         loadModel(modelName);
@@ -123,13 +140,13 @@ export default () => {
     }, [modelName]);
 
     return (
-        <Fragment>
+        <Models>
             <div id="canvasContainer">
                 <canvas id="canvas"/>
             </div>
             <select id="modelList" value={modelName} onChange={e => setModelName(e.target.value)}>
                 {modelNames.map(name => <option value={name} key={name}>{name}</option>)}
             </select>
-        </Fragment>
+        </Models>
     )
 }

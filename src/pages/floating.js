@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import Delaunator from 'delaunator';
+import { useAnimate, useEventListener } from '../lib/hooks';
 const V3 = THREE.Vector3;
 
 var SCALE = 256;
@@ -30,7 +31,8 @@ class Point {
 function init() {
     renderer = new THREE.WebGLRenderer({
         canvas: document.querySelector('#canvas'),
-        antialias: true
+        antialias: true,
+        alpha: true,
     });
     renderer.setPixelRatio(window.devicePixelRatio);
     let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
@@ -73,18 +75,36 @@ function init() {
 
     mesh = new THREE.Mesh(
         geometry,
-        new THREE.MeshBasicMaterial({ wireframe: true, side: THREE.DoubleSide, vertexColors: THREE.VertexColors }))
+        new THREE.MeshBasicMaterial({ wireframe: true, side: THREE.DoubleSide, vertexColors: THREE.VertexColors, width: 10 }))
     scene.add(mesh);
 
-    window.addEventListener('resize', onWindowResize, false);
+    // add circles
+    [...Array(10).keys()].forEach(i => {
+        const curve = new THREE.EllipseCurve(
+            // 0,  0, SCALE/2 * (1.05**i), SCALE/2 * (1.05**i),
+            0,  0, SCALE/2 * (1 - .1*i), SCALE/2 * (1 - .1*i),
+            0,  2 * Math.PI, false, 0
+        );
+        scene.add(new THREE.Line(
+            new THREE.BufferGeometry().setFromPoints(curve.getPoints(90)),
+            new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: i/42 + .1 })));
+    })
+
     onWindowResize();
+
+    return () => {
+        renderer.dispose();
+        scene.dispose();
+        camera = null;
+        scene = null;
+        renderer = null;
+        points = null;
+        delaunay = null;
+        mesh = null;
+    }
 }
 
-let stop = false
 function animate() {
-    if (stop) return;
-    requestAnimationFrame(animate);
-
     mesh.geometry.dispose();
 
     points.forEach(p => p.update())
@@ -123,18 +143,13 @@ function onWindowResize() {
 }
 
 export default () => {
-    useEffect(() => {
-        stop = false
-        init();
-        animate();
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
-    }, []);
+    useEffect(() => init(), []);
+    useAnimate(animate);
+    useEventListener(window, 'resize', onWindowResize, false);
 
     return (
-        <div id="canvasContainer" style={{ height: '100%', width: '100%' }}>
+        <div id="canvasContainer" className="seamless"
+            style={{ height: '100%', width: '100%' }}>
             <canvas id="canvas"/>
         </div>
     )

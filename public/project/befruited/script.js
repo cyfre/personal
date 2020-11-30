@@ -144,7 +144,7 @@ class ScoreManager {
     }
     draw(ctx) {
         this.scores.forEach(score => score.draw(ctx));
-        
+
         let scoreBoxY = CNST.GRID_HEIGHT + 2*CNST.GRID_FRAME;
         Arc.sprites.score.draw(CNST.GRID_FRAME + .25, scoreBoxY + 1.25, .5);
         Arc.drawNumber(this.score, CNST.GRID_FRAME + .25 + Arc.sprites.score.width/2 + 2.5, scoreBoxY + 1.25, 0.5, .5);
@@ -247,7 +247,7 @@ class Board {
                 this.grid[row][col] = this.fruitManager.spawn(new Arc.V(col, row));
             }
         }
-        
+
         // clear any matches
         do {
             this.tick();

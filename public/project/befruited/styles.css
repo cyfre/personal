@@ -40,3 +40,7 @@ body {
     background-repeat: no-repeat;
     transform-origin: top left;
 }
+
+.seamless .outer.container {
+    padding: 0;
+}

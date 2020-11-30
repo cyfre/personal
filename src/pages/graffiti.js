@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components';
 import api from '../lib/api';
+import { useEventListener } from '../lib/hooks';
 
 const WIDTH = 256, HEIGHT = 256;
 let canvas, ctx, canvasScale;
@@ -24,13 +25,6 @@ const SZ = {
   '.7rem': 3,
   '1rem': 8
 }
-
-const cleanup = [];
-const addEventListener = (target, type, callback, useCapture) => {
-  target.addEventListener(type, callback, useCapture);
-  cleanup.push(() => target.removeEventListener(type, callback, useCapture));
-}
-const cleanEventListeners = () => cleanup.forEach(action => action());
 
 const copyCanvas = () => {
   let copy = document.createElement('canvas');
@@ -57,7 +51,6 @@ const init = () => {
     }
     sendAndReceive();
   });
-  addEventListener(window, 'resize', resize, false);
 }
 
 const sendAndReceive = () => {
@@ -116,6 +109,7 @@ const Graffiti = styled.div`
   width: 100%;
   display: flex;
   flex-direction: row;
+  background: var(--dark);
 `
 
 const Toolbar = styled.div`
@@ -201,9 +195,10 @@ export default () => {
 
   useEffect(() => {
     init();
-    addEventListener(window, 'pointerup', e => setDown(false), false);
-    return cleanEventListeners;
   }, []);
+
+  useEventListener(window, 'pointerup', e => setDown(false), false);
+  useEventListener(window, 'resize', resize, false);
 
   const draw = (e, force) => {
     let rect = e.target.getBoundingClientRect();

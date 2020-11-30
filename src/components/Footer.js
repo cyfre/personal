@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 const Footer = styled.div`
     & .signature {
-        color: var(--dark);
+        color: var(--light);
         opacity: .5;
         font-size: 0.5rem;
         padding-bottom: 0.5rem;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { useInput } from '../../lib/hooks';
+import { useInput, useEventListener, useAnimate } from '../../lib/hooks';
 import './turt.css';
 
 import * as THREE from 'three';
@@ -77,17 +77,12 @@ function init() {
         }
     );
 
-    window.addEventListener('resize', onWindowResize, false);
     onWindowResize();
 }
 
-let stop = false
 let startTime = Date.now();
 let previousTime = startTime;
 function animate() {
-    if (stop) return;
-    requestAnimationFrame(animate);
-
     let elapsedTime = Date.now() - startTime;
     if (model) {
         let animZ = elapsedTime / 3000 % 2;
@@ -126,14 +121,11 @@ function onWindowResize() {
 
 const CanvasContainer = () => {
     useEffect(() => {
-        stop = false
         init();
-        animate();
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
     }, []);
+
+    useAnimate(animate);
+    useEventListener(window, 'resize', onWindowResize, false);
 
     return (
         <div id="canvasContainerContainer">

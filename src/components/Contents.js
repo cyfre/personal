@@ -2,27 +2,105 @@ import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Route } from 'react-router-dom';
 import { useParams, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
+import { useTitle, useTimeout, useInterval, useEventListener } from '../lib/hooks';
 
 import ErrorBoundary from './ErrorBoundary';
+
+// https://projects.lukehaas.me/css-loaders/
+const Loader = styled.div`
+    margin: 60px auto;
+    font-size: 10px;
+    position: relative;
+    text-indent: -9999em;
+    border-top: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-right: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
+    border-left: 1.1em solid #ffffff;
+    transform: translateZ(0);
+    animation: load8 2s infinite linear;
+    &, &::after {
+        border-radius: 50%;
+        width: 10em;
+        height: 10em;
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+        }
+        100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+    }
+`
 
 const Fallback = styled.div`
     width: 100%;
     height: 100%;
-    font-size: 1.6rem;
+    color: var(--light);
+    text-shadow: none;
     text-transform: lowercase;
-    font-weight: bold;
-    opacity: .32;
-    text-shadow: 1px 2px 4px #00000020;
+
+    position: relative;
+    & > * {
+        opacity: .6;
+    }
+    &::before {
+        opacity: .25;
+        background: var(--light);
+
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        z-index: -1;
+    }
 `
 
-const Loading = () => <Fallback className="centering">loading</Fallback>;
-const Missing = () => <Fallback className="centering">🐙<br/>there's nothing to see here</Fallback>;
+const IFrameDiv = styled.div`
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    & iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+    }
+`
+
+const Loading = () => {
+    const [show, setShow] = useState(false);
+    useTimeout(() => setShow(true), 1000);
+    return (
+        <Fallback className="centering seamless">
+            {show ? <Loader /> : ''}
+        </Fallback>);
+}
+const Missing = () =>
+    <Fallback className="centering seamless"><p>🐙<br/>nothing to see here</p></Fallback>;
 
 const Page = () => {
     let { id } = useParams();
+    useTitle(id);
     let Page = React.lazy(() => import('../pages/' + id));
-    useEffect(() => { document.title = id; }, [id]);
-
     return (
         <Suspense fallback={<Loading />}>
             <ErrorBoundary fallback={<Missing />}>
@@ -34,44 +112,41 @@ const Page = () => {
 
 const Embedded = ({ name }) => {
     let [src, setSrc] = useState();
+    let [loaded, setLoaded] = useState(false);
     let history = useHistory();
     let ifr = useRef();
 
     const handle = {
         hash: (hash) => setSrc(`/project/${name}/index.html${hash}`),
+        load: () => setLoaded(true),
     };
 
+    // focus & set src to start
     useEffect(() => {
-        // focus & set src
         ifr.current.focus();
         handle.hash(window.location.hash);
-
-        // send hash updates down
-        let eventId = window.addEventListener('hashchange', () =>
-            handle.hash(window.location.hash));
-
-        // bring hash & title updates up
-        let intervalId = setInterval(() => {
-            document.title = ifr.current.contentWindow.window.document.title;
-            let ifrHash = ifr.current.contentWindow.window.location.hash;
-            if (window.location.hash !== ifrHash) {
-                history.replace(ifrHash);
-            }
-        }, 500);
-
-        return () => {
-            window.removeEventListener('hashchange', eventId);
-            clearInterval(intervalId);
-        };
     }, []);
 
+    // send hash updates down
+    useEventListener(window, 'hashchange', () => handle.hash(window.location.hash));
+
+    // bring hash & title updates up
+    useInterval(() => {
+        document.title = ifr.current.contentWindow.window.document.title;
+        let ifrHash = ifr.current.contentWindow.window.location.hash;
+        if (window.location.hash !== ifrHash) {
+            history.replace(ifrHash);
+        }
+    }, 500);
+
     return (
-        <iframe
-            id="embedded"
-            title={name}
-            frameBorder="0"
-            src={src}
-            ref={ifr} />
+        <IFrameDiv>
+            {loaded ? '' : <Loading />}
+            <iframe id="embedded" ref={ifr}
+                title={name} src={src}
+                frameBorder="0"
+                onLoad={handle.load} />
+        </IFrameDiv>
     )
 }
 

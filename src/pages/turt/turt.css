@@ -28,6 +28,8 @@
 
 .Turt {
     width: 100%;
+    max-width: 140vh;
+    margin: auto;
     height: 100%;
     text-align: center;
     /* max-width: min(30rem, calc(100% - 2rem)); */
@@ -200,6 +202,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+    color: var(--dark);
 }
 .About * {
     font-family: monospace;

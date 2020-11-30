@@ -1,3 +1,7 @@
+body {
+    background: var(--dark);
+}
+
 .container {
     user-select: none;
     flex-grow: 1;

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useAnimate, useEventListener } from '../lib/hooks';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -71,14 +72,10 @@ function init() {
         }
     );
 
-    window.addEventListener('resize', onWindowResize, false);
     onWindowResize();
 }
 
-let stop = false
 function animate() {
-    if (stop) return;
-    requestAnimationFrame(animate);
     controls.update();
     renderer.render(scene, camera);
 }
@@ -92,14 +89,11 @@ function onWindowResize() {
 
 export default () => {
     useEffect(() => {
-        stop = false
         init();
-        animate();
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
     }, []);
+
+    useAnimate(animate);
+    useEventListener(window, 'resize', onWindowResize, false);
 
     return (
         <div id="canvasContainer" style={{ height: '100%', width: '100%' }}>

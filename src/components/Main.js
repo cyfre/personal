@@ -6,24 +6,22 @@ import { embedded, EmbeddedRoute, Page, Missing  } from './Contents';
 
 const Main = styled.div`
     width: 100%;
-    background: var(--dark);
+    background: none;
+    color: var(--light);
     height: 0;
     flex-grow: 1;
     margin: .5rem auto;
     max-width: calc(100% - 1rem);
     margin-top: 0;
-    border-radius: 3px;
-    box-shadow: 1px 2px 6px #00000020;
-
-    overflow: hidden;
     position: relative;
 
-    & iframe {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
+    & > * {
+        border-radius: 3px;
+        overflow: hidden;
+        box-shadow: 1px 2px 6px #00000020;
+        &.seamless {
+            box-shadow: none;
+        }
     }
 `
 

@@ -1,6 +1,7 @@
 // adapted from https://threejs.org/examples/webgl_postprocessing_afterimage
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
+import { useEventListener, useAnimate } from '../lib/hooks';
 
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -37,8 +38,6 @@ function init() {
     afterimagePass = new AfterimagePass();
     afterimagePass.uniforms["damp"].value = 0.997;
     composer.addPass( afterimagePass );
-
-    window.addEventListener( 'resize', onWindowResize, false );
 }
 
 function onWindowResize() {
@@ -50,11 +49,7 @@ function onWindowResize() {
     composer.setSize( bounds.width, bounds.height );
 }
 
-let stop = false
 function animate() {
-    if (stop) return;
-    requestAnimationFrame( animate );
-
     mesh.rotation.x += 0.005;
     mesh.rotation.y += 0.01;
 
@@ -69,14 +64,11 @@ const CanvasContainer = styled.div`
 
 export default () => {
     useEffect(() => {
-        stop = false;
         init();
-        animate();
-        return () => {
-            stop = true;
-            window.removeEventListener('resize', onWindowResize, false)
-        }
     }, []);
+
+    useAnimate(animate);
+    useEventListener(window, 'resize', onWindowResize, false);
 
     return (
         <CanvasContainer id="canvasContainer">
