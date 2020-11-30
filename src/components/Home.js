@@ -336,9 +336,9 @@ export default () => {
           <Route exact path='/projects' component={Projects} />
           <Route exact path='/contact' component={ContactPage} />
         </Switch>
-        <div>
+        {/* <div>
           <WikiLink path={url} />
-        </div>
+        </div> */}
       </Box>
 
       <div id="after"></div>

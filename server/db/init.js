@@ -11,7 +11,10 @@ db.connect('mongodb://localhost/site', async () => {
     await db.collection('turt').deleteMany({});
 
     let turts = [
-        {content: 'content', author: 'author'}
+        {
+            content: 'Home is where somebody notices when you are no longer there',
+            author: 'Aleksandar Hemon',
+        },
     ];
 
     await db.collection('turt').insertMany(turts);
