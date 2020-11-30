@@ -22,6 +22,16 @@ function genRemove(name) {
     return async (id) => db.collection(name).deleteOne({ _id: ObjectID(id) });
 }
 
+function wrapReturn(func) {
+    return (req, res) => func(req)
+        .then(data => {
+            console.log(req.method, req.originalUrl);
+            console.log(data);
+            res.json(data);
+        })
+        .catch(error => res.json(error));
+}
+
 function genModelRoutes(model, routes) {
     if (routes === undefined) routes = express.Router();
 
@@ -48,7 +58,8 @@ function genModelRoutes(model, routes) {
                 .then(data => {
                     console.log(req.method, req.originalUrl);
                     console.log(data);
-                    res.json(data);})
+                    res.json(data);
+                })
                 .catch(error => res.json(error));
         });
     });
@@ -60,5 +71,6 @@ module.exports = {
     update,
     genGetAll,
     genGet,
+    wrapReturn,
     genModelRoutes
 }

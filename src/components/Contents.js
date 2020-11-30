@@ -75,7 +75,7 @@ const Embedded = ({ name }) => {
     )
 }
 
-const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited', 'jeanne'];
+const embedded = ['terrain', 'nonogram', 'snakes', 'snackman', 'befruited', 'insult'];
 const EmbeddedRoute = ({name, implicit}) => (
     <Route
         key={name + implicit}

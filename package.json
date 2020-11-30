@@ -9,6 +9,7 @@
     "bootstrap": "^4.4.1",
     "delaunator": "^4.0.1",
     "express": "^4.17.1",
+    "googleapis": "^65.0.0",
     "mongodb": "^3.5.5",
     "nodemon": "^2.0.2",
     "paper": "^0.12.4",

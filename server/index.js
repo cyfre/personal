@@ -25,6 +25,7 @@ app.use((req, res, next) => {
 app.use('/api/turt', require('./turt').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
 app.use('/api/cityhall', require('./cityhall').routes);
+app.use('/api/msg', require('./msg').routes);
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));

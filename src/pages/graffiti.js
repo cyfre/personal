@@ -25,6 +25,13 @@ const SZ = {
   '1rem': 8
 }
 
+const cleanup = [];
+const addEventListener = (target, type, callback, useCapture) => {
+  target.addEventListener(type, callback, useCapture);
+  cleanup.push(() => target.removeEventListener(type, callback, useCapture));
+}
+const cleanEventListeners = () => cleanup.forEach(action => action());
+
 const copyCanvas = () => {
   let copy = document.createElement('canvas');
   copy.width = canvas.width;
@@ -50,7 +57,7 @@ const init = () => {
     }
     sendAndReceive();
   });
-  window.addEventListener('resize', resize, false);
+  addEventListener(window, 'resize', resize, false);
 }
 
 const sendAndReceive = () => {
@@ -194,7 +201,8 @@ export default () => {
 
   useEffect(() => {
     init();
-    window.addEventListener('pointerup', e => setDown(false), false);
+    addEventListener(window, 'pointerup', e => setDown(false), false);
+    return cleanEventListeners;
   }, []);
 
   const draw = (e, force) => {

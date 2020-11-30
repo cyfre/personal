@@ -33,8 +33,8 @@
     <script>
       const q = (s) => document.querySelector(s);
       const sample = (arr) => arr[Math.floor(Math.random() * arr.length)];
-      const encode = (s) => s.replaceAll(' ', '+');
-      const decode = (s) => s.replaceAll('+', ' ');
+      const encode = (s) => s.replace(/ /g, '+');
+      const decode = (s) => s.replace(/\+/g, ' ');
 
       const insultElem = q('#insult');
 

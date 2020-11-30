@@ -13,7 +13,7 @@ import Footer from './components/Footer';
 const App = () => (
   <Router>
     <Switch>
-      <Route exact path='/(|projects|about)' component={Home} />
+      <Route exact path='/(|projects|about|contact)' component={Home} />
       <Route path='*'>
         <Header />
         <Main />

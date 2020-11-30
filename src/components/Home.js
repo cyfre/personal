@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect } from 'react';
-import { Route, Link, Switch, useRouteMatch } from 'react-router-dom';
+import { Route, Link, Switch, useRouteMatch, Redirect } from 'react-router-dom';
 import styled from 'styled-components';
+import Contact from './Contact';
 
 import WikiLink from './WikiLink';
 
@@ -31,10 +32,11 @@ const Home = styled.div`
     right: 0;
     bottom: -1.5rem;
     color: var(--light);
+    opacity: .5;
   }
 
   & p > a, & span > a {
-    color: #c0fbcd; // #6e7f90
+    color: #ddffe4; // #c0fbcd; // #6e7f90
     text-decoration: none;
     &:hover {
       color: var(--light);
@@ -100,12 +102,30 @@ const Title = styled.div`
   padding: 0.25rem 0 1rem 0;
   text-align: center;
   margin-bottom: 1rem;
-  & > img {
+  & > .imgDiv {
     width: 50%;
-    border-radius: 50%;
-    border: 2px solid var(--light);
-    box-shadow: 1px 2px 4px #00000020;
+    position: relative;
+    margin: auto;
     margin-bottom: .5rem;
+    &::after {
+      content: "";
+      display: block;
+      padding-bottom: 100%;
+    }
+    & > img {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 50%;
+      border: 2px solid var(--light);
+      box-shadow: 1px 2px 4px #00000020;
+    }
   }
   & > h1 {
     margin: 0;
@@ -254,21 +274,32 @@ const About = () => (
   </Title>
 
   <Description>
-    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and I'm currently looking for work as a software developer.
+    Hi, I'm Cyrus! I've been coding since 2013, I graduated from <a href="https://en.wikipedia.org/wiki/University_of_Massachusetts_Amherst">UMass Amherst</a> in 2019, and I'm currently working as a software developer at <a href="https://en.wikipedia.org/wiki/Amazon_Robotics">Amazon Robotics</a> while living in Boston
   </Description>
   <Description>
-    I'm passionate about <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a> and general outdoorsy things like hiking, camping, and bonfires.
+    I enjoy <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a>, indoor rock climbing, and general outdoorsy things like hiking, camping, and skiing
   </Description>
-  <Description>
-    This site is for experimentation – all subject to change. You can reach me at cyruswfreshman@gmail.com
-  </Description>
+  <br />
+  <Contact />
+  </Fragment>
+)
+
+const ContactPage = () => (
+  <Fragment>
+  <Title>
+    <h1>Contact</h1>
+  </Title>
+
+  <Contact />
   </Fragment>
 )
 
 const Base = () => (
   <Fragment>
   <Title>
-    <img src="/profile.jpeg"/>
+    <div className="imgDiv">
+      <img src="/profile.jpeg" alt="profile"/>
+    </div>
     <h1>Cyrus Freshman</h1>
     <p>Software Developer</p>
     <p>B.S. in Computer Science</p>
@@ -303,6 +334,7 @@ export default () => {
           <Route exact path='/' component={Base} />
           <Route exact path='/about' component={About} />
           <Route exact path='/projects' component={Projects} />
+          <Route exact path='/contact' component={ContactPage} />
         </Switch>
         <div>
           <WikiLink path={url} />

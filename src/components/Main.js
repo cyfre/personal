@@ -27,10 +27,21 @@ const Main = styled.div`
     }
 `
 
+const redirects = [
+    ['/projects', ''],
+    ['/jeanne', '/insult'],
+].map(pair => (
+    <Route path={pair[0]} key={pair.join()} render={routeProps =>
+        <Redirect to={
+            routeProps.location.pathname.replace(...pair) + routeProps.location.hash
+        }/>
+    }/>
+));
+
 export default () => (
     <Main id='main'>
         <Switch>
-            <Redirect from='/projects/*' to='/*' />
+            {redirects}
             {/* explicit /projects/ */}
             {/* {projects.map(name => EmbeddedRoute({name, implicit: false}))}
             <Route path='/projects/:id' component={Page} /> */}
