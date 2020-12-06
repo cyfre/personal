@@ -29,7 +29,13 @@ const useScript = (src) => {
 
 const useTitle = (title) => {
     useEffect(() => {
+        const prevTitle = document.title;
         document.title = title;
+        return () => {
+            if (document.title === title) {
+                document.title = prevTitle;
+            }
+        }
     }, [title]);
 }
 

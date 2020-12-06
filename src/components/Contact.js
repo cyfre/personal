@@ -100,7 +100,7 @@ export default () => {
       <input ref={contact}
         className='contact' type='text' spellCheck='false'
         onKeyDown={e => e.key === 'Enter' && handle.send()}
-        placeholder='contact info' />
+        placeholder='optional contact info' />
       {sent
         ? <div className='confirmation'>sent!</div>
         : <button className='send' onClick={handle.send}>send</button>
