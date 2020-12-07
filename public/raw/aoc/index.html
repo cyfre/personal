@@ -76,7 +76,6 @@
             console.log(e);
         },
         run: () => {
-            console.log(`./${E.year.value}/${E.day.value}.js`);
             const script = document.createElement('script');
             script.type = 'text/javascript';
             document.body.append(script);
@@ -88,31 +87,14 @@
                     p2: 'unsolved'
                 };
                 if (solution) {
+                    let start = Date.now();
                     answers = {...answers, ...solution(E.paste.value)};
+                    console.log(`${E.year.value}/${E.day.value} ${Date.now() - start}ms`);
                 }
                 handle.output(answers);
             }
             script.src = `./${E.year.value}/${E.day.value}.js`;
             handle.saveState();
-
-            // fetch(`./${E.year.value}/${E.day.value}.mjs`)
-            //     .then(res => res.text()).then(text => {
-            //         console.log(text);
-            //         const script = document.createElement('script', {
-            //             type: 'module',
-            //         });
-            //         script.innerHTML = text;
-            //         document.body.append(script);
-            //     })
-            //     .catch(console.log)
-
-            // import(`./${E.year.value}/${E.day.value}.mjs`)
-            //     .then(module => {
-            //         console.log(module);
-            //         handle.output(module.default(E.paste.value))
-            //         delete require.cache[require.resolve(`./${E.year.value}/${E.day.value}.mjs`)]
-            //     })
-            //     .catch(err => handle.output(`sorry, ${E.year.value} day ${E.day.value} is still unsolved`));
         },
         output: result => {
             // E.output.textContent = result;
