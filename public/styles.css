@@ -10,9 +10,6 @@
     transition: 0.15s;
 }
 
-html {
-    font-size: 14px;
-}
 html, body {
     margin: 0;
     height: 1px;
@@ -20,6 +17,7 @@ html, body {
     min-width: 100%;
     min-height: 100%;
 }
+
 body {
     background: var(--light);
     display: flex;

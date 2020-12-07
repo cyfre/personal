@@ -28,6 +28,8 @@ const Main = styled.div`
 const redirects = [
     ['/projects', ''],
     ['/jeanne', '/insult'],
+    ['/project/jeanne', '/project/insult'],
+    ['/project', '/raw'],
 ].map(pair => (
     <Route path={pair[0]} key={pair.join()} render={routeProps =>
         <Redirect to={
@@ -39,6 +41,7 @@ const redirects = [
 export default () => (
     <Main id='main'>
         <Switch>
+            <Route path='/raw' render={() => window.location.reload()} />
             {redirects}
             {/* explicit /projects/ */}
             {/* {projects.map(name => EmbeddedRoute({name, implicit: false}))}

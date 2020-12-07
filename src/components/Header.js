@@ -75,7 +75,7 @@ export default () => {
         {crumbs.map(crumb => <Link to={crumb} key={crumb}>/ {crumb.split('/').pop()}</Link>)}
       </div>
       <div>
-        {isEmbeddedProject && <a className='raw-link' href={`/project${crumbs[0]}${location.hash}`}>[ view raw ]</a>}
+        {isEmbeddedProject && <a className='raw-link' href={`/raw${crumbs[0]}${location.hash}`}>[ view raw ]</a>}
         <WikiLink path={url} />
       </div>
     </Header>

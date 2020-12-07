@@ -117,7 +117,7 @@ const Embedded = ({ name }) => {
     let ifr = useRef();
 
     const handle = {
-        hash: (hash) => setSrc(`/project/${name}/index.html${hash}`),
+        hash: (hash) => setSrc(`/raw/${name}/index.html${hash}`),
         load: () => setLoaded(true),
     };
 

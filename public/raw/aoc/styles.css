@@ -75,16 +75,17 @@ html {
     color: var(--light);
 }
 #aoc .run::before {
-    content: "";
+    content: "[ ";
 }
 #aoc .run::after {
-    content: " >";
+    content: " ]";
 }
 #aoc .run:hover {
     text-decoration: underline;
 }
 
 #aoc .answer {
+    width: 4rem;
     flex-grow: 1;
     background: black;
     color: var(--light);
@@ -95,6 +96,7 @@ html {
 
 #aoc .login-warning {
     font-size: .66rem;
+    margin-top: .5rem;
 }
 #aoc .doc {
     width: 100%;
