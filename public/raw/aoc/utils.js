@@ -1,6 +1,8 @@
 (() => {
     const U = {
         opt: (val, func) => func ? func(val) : val,
+        apply: (val, func) => func(val),
+        use: (val, func) => { func(val); return val; },
         o: (field, value) => ({ [field]: value }),
         k: (obj, func) => U.opt(Object.keys(obj), func),
         v: (obj, func) => U.opt(Object.values(obj), func),
@@ -12,11 +14,11 @@
         product: (arr, func) => arr.reduce((prod, val) => prod * U.opt(val, func), 1),
         match: (strs, regex, func) => strs.map(str => U.opt(str.match(regex), func)),
         union: (a, b) => new Set(...a, ...b),
-        answer: (input, func) => {
-            let answers = {};
-            func(input.split('\n'), ...['p1', 'p2'].map(pN => aN => { answers[pN] = aN; }));
-            return answers;
-        },
+        splice: (arr, i, nX, ...items) =>
+            U.use(arr.slice(), copy => copy.splice(i, nX, ...items)),
+        answer: (input, func) => U.use({}, answers => func(
+            input.split('\n'),
+            ...['p1', 'p2'].map(pN => aN => { console.log(pN, aN); answers[pN] = aN; }))),
     };
     window.U = U;
 })();
