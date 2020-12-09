@@ -21,6 +21,46 @@
             ...['p1', 'p2'].map(pN => aN => { console.log(pN, aN); answers[pN] = aN; }))),
     };
 
+    function ok(i, nums, window) {
+        for (let j = i-window; j < i-1; j++) {
+            for (let k = j+1; k < i; k++) {
+                if (nums[j] + nums[k] === nums[i]) return true;
+            }
+        }
+        return false;
+    }
+
+    function is(i, nums, target) {
+        for (let sum = 0; i < nums.length; i++) {
+            sum += nums[i];
+            if (sum === target) return i;
+            if (sum > target) return false;
+        }
+        return false;
+    }
+
     window.solution = input => U.answer(input, (lines, p1, p2) => {
+        let nums = lines.map(Number);
+        let window = 25;
+        let target;
+        console.log(nums);
+        for (let i = window; i < nums.length; i++) {
+            if (!ok(i, nums, window)) {
+                target = nums[i];
+                p1(nums[i]);
+                break;
+            }
+        }
+
+        for (let i = 0; i < nums.length; i++) {
+            let result = is(i, nums, target);
+            if (is(i, nums, target)) {
+                let min = Math.min(...nums.slice(i, result+1));
+                let max = Math.max(...nums.slice(i, result+1));
+                console.log(i, result, nums.slice(i, result+1), min, max);
+                p2(min + max);
+                break;
+            }
+        }
     });
 })();
