@@ -224,43 +224,47 @@ const Projects = () => (
   <ProjectList>
     <Link to="/terrain">terrain generation</Link>
     <Description>
-      A procedurally generated landscape
+      procedurally generated landscape
     </Description>
     <Link to="/nonogram">nonogram solver</Link>
     <Description>
-      Created to solve puzzles from the app <a href="https://apps.apple.com/us/app/picture-cross/id977150768">Picture Cross</a>, aka <a href="https://en.wikipedia.org/wiki/Nonogram">nonograms</a>
+      created to solve puzzles from the app <a href="https://apps.apple.com/us/app/picture-cross/id977150768">Picture Cross</a>, aka <a href="https://en.wikipedia.org/wiki/Nonogram">nonograms</a>
     </Description>
     <Link to="/snakes">snakes</Link>
     <Description>
-      A one- or two-player co-op game of snake!
+      one- or two-player co-op game of snake!
     </Description>
     <Link to="/snackman">snackman</Link>
     <Description>
-      It's kinda like Pac-Man!
+      it's kinda like Pac-Man!
     </Description>
     <Link to="/befruited">befruited</Link>
     <Description>
-      Bejeweled but with fruit!
+      bejeweled but with fruit!
     </Description>
     <Link to="/graffiti">graffiti wall</Link>
     <Description>
-      A graffiti wall open to everyone
+      graffiti wall open to everyone
     </Description>
     <Link to="/turt">turt smurts</Link>
     <Description>
-      A wise turtle, 50/50 mix of user content and <a href="api.quotable.io">api.quotable.io/random</a>
+      wise turtle, 50/50 mix of user content and <a href="api.quotable.io">api.quotable.io/random</a>
+    </Description>
+    <Link to="/insult">insult</Link>
+    <Description>
+      idk sometimes it's funny
     </Description>
     <Link to="/cloud">cloud</Link>
     <Description>
-      A pretty rotating cube
+      pretty rotating cube
     </Description>
     <Link to="/floating">floating</Link>
     <Description>
-      A shifting Delaunay triangulation
+      shifting Delaunay triangulation
     </Description>
     <Link to="/models">models</Link>
     <Description>
-      Simple 3d trees & things created in Blender
+      simple 3d trees & things created in Blender
     </Description>
 
   </ProjectList>
