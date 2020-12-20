@@ -103,7 +103,7 @@ function loadModel(name) {
     model && scene.remove(model);
     if (name && modelNames.includes(name)) {
         loader.load(
-            `/project/models/${name}.glb`,
+            `/raw/models/${name}.glb`,
             (gltf) => {
                 model = gltf.scene;
 

@@ -65,7 +65,7 @@ function init() {
 
     var loader = new GLTFLoader();
     loader.load(
-        '/project/models/tree.glb',
+        '/raw/models/tree.glb',
         (gltf) => {
             console.log(gltf);
             scene.add(gltf.scene);

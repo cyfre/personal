@@ -55,7 +55,7 @@ function init() {
 
     var loader = new GLTFLoader();
     loader.load(
-        '/project/models/turtle.glb',
+        '/raw/models/turtle.glb',
         (gltf) => {
             model = gltf.scene;
             model.castShadow = true;
@@ -63,7 +63,7 @@ function init() {
         }
     );
     loader.load(
-        '/project/models/tree.glb',
+        '/raw/models/tree.glb',
         (gltf) => {
             tree = gltf.scene;
             trees = [1,2,3,4,5,6].map(i => tree.clone());
