@@ -115,7 +115,7 @@ const Graffiti = styled.div`
 const Toolbar = styled.div`
   background: var(--dark-l);
   height: 100%;
-  padding: .5rem 0;
+  padding: .2rem 0;
   flex-wrap: wrap;
   flex-direction: column;
 
@@ -128,8 +128,8 @@ const Toolbar = styled.div`
 
   & .divider {
     height: .1rem;
-    width: 2rem;
-    margin: 1rem;
+    width: calc(100% - 1rem);
+    margin: .5rem;
     background: var(--light);
   }
 `
@@ -138,7 +138,7 @@ const Dot = styled.div`
   border-radius: 50%;
   width: 1.75em;
   height: 1.75em;
-  margin: .5rem;
+  margin: calc((2.2rem - 1.75em)/6 + .2rem*2/3) calc((2.4rem - 1.75em)/6 + .4rem*2/3); // .2rem .4rem;
   border: 2px solid var(--dark);
   background-color: var(--dark-l);
   box-shadow: 1px 2px 4px black;
