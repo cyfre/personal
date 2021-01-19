@@ -2,11 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 
 const Footer = styled.div`
+    position: relative;
     & .signature {
+        position: absolute;
+        top: .05rem;
         color: var(--light);
         opacity: .5;
         font-size: 0.5rem;
-        padding-bottom: 0.5rem;
     }
 `
 

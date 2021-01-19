@@ -57,18 +57,18 @@ const Fallback = styled.div`
     & > * {
         opacity: .6;
     }
-    &::before {
-        opacity: .25;
-        background: var(--light);
+    // &::before {
+    //     opacity: .25;
+    //     background: var(--light);
 
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        z-index: -1;
-    }
+    //     content: "";
+    //     position: absolute;
+    //     top: 0;
+    //     left: 0;
+    //     height: 100%;
+    //     width: 100%;
+    //     z-index: -1;
+    // }
 `
 
 const IFrameDiv = styled.div`
@@ -88,7 +88,7 @@ const IFrameDiv = styled.div`
 
 const Loading = () => {
     const [show, setShow] = useState(false);
-    useTimeout(() => setShow(true), 1000);
+    useTimeout(() => setShow(true), 500);
     return (
         <Fallback className="centering seamless">
             {show ? <Loader /> : ''}

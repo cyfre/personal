@@ -10,13 +10,15 @@ const Main = styled.div`
     color: var(--light);
     height: 0;
     flex-grow: 1;
-    margin: .5rem auto;
-    max-width: calc(100% - 1rem);
+    // margin: .5rem auto;
+    // max-width: calc(100% - 1rem);
     margin-top: 0;
     position: relative;
 
     & > * {
-        border-radius: 3px;
+        // border-radius: 3px;
+        border-bottom-left-radius: .2rem;
+        border-bottom-right-radius: .2rem;
         overflow: hidden;
         box-shadow: 1px 2px 6px #00000020;
         &.seamless {

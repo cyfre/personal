@@ -10,14 +10,18 @@ const Home = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  @media (max-width: 30rem) {
+  background: black;
+  // background: linear-gradient(15deg,#609e98,#e2d291) fixed;
+  @media (max-width: 30.01rem) {
+    // background: #131125;
     &.darken {
       // background-color: rgba(0, 0, 0, .042);
     }
   }
 
   & #before {
-    flex-grow: 4;
+    // flex-grow: 4;
+    height: 1rem;
   }
   & #after {
     flex-grow: 5;
@@ -36,7 +40,7 @@ const Home = styled.div`
   }
 
   & p > a, & span > a {
-    color: #ddffe4; // #c0fbcd; // #6e7f90
+    color: rgb(155 228 170); // #ddffe4; // #c0fbcd; // #6e7f90
     text-decoration: none;
     &:hover {
       color: var(--light);
@@ -57,14 +61,38 @@ const Box = styled.div`
   align-items: center;
   justify-content: center;
   position: relative;
+  z-index: 1;
 
+  padding: 1rem;
+  background: #131125;
+  width: calc(100% - 4rem);
+  left: -.15rem;
+  max-width: 32rem;
+  border: none;
+  &::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    border-radius: inherit;
+    z-index: -1;
+  }
+  &::after {
+    position: absolute;
+    left: -0.3rem;
+    top: -0.3rem;
+    content: "";
+    width: calc(100% + 1.2rem);
+    height: calc(100% + 1.2rem);
+    background: linear-gradient(15deg, rgb(255, 145, 145) 0%, rgb(255, 227, 114) 100%) fixed;
+    background: linear-gradient(15deg,#609e98,#e2d291) fixed;
+    border-radius: .2rem;
+    z-index: -2;
+  }
+  @media (max-width: 30.01rem) {
+  }
   @media (min-width: 30rem) {
-    width: 22rem;
-    padding: 1rem;
-    border: 2px solid var(--light);
-    &.darken {
-      // background-color: rgba(0, 0, 0, .042);
-    }
   }
 
   & > * {
@@ -103,7 +131,8 @@ const Title = styled.div`
   text-align: center;
   margin-bottom: 1rem;
   & > .imgDiv {
-    width: 50%;
+    width: 42%;
+    max-width: 10rem;
     position: relative;
     margin: auto;
     margin-bottom: .5rem;
@@ -123,7 +152,7 @@ const Title = styled.div`
       object-fit: cover;
       object-position: center;
       border-radius: 50%;
-      border: 2px solid var(--light);
+      // border: 2px solid var(--light);
       box-shadow: 1px 2px 4px #00000020;
     }
   }
@@ -145,17 +174,25 @@ const Links = styled.div`
   position: fixed;
   top: 0;
   padding: 1rem;
+  font-size: .8rem;
+
+  position: absolute;
+  padding: 0;
+  top: .5rem;
+  font-size: .8rem;
+  top: .25rem;
   @media (min-width: 30rem) {
     position: absolute;
     padding: 0;
     top: .5rem;
     font-size: .8rem;
-    // top: .25rem;
+    top: .25rem;
   }
   &.base {
     position: absolute;
     padding: 0;
-    top: 3rem;
+    // top: 3rem;
+    top: .25rem;
     @media (min-width: 30rem) {
       font-size: .8rem;
       top: .25rem;
@@ -191,6 +228,7 @@ const ProjectList = styled.div`
     color: var(--light);
     text-decoration: underline;
     width: 40%;
+    margin-right: .5rem;
     display: inline-block;
     float: left;
     &:hover {
@@ -203,7 +241,7 @@ const ProjectList = styled.div`
     // margin-right: .5rem;
     // position: relative;
     // left: .5rem;
-    width: 60%;
+    width: 57%;
     display: inline-block;
     margin-top: .1rem;
     vertical-align: top;
@@ -253,10 +291,6 @@ const Projects = () => (
     <Link to="/insult">insult</Link>
     <Description>
       idk sometimes it's funny
-    </Description>
-    <Link to="/cloud">cloud</Link>
-    <Description>
-      pretty rotating cube
     </Description>
     <Link to="/floating">floating</Link>
     <Description>

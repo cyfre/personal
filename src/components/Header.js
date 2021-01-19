@@ -12,8 +12,13 @@ const Header = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  padding-left: .25rem;
+  // padding-left: .25rem;
+  // padding-top: .25rem;
+  // padding-bottom: .25rem;
   position: relative;
+  background: #131125;
+  border-top-left-radius: .2rem;
+  border-top-right-radius: .2rem;
 
   & > div {
     display: flex;
@@ -25,7 +30,7 @@ const Header = styled.div`
   & .profile {
     height: 2rem;
     border-radius: 50%;
-    border: 1px solid var(--light);
+    // border: 1px solid var(--light);
     box-shadow: 1px 2px 4px #00000020;
   }
   & a, & a:hover {
@@ -71,8 +76,8 @@ export default () => {
         <Link to="/">
           <img className="profile" src="/profile.jpeg" alt="profile"/>
         </Link>
-        {isImplicitProject && <Link to='/projects'>/ projects</Link>}
-        {crumbs.map(crumb => <Link to={crumb} key={crumb}>/ {crumb.split('/').pop()}</Link>)}
+        {isImplicitProject && <Link to='/projects'>/projects</Link>}
+        {crumbs.map(crumb => <Link to={crumb} key={crumb}>/{crumb.split('/').pop()}</Link>)}
       </div>
       <div>
         {isEmbeddedProject && <a className='raw-link' href={`/raw${crumbs[0]}${location.hash}`}>[ view raw ]</a>}
