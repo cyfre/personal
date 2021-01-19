@@ -80,9 +80,10 @@ function init() {
 
     // add circles
     [...Array(10).keys()].forEach(i => {
+        const radius = SCALE/2 * (.95 - .1*i);
         const curve = new THREE.EllipseCurve(
             // 0,  0, SCALE/2 * (1.05**i), SCALE/2 * (1.05**i),
-            0,  0, SCALE/2 * (1 - .1*i), SCALE/2 * (1 - .1*i),
+            0,  0, radius, radius,
             0,  2 * Math.PI, false, 0
         );
         scene.add(new THREE.Line(

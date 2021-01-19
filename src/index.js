@@ -12,7 +12,10 @@ import Main from './components/Main';
 import Footer from './components/Footer';
 
 const Default = styled.div`
-  background: #13112522;
+  // background: #13112522;
+  // background: #13112544;
+  // background: #131125;
+  background: #ffffff44;
   display: flex;
   flex-direction: column;
   width: calc(100% - 1.2rem);

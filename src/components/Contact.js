@@ -27,7 +27,6 @@ const Contact = styled.div`
     }
     &:focus {
       outline-color: #ddffe4;
-      outline-offset: 0.16rem;
     }
   }
 

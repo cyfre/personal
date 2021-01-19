@@ -52,6 +52,9 @@ const Fallback = styled.div`
     color: var(--light);
     text-shadow: none;
     text-transform: lowercase;
+    &.loading {
+        background: #131125;
+    }
 
     position: relative;
     & > * {
@@ -77,6 +80,9 @@ const IFrameDiv = styled.div`
     left: 0;
     height: 100%;
     width: 100%;
+    &.loading {
+        background: #131125;
+    }
     & iframe {
         position: absolute;
         top: 0;
@@ -90,7 +96,7 @@ const Loading = () => {
     const [show, setShow] = useState(false);
     useTimeout(() => setShow(true), 500);
     return (
-        <Fallback className="centering seamless">
+        <Fallback className="centering seamless loading">
             {show ? <Loader /> : ''}
         </Fallback>);
 }
@@ -140,7 +146,7 @@ const Embedded = ({ name }) => {
     }, 500);
 
     return (
-        <IFrameDiv>
+        <IFrameDiv className={loaded ? '' : 'loading'}>
             {loaded ? '' : <Loading />}
             <iframe id="embedded" ref={ifr}
                 title={name} src={src}

@@ -20,7 +20,7 @@ const Main = styled.div`
         border-bottom-left-radius: .2rem;
         border-bottom-right-radius: .2rem;
         overflow: hidden;
-        box-shadow: 1px 2px 6px #00000020;
+        // box-shadow: 1px 2px 6px #00000020;
         &.seamless {
             box-shadow: none;
         }
