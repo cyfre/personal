@@ -53,6 +53,7 @@
 .Turt .quote {
     font-family: 'Caveat';
     color: var(--dark);
+    max-width: calc(100% - 2rem);
 }
 .Turt .turtle {
     width: 15rem;
