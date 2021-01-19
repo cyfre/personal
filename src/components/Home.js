@@ -219,17 +219,6 @@ const Links = styled.div`
 
 const Description = styled.p`
   font-size: .8rem;
-  font-size: .6rem;
-  margin-bottom: .67rem;
-  width: 55%;
-  display: inline-block;
-  margin-top: .1rem;
-  vertical-align: top;
-  float: left;
-  &::after {
-    content: '';
-    display: block;
-  }
 `
 
 const ProjectList = styled.div`
@@ -244,6 +233,22 @@ const ProjectList = styled.div`
     float: left;
     &:hover {
       color: var(--light);
+    }
+  }
+  & > span, & > p {
+    font-size: .6rem;
+    margin-bottom: .67rem;
+    // margin-right: .5rem;
+    // position: relative;
+    // left: .5rem;
+    width: 55%;
+    display: inline-block;
+    margin-top: .1rem;
+    vertical-align: top;
+    float: left;
+    &::after {
+      content: '';
+      display: block;
     }
   }
 `
