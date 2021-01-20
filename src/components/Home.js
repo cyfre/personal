@@ -365,7 +365,7 @@ export default () => {
         </Links>
         <Links className={"right " + (isBase ? "base" : "")}>
           <a href="https://github.com/cfreshman">github</a>
-          <a href="https://twitter.com/cyrusfreshman">twitter</a>
+          <a href="https://twitter.com/freshman_dev">twitter</a>
           <a href="https://www.linkedin.com/in/cfreshman/">linkedin</a>
         </Links>
         <Switch>
