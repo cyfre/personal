@@ -1,6 +1,10 @@
 html {
     font-size: 16px !important;
 }
+html,body {
+    /* hide strange extra space to right of page :) */
+    overflow-x: hidden;
+}
 
 #aoc {
     width: 100%;
