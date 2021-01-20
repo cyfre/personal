@@ -317,6 +317,9 @@ const About = () => (
   <Description>
     I enjoy <a href="https://en.wikipedia.org/wiki/Twilight_Imperium">intense board games</a>, indoor rock climbing, and general outdoorsy things like hiking, camping, and skiing
   </Description>
+  <Description>
+    This site is little more than a random assortment of webdev experiments. Feel free to connect through the social links above or send a quick message below!
+  </Description>
   <br />
   <Contact />
   </Fragment>
