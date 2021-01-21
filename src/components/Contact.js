@@ -26,24 +26,25 @@ const Contact = styled.div`
       margin-top: 0;
     }
     &:focus {
-      outline-color: #ddffe4;
+      outline-color: var(--light);
     }
   }
 
   & .content, & .contact {
-    border: 1px solid var(--light);
-    background: rgba(255,255,255,.2);
-    padding: .3rem;
+    border: none;
+    background: #090919; // #06060f
+    padding: .25rem .45rem;
     resize: none;
 
     &::placeholder {
       color: var(--light);
       opacity: .7;
       text-align: center;
+      font-size: .725rem;
     }
   }
   & .content::placeholder {
-    padding-top: 2.5rem;
+    padding-top: 2.425rem;
   }
 
   & .send, & .confirmation {
