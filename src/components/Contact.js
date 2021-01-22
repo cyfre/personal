@@ -33,7 +33,7 @@ const Contact = styled.div`
   & .content, & .contact {
     border: none;
     background: #090919; // #06060f
-    padding: .25rem .45rem;
+    padding: .4rem .6rem;
     resize: none;
 
     &::placeholder {
