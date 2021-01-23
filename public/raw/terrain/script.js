@@ -257,12 +257,12 @@ function init() {
     }))
     scene.add(sides);
 
-    var border_geom = new T.CircleGeometry(radius + borderSize, 256);
-    border_geom.lookAt(new T.Vector3(0, 0, 1));
-    scene.add(new T.Mesh(border_geom, new T.MeshBasicMaterial({
-        color: COLOR.border,
-        side: T.DoubleSide
-    })));
+    // var border_geom = new T.CircleGeometry(radius + borderSize, 256);
+    // border_geom.lookAt(new T.Vector3(0, 0, 1));
+    // scene.add(new T.Mesh(border_geom, new T.MeshBasicMaterial({
+    //     color: COLOR.border,
+    //     side: T.DoubleSide
+    // })));
 
     boids = [];
     for (var i = 0; i < N_BOIDS; i++) {
@@ -290,7 +290,7 @@ function init() {
     window.addEventListener('blur', () => { pause(true) });
     window.addEventListener('focus', () => { pause(false) });
     window.addEventListener('resize', onWindowResize, false);
-    (window.parent || window).document.addEventListener('keydown', (event) => {
+    window.document.addEventListener('keydown', (event) => {
         switch(event.key) {
             case ' ':
                 generate();
@@ -305,7 +305,7 @@ function init() {
             case 'd': dirs.right = 1; break;
         }
     }, false);
-    (window.parent || window).document.addEventListener('keyup', (event) => {
+    window.document.addEventListener('keyup', (event) => {
         switch(event.key) {
             case 'w': dirs.up = 0; break;
             case 's': dirs.down = 0; break;
