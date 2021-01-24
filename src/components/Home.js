@@ -272,6 +272,10 @@ const Projects = () => (
     <Description>
       one- or two-player co-op game of snake!
     </Description>
+    <Link to="/wordbase">wordbase</Link>
+    <Description>
+      clone of Wordbase (discontinued)
+    </Description>
     <Link to="/snackman">snackman</Link>
     <Description>
       it's kinda like Pac-Man!
