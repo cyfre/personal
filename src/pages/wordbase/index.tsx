@@ -160,7 +160,7 @@ const TileElem = ({tile, word, handle}) => {
                 let refRect = (touch.target as Element).getBoundingClientRect();
                 let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
                 let col = tile.col + (touch.clientX - refRect.x)/refRect.width;
-                if (dist(.5, .5, row % 1, col % 1) <= .8) {
+                if (dist(.5, .5, row % 1, col % 1) <= .5) {
                     handle.hover(Math.floor(row), Math.floor(col));
                 }
             }}></div>
