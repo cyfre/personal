@@ -274,7 +274,7 @@ const Projects = () => (
     </Description>
     <Link to="/wordbase">wordbase</Link>
     <Description>
-      clone of Wordbase (discontinued)
+      clone of Wordbase (discontinued word game)
     </Description>
     <Link to="/snackman">snackman</Link>
     <Description>

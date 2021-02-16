@@ -6,6 +6,11 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.22",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "@types/styled-components": "^5.1.7",
     "bootstrap": "^4.4.1",
     "delaunator": "^4.0.1",
     "express": "^4.17.1",
@@ -21,7 +26,8 @@
     "react-scripts": "3.4.0",
     "react-three-fiber": "^4.0.27",
     "styled-components": "^5.1.0",
-    "three": "^0.115.0"
+    "three": "^0.115.0",
+    "typescript": "^3.8.x"
   },
   "scripts": {
     "start": "react-scripts start",
