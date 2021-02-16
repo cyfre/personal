@@ -120,4 +120,10 @@ export class Board {
 
         return Array.from(connected);
     }
+
+    gameStatus(): Player {
+        if (this.board[Board.BASE[1]].some(tile => tile.owner === Player.p2)) return Player.p2;
+        if (this.board[Board.BASE[0]].some(tile => tile.owner === Player.p1)) return Player.p1;
+        return Player.none;
+    }
 }

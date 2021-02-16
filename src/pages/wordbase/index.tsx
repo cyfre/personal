@@ -5,49 +5,76 @@ import { useInput, useEventListener, useAnimate } from '../../lib/hooks';
 import { dist, end } from './util';
 import { isValidWord } from './dict';
 import { Player, Tile, Board } from './board';
+import './fonts.css';
 
 const orange = '#ffa500';
 const blue = '#4bdbff';
 const Wordbase = styled.div`
-    background: var(--dark);
+    // background: var(--dark);
+    background: #fbfbfb88;
     height: 100%;
     width: 100%;
+    margin: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
 
-    .button {
-        cursor: pointer;
-    }
+    .button { cursor: pointer; }
     .game-progress {
         width: 100%;
-        height: 1rem;
+        height: 1.2rem;
+
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0 .3rem;
+        font-family: 'Ubuntu', sans-serif;
+        .game-status {
+            flex-grow: 1;
+            text-align: center;
+        }
     }
-    .preview-container, .cancel-submit-container {
-        height: 1rem;
+    .ui {
+        height: 5rem;
+    }
+    .preview-container, .control-container {
         display: flex;
         flex-direction: row;
         align-items: center;
         &.preview-container {
             justify-content: center;
-            margin: .5rem 0;
+            margin: .4rem 0 .3rem 0;
         }
-        &.cancel-submit-container {
-            justify-content: space-between;
-            margin: .5rem 25%;
+        &.control-container {
+            justify-content: center;
+            margin: 0 25%;
         }
 
-        .preview, .cancel, .submit {
-            background: gray;
+        .preview, .control {
             padding: 0 .3rem;
             border-radius: .3rem;
+            font-family: 'Ubuntu', sans-serif;
+            text-transform: uppercase;
+        }
+        .preview {
+            background: white;
+            color: black;
+            font-size: 2rem;
+            line-height: 2.2rem;
+        }
+        .control {
+            background: black;
+            color: white;
+            font-size: 1.2rem;
+            margin: 0 .5rem;
         }
     }
     .board-container {
+        height: 0;
         flex-grow: 1;
         width: 100%;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
     }
     .board {
@@ -57,15 +84,13 @@ const Wordbase = styled.div`
         display: flex;
         flex-direction: column;
 
-        &.p0 .tile, &.p1 .tile {
-            &.selected::after { opacity: .5; }
-            &.active::after { opacity: .75; }
-        }
         &.p1 .tile {
-            &.selected, &.active { &::after { background: ${orange}; } }
+            &.selected { &::after { background: ${orange}88; } }
+            &.active { &::after { background: ${orange}bb; } }
         }
         &.p0 .tile {
-            &.selected, &.active { &::after { background: ${blue}; } }
+            &.selected { &::after { background: ${blue}88; } }
+            &.active { &::after { background: ${blue}bb; } }
         }
     }
     .board-row {
@@ -86,8 +111,9 @@ const Wordbase = styled.div`
         text-transform: uppercase;
         padding: 0;
         margin: 0;
-        font-family: sans-serif;
+        font-family: 'Ubuntu', sans-serif;
         font-weight: bolder;
+        font-size: 1.2rem;
         user-select: none;
         background: transparent;
         z-index: 2;
@@ -181,14 +207,19 @@ export default () => {
     const [word, setWord]: [Tile[], any] = useState([]);
     const [progress, setProgress] = useState([10, 90]);
     const [history, setHistory] = useState([]);
+    const [status, setStatus] = useState(Player.p1);
 
     useEffect(() => {
         Object.assign(window, { board });
     }, [board]);
 
     const handle = {
-        board: () => setBoard(board.clone()),
+        board: () => {
+            setBoard(board.clone());
+            setStatus(board.gameStatus());
+        },
         select: (row, col) => {
+            if (status !== Player.none) return;
             let player = turn % 2;
             let tile: Tile = board.get(row, col);
             if (selected) {
@@ -209,6 +240,7 @@ export default () => {
             handle.board();
         },
         hover: (row, col) => {
+            if (status !== Player.none) return;
             if (board.get(row, col) && selected && word.length > 0) {
                 if (Tile.eq(end(word, 2), {row, col})) {
                     setWord(word.slice(0, word.length - 1));
@@ -226,13 +258,13 @@ export default () => {
         },
         resize: () => {
             let wordbase: HTMLElement = document.querySelector('.wordbase');
+            wordbase.style.width = '100%';
             let board: HTMLElement = document.querySelector('.board');
-            let style = window.getComputedStyle(board.parentNode as Element);
-            let containerWidth = Number(style.width.slice(0, -2));
-            let containerHeight = Number(style.height.slice(0, -2));
+            let containerRect = board.parentElement.getBoundingClientRect();
+            console.log(containerRect);
 
             let ratio = Board.ROWS / Board.COLS;
-            let width = Math.min(containerWidth, containerHeight / ratio);
+            let width = Math.min(containerRect.width, containerRect.height / ratio);
             wordbase.style.width = width + 'px';
             board.style.width = width + 'px';
             board.style.height = width * ratio + 'px';
@@ -279,7 +311,16 @@ export default () => {
                 case 'Esc': handle.cancel(); break;
                 case 'Enter': handle.submit(); break;
             }
-        }
+        },
+        newGame: () => {
+            setBoard(Board.new());
+            setTurn(0);
+            setSelected(false);
+            setWord([]);
+            setProgress([10, 90]);
+            setHistory([]);
+            setStatus(Player.none);
+        },
     }
 
     useEffect(() => {
@@ -309,23 +350,42 @@ export default () => {
         setProgress([p1/total, p0/total].map(x => Math.round(x * 100)));
     }, [board]);
 
-    const progressGradient = `${orange} ${progress[0]}%, transparent ${progress[0]}% ${progress[1]}%, ${blue} ${progress[1]}%`
+    const progressGradient = `${orange} ${progress[0]}%, #2d2d2d ${progress[0]}% ${progress[1]}%, ${blue} ${progress[1]}%`
     return (
         <Wordbase className='wordbase'>
             <div className='game-progress' style={{
                 background: `linear-gradient(90deg, ${progressGradient})`
-            }}></div>
-
-            <div className='preview-container'>
-                <div className='preview'>{word.map(t => t.letter).join('')}</div>
+            }}>
+                <div className='player-name p2'>orange</div>
+                <div className='game-status'>{(() => {
+                    switch (status) {
+                        case Player.none: return '';
+                        case Player.p1: return 'blue wins!';
+                        case Player.p2: return 'orange wins!';
+                    }
+                })()}</div>
+                <div className='player-name p1'>blue</div>
             </div>
-            <div className='cancel-submit-container'>
-                <div className='cancel button'>
-                    <div onClick={handle.cancel}>{'cancel'}</div>
+
+            <div className='ui'>
+                <div className='preview-container'>
+                    <div className='preview'>{word.map(t => t.letter).join('')}</div>
                 </div>
-                <div className='submit button'>
-                    <div onClick={handle.submit}>{'submit'}</div>
-                </div>
+                {!word.length ? '' :
+                <div className='control-container'>
+                    <div className='control button'>
+                        <div onClick={handle.cancel}>{'cancel'}</div>
+                    </div>
+                    <div className='control button'>
+                        <div onClick={handle.submit}>{'submit'}</div>
+                    </div>
+                </div>}
+                {status === Player.none ? '' :
+                <div className='control-container'>
+                    <div className='control button'>
+                        <div onClick={handle.newGame}>{'new game'}</div>
+                    </div>
+                </div>}
             </div>
 
             <div className='board-container'>
