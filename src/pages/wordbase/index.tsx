@@ -129,6 +129,7 @@ const Wordbase = styled.div`
     }
 `
 
+let tilePx = 50;
 const playerClass = ['p1', 'p2'];
 const TileElem = ({tile, word, handle}) => {
     const [selected, setSelected] = useState(false);
@@ -168,7 +169,7 @@ const TileElem = ({tile, word, handle}) => {
 
 
 const Row = ({row, word, handle}) => {
-    return (<div className='board-row'>
+    return (<div className='board-row' style={{height: `${tilePx}px`}}>
         {(row as Tile[]).map((tile, i) => <TileElem key={i} tile={tile} word={word} handle={handle}/>)}
     </div>)
 }
@@ -224,14 +225,18 @@ export default () => {
             handle.board();
         },
         resize: () => {
+            let wordbase: HTMLElement = document.querySelector('.wordbase');
             let board: HTMLElement = document.querySelector('.board');
             let style = window.getComputedStyle(board.parentNode as Element);
             let containerWidth = Number(style.width.slice(0, -2));
             let containerHeight = Number(style.height.slice(0, -2));
 
-            let width = Math.min(containerWidth, containerHeight / 1.3);
+            let ratio = Board.ROWS / Board.COLS;
+            let width = Math.min(containerWidth, containerHeight / ratio);
+            wordbase.style.width = width + 'px';
             board.style.width = width + 'px';
-            board.style.height = width * 1.3 + 'px';
+            board.style.height = width * ratio + 'px';
+            tilePx = width / Board.COLS;
         },
         cancel: () => {
             setWord([]);
@@ -306,7 +311,7 @@ export default () => {
 
     const progressGradient = `${orange} ${progress[0]}%, transparent ${progress[0]}% ${progress[1]}%, ${blue} ${progress[1]}%`
     return (
-        <Wordbase>
+        <Wordbase className='wordbase'>
             <div className='game-progress' style={{
                 background: `linear-gradient(90deg, ${progressGradient})`
             }}></div>
