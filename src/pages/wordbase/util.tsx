@@ -27,3 +27,14 @@ export const dist = (x1: number, y1: number, x2: number, y2: number) =>
  */
 export const manhat = (x1: number, y1: number, x2: number, y2: number) =>
     Math.abs(x1 - x2) + Math.abs(y1 - y2);
+
+/**
+ * pop element from set
+ */
+export const pop = (set: Set<any>) => {
+    if (!set.size) return undefined;
+
+    let item = set.values().next().value;
+    set.delete(item);
+    return item;
+}

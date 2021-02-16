@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import styled from 'styled-components';
 import { useInput, useEventListener, useAnimate } from '../../lib/hooks';
-import { end } from './util';
+import { dist, end } from './util';
 import { isValidWord } from './dict';
 import { Player, Tile, Board } from './board';
 
@@ -140,7 +140,7 @@ const TileElem = ({tile, word, handle}) => {
     }, [word]);
 
     return (<div
-        onClick={() => handle.select(tile.row, tile.col)}
+        onPointerDown={() => handle.select(tile.row, tile.col)}
         className={[
             'tile',
             playerClass[tile.owner] || '',
@@ -153,7 +153,16 @@ const TileElem = ({tile, word, handle}) => {
 
         <div
             className='hover-target'
-            onPointerOver={() => handle.hover(tile.row, tile.col)}></div>
+            onPointerOver={() => handle.hover(tile.row, tile.col)}
+            onTouchMove={(e) => {
+                let touch = e.touches[0];
+                let refRect = (touch.target as Element).getBoundingClientRect();
+                let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
+                let col = tile.col + (touch.clientX - refRect.x)/refRect.width;
+                if (dist(.5, .5, row % 1, col % 1) <= .8) {
+                    handle.hover(Math.floor(row), Math.floor(col));
+                }
+            }}></div>
     </div>)
 }
 
@@ -199,7 +208,7 @@ export default () => {
             handle.board();
         },
         hover: (row, col) => {
-            if (selected && word.length > 0) {
+            if (board.get(row, col) && selected && word.length > 0) {
                 if (Tile.eq(end(word, 2), {row, col})) {
                     setWord(word.slice(0, word.length - 1));
                 } else {

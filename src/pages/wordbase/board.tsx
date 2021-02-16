@@ -107,19 +107,17 @@ export class Board {
     }
     bfs(player: Player): Tile[] {
         let base = (player === Player.p1) ? Board.BASE[1] : Board.BASE[0];
-        let openSet = new Set(this.board[base]);
-        let closedSet: Set<Tile> = new Set();
-        console.log('START');
-        while (openSet.size) {
-            let curr = openSet.values().next().value;
-            openSet.delete(curr);
-
-            closedSet.add(curr);
-            let adj = this.adj(curr).filter(tile =>
-                tile.owner === player && !closedSet.has(tile) && !openSet.has(tile));
-            adj.forEach(tile => openSet.add(tile));
+        let frontier = this.board[base].slice();
+        let connected = new Set(this.board[base]);
+        while (frontier.length) {
+            this.adj(frontier.pop())
+                .filter(tile => tile.owner === player && !connected.has(tile))
+                .forEach(tile => {
+                    frontier.push(tile);
+                    connected.add(tile);
+                });
         }
 
-        return [...closedSet];
+        return Array.from(connected);
     }
 }
