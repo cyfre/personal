@@ -27,11 +27,16 @@ const Wordbase = styled.div`
         display: flex;
         flex-direction: row;
         align-items: center;
+        justify-content: space-between;
         padding: 0 .3rem;
         font-family: 'Ubuntu', sans-serif;
+        position: relative;
         .game-status {
             flex-grow: 1;
             text-align: center;
+            position: absolute;
+            width: 100%;
+            left: 0;
         }
     }
     .ui {
@@ -44,6 +49,7 @@ const Wordbase = styled.div`
         &.preview-container {
             justify-content: center;
             margin: .4rem 0 .3rem 0;
+            height: 2.15rem;
         }
         &.control-container {
             justify-content: center;
@@ -205,9 +211,9 @@ export default () => {
     const [turn, setTurn] = useState(0);
     const [selected, setSelected] = useState(false);
     const [word, setWord]: [Tile[], any] = useState([]);
-    const [progress, setProgress] = useState([10, 90]);
+    const [progress, setProgress] = useState([0, 100]);
     const [history, setHistory] = useState([]);
-    const [status, setStatus] = useState(Player.p1);
+    const [status, setStatus] = useState(Player.none);
 
     useEffect(() => {
         Object.assign(window, { board });
@@ -220,6 +226,7 @@ export default () => {
         },
         select: (row, col) => {
             if (status !== Player.none) return;
+            console.log(row, col);
             let player = turn % 2;
             let tile: Tile = board.get(row, col);
             if (selected) {
@@ -317,7 +324,7 @@ export default () => {
             setTurn(0);
             setSelected(false);
             setWord([]);
-            setProgress([10, 90]);
+            setProgress([0, 100]);
             setHistory([]);
             setStatus(Player.none);
         },
@@ -334,7 +341,7 @@ export default () => {
     useEventListener(window, 'keydown', handle.keypress, false);
 
     useEffect(() => {
-        let p0 = 12;
+        let p0 = Board.ROWS;
         board.do(tile => {
             if (tile.owner === 0) {
                 p0 = Math.min(p0, tile.row);
@@ -346,8 +353,8 @@ export default () => {
                 p1 = Math.max(p1, tile.row);
             }
         });
-        let total = Math.max(12, p1 + (12 - p0));
-        setProgress([p1/total, p0/total].map(x => Math.round(x * 100)));
+        let total = Math.max(Board.ROWS, p1 + (Board.ROWS - p0));
+        setProgress([p1/total, (p0+1)/total].map(x => Math.round(x * 100)));
     }, [board]);
 
     const progressGradient = `${orange} ${progress[0]}%, #2d2d2d ${progress[0]}% ${progress[1]}%, ${blue} ${progress[1]}%`
