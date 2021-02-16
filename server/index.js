@@ -22,6 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/api/login', require('./login').routes);
 app.use('/api/turt', require('./turt').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
 app.use('/api/cityhall', require('./cityhall').routes);

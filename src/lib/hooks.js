@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
 
 // reference here: https://rangle.io/blog/simplifying-controlled-inputs-with-hooks/
 
@@ -80,6 +81,17 @@ const useAnimate = (animate) =>
         return () => cancelAnimationFrame(id);
     }, [animate]);
 
+const useAuth = () => {
+    const [localAuth, setLocalAuth] = useState(Object.assign({}, auth));
+    useEffect(() => {
+        let callback = auth => setLocalAuth(Object.assign({}, auth))
+        addAuthTrigger(callback);
+        return () => removeAuthTrigger(callback);
+    }, []);
+
+    return localAuth;
+}
+
 export {
     useInput,
     useScript,
@@ -89,4 +101,5 @@ export {
     useInterval,
     useEventListener,
     useAnimate,
+    useAuth
 }

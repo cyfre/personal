@@ -29,8 +29,6 @@ const Main = styled.div`
 
 const redirects = [
     ['/projects', ''],
-    ['/jeanne', '/insult'],
-    ['/project/jeanne', '/project/insult'],
     ['/project', '/raw'],
 ].map(pair => (
     <Route path={pair[0]} key={pair.join()} render={routeProps =>
