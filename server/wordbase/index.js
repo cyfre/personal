@@ -26,13 +26,8 @@ routes.post('/change-pass', (req, res) => {
     json(res, model.changePass(user, currPass, newPass));
 });
 
-async function auth(req) {
-    let { auth } = req.body;
-    if (auth) {
-        let result = await model.check(auth.user, auth.token);
-        if (result.ok) return auth.user;
-    }
-    return false;
+function auth(user, token) {
+    return model.check(user, token);
 }
 
 module.exports = {

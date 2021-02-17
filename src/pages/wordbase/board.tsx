@@ -13,7 +13,7 @@ export class Pos implements IPos {
     constructor(row: number, col: number) { Object.assign(this, {row, col}); }
     static new = (props: IPos): Pos => new Pos(props.row, props.col)
     static from = (coord: number[]): Pos => new Pos(coord[1], coord[0]);
-    static eq = (a: IPos, b: IPos) => (a.row === b.row && a.col === b.col);
+    static eq = (a: IPos, b: IPos) => (a && b && a.row === b.row && a.col === b.col);
     static add = (a: IPos, b: IPos) => new Pos(a.row + b.row, a.col + b.col);
 }
 export class Dirs {
@@ -29,16 +29,16 @@ export interface ITile extends IPos {
     letter: string,
     owner: number,
     isBomb: boolean,
+    flipped?: boolean,
 }
 export class Tile extends Pos implements ITile {
-    letter: string; owner: number; isBomb: boolean;
+    letter: string; owner: number; isBomb: boolean; flipped?: boolean;
 
-    constructor(row: number, col: number, letter: string, owner: number, isBomb: boolean) {
+    constructor(row: number, col: number, letter: string, owner: number, isBomb: boolean, flipped?: boolean) {
         super(row, col);
-        Object.assign(this, { letter, owner, isBomb });
+        Object.assign(this, { letter, owner, isBomb, flipped });
     }
-    static new = (props: ITile) =>
-        new Tile(props.row, props.col, props.letter, props.owner, props.isBomb);
+    static new = (props: ITile) => Object.assign({}, props);
 
     static has = (arr: any[], tile: ITile): boolean =>
         arr.some(t => Tile.eq(t, tile));
@@ -51,9 +51,9 @@ export class Board {
     static readonly ROWS = 13;
     static readonly COLS = 10;
     static readonly BASE = [0, Board.ROWS - 1];
-    board: Tile[][];
+    board: ITile[][];
 
-    constructor(board: Tile[][]) {
+    constructor(board: ITile[][]) {
         this.board = board;
     }
     static new() {
@@ -70,27 +70,28 @@ export class Board {
         return new Board(board);
     }
 
-    get(pos_or_row: (IPos | number), col?: number): Tile {
+    get(pos_or_row: (IPos | number), col?: number): ITile {
         let pos = (col === undefined) ? pos_or_row as IPos : { row: pos_or_row as number, col };
         return this.board[pos.row] ? this.board[pos.row][pos.col] : undefined;
     }
 
-    do(func: (tile: Tile, r_i?: number, c_i?: number) => any): any[][] {
+    do(func: (tile: ITile, r_i?: number, c_i?: number) => any): any[][] {
         return this.board.map((row, r_i) => row.map((tile, c_i) => func(tile, r_i, c_i)));
     }
-    rows(func: (row: Tile[], r_i?: number) => any): any[][] {
+    rows(func: (row: ITile[], r_i?: number) => any): any[][] {
         return this.board.map((row, r_i) => func(row, r_i));
     }
+    tiles = () => this.board.flat();
 
     clone(): Board {
         return new Board(this.board);
     }
     deep(): Board {
-        return new Board(this.do(tile => tile));
+        return new Board(this.do(tile => Tile.new(tile)));
     }
 
-    adj(pos: IPos): Tile[] {
-        let tiles: Tile[] = [];
+    adj(pos: IPos): ITile[] {
+        let tiles: ITile[] = [];
         for (let i = -1; i < 2; i++) {
             for (let j = -1; j < 2; j++) {
                 if (i === 0 && j === 0) continue;
@@ -102,10 +103,10 @@ export class Board {
         }
         return tiles.filter(t => t);
     }
-    square(pos: IPos): Tile[] {
+    square(pos: IPos): ITile[] {
         return Dirs.map(dir => this.get(Pos.add(pos, dir))).filter(t => t);
     }
-    bfs(player: Player): Tile[] {
+    bfs(player: Player): ITile[] {
         let base = (player === Player.p1) ? Board.BASE[1] : Board.BASE[0];
         let frontier = this.board[base].slice();
         let connected = new Set(this.board[base]);

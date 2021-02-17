@@ -1,3 +1,4 @@
+import { rejects } from 'assert';
 import api from './api';
 import { fetchCookie, saveCookie } from './util';
 
@@ -24,7 +25,7 @@ function setAuth(user, token) {
     saveCookie(AUTH_COOKIE, auth);
     authTriggers.forEach(callback => callback(auth));
 }
-export const auth = fetchCookie(AUTH_COOKIE) || logout();
+export const auth = fetchCookie(AUTH_COOKIE) || {};
 window.auth = auth;
 
 export function logout() {
@@ -32,33 +33,34 @@ export function logout() {
 }
 window.logout = logout;
 
-export function login(user, pass) {
-    sha256(pass).then(hash => {
-        api.post('/login', {
-            user,
-            pass: hash,
-        }, data => {
-            console.log(data);
-            if (data.token) {
-                setAuth(user, data.token);
-            }
-        });
+function signin(path, user, pass) {
+    return new Promise((resolve, reject) => {
+        sha256(pass)
+            .then(hash => api.post(path, {
+                user,
+                pass: hash,
+            }))
+            .then(data => {
+                console.log(data);
+                if (data.token) {
+                    setAuth(user, data.token);
+                    resolve(auth);
+                }
+            })
+            .catch(err => {
+                console.log('err', err);
+                reject(err);
+            });
     });
+}
+
+export function login(user, pass) {
+    return signin('/login', user, pass);
 }
 window.login = login;
 
 export function signup(user, pass) {
-    sha256(pass).then(hash => {
-        api.post('/login/signup', {
-            user,
-            pass: hash,
-        }, data => {
-            console.log(data);
-            if (data.token) {
-                setAuth(user, data.token);
-            }
-        });
-    });
+    return signin('/login/signup', user, pass);
 }
 window.signup = signup;
 

@@ -13,5 +13,5 @@ export function fetchCookies(names) {
     return {...names.map(name => ({ [name]: fetchCookie(name) }))}
 }
 export function saveCookies(object) {
-    Object.entries().map(entry => saveCookie(...entry));
+    Object.entries(object).map(entry => saveCookie(...entry));
 }

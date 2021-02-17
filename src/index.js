@@ -1,17 +1,16 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import styled from 'styled-components';
 import * as serviceWorker from './serviceWorker';
 import './index.css';
 
-import Home from './components/Home';
+import { Base } from './components/base/Base';
 
-import Header from './components/Header';
-import Main from './components/Main';
-import Footer from './components/Footer';
+import { Header } from './components/Header';
+import { Main } from './components/Main';
 
-const Default = styled.div`
+const Style = styled.div`
   // background: #13112522;
   // background: #13112544;
   // background: #131125;
@@ -54,13 +53,12 @@ const Default = styled.div`
 const App = () => (
   <Router>
     <Switch>
-      <Route exact path='/(|projects|about|contact)' component={Home} />
+      <Route exact path='/(|projects|about|contact)' component={Base} />
       <Route path='*'>
-        <Default>
+        <Style>
           <Header />
           <Main />
-          {/* <Footer /> */}
-        </Default>
+        </Style>
       </Route>
     </Switch>
   </Router>

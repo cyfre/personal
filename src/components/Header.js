@@ -4,9 +4,9 @@ import styled from 'styled-components';
 import { embedded } from './Contents';
 import WikiLink from './WikiLink';
 import { useAuth } from '../lib/hooks';
-import { login, logout } from '../lib/auth';
+import { login, signup, logout } from '../lib/auth';
 
-const Header = styled.div`
+const Style = styled.div`
   width: 100%;
   height: 2.5rem;
   display: flex;
@@ -56,7 +56,7 @@ const Header = styled.div`
   }
 
   .user {
-    text-decoration: underline;
+    // text-decoration: underline;
     cursor: pointer;
     user-select: none;
     font-size: 0.8rem;
@@ -68,6 +68,13 @@ const Header = styled.div`
     align-items: center;
     justify-content: center;
 
+    .display {
+      opacity: .8;
+      &:hover { span { text-decoration: underline; } }
+    }
+    &.active .display {
+      opacity: 1;
+    }
     .dropdown {
       position: absolute;
       top: 100%;
@@ -82,6 +89,22 @@ const Header = styled.div`
 
       .item {
         padding: .15rem 0;
+        input {
+          border-color: black;
+        }
+        &:not(.signin):hover { text-decoration: underline; }
+        &.signin span:hover {
+          text-decoration: underline;
+        }
+      }
+
+      &.error {
+        input {
+          // border-color: #ff0000dd;
+          // border-radius: .2rem;
+          // background: #ff0000;
+          background: #ffdbdb;
+        }
       }
     }
   }
@@ -90,17 +113,20 @@ const Header = styled.div`
 const User = () => {
   let auth = useAuth();
   let [dropdown, setDropdown] = useState(false);
+  let [error, setError] = useState('');
   let userRef = useRef();
   let passRef = useRef();
 
   const handle = {
-    login: () => {
-      login(userRef.current.value, passRef.current.value);
-      setDropdown(false);
+    close: () => { setDropdown(false); setError(''); },
+    signin: (func) => {
+      func(userRef.current.value, passRef.current.value)
+        .then(auth => handle.close())
+        .catch(e => setError(e.error || 'error'));
     },
     logout: () => {
       logout();
-      setDropdown(false);
+      handle.close();
     }
   }
 
@@ -113,31 +139,34 @@ const User = () => {
   )
 
   const loggedOut = (
-    <div className='dropdown'>
+    <div className={'dropdown' + (error ? ' error' : '')} title={error}>
       <div className='item'>
-        <input ref={userRef} type='text' placeholder='username' />
+        <input ref={userRef} type='text' placeholder='username'
+          autocorrect="off" autocapitalize="none"/>
       </div>
       <div className='item'>
         <input ref={passRef} type='password' placeholder='password'
-          onKeyDown={e => e.key === 'Enter' && handle.login()}/>
+          onKeyDown={e => e.key === 'Enter' && handle.signin(login)}/>
       </div>
-      <div className='item' onClick={() => handle.login()}>
-        log in / sign up
+      <div className='item signin'>
+        <span onClick={() => handle.signin(login)}>log in</span>
+        {' / '}
+        <span onClick={() => handle.signin(signup)}>sign up</span>
       </div>
     </div>
   )
 
   return (
-    <div className='user'>
+    <div className={dropdown ? 'user active' : 'user'}>
       <div className='display' onClick={() => setDropdown(!dropdown)}>
-        {auth.user ? auth.user : 'log in'}
+        [ <span>{auth.user ? auth.user : 'log in'}</span> ]
       </div>
       {!dropdown ? '' : ( auth.user ? loggedIn : loggedOut )}
     </div>
   )
 }
 
-export default () => {
+export const Header = () => {
   let { url } = useRouteMatch();
   let location = useLocation();
 
@@ -162,7 +191,7 @@ export default () => {
   }, [url]);
 
   return (
-    <Header id="header">
+    <Style id="header">
       <div>
         <Link to="/">
           <img className="profile" src="/profile.jpeg" alt="profile"/>
@@ -176,6 +205,6 @@ export default () => {
         <WikiLink path={url} />
       </div> */}
       <User />
-    </Header>
+    </Style>
   )
 }

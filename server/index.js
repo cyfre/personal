@@ -3,6 +3,8 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const db = require('./db');
 
+const login = require('./login');
+
 const app = express();
 const port = 5000;
 app.use(bodyParser.json({
@@ -22,7 +24,15 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use('/api/login', require('./login').routes);
+// authorize user
+app.use((req, res, next) => {
+    login.auth(req).then(user => {
+        req.user = user;
+        next();
+    });
+});
+
+app.use('/api/login', login.routes);
 app.use('/api/turt', require('./turt').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
 app.use('/api/cityhall', require('./cityhall').routes);

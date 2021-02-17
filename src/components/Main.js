@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { embedded, EmbeddedRoute, Page, Missing  } from './Contents';
 
-const Main = styled.div`
+const Style = styled.div`
     width: 100%;
     background: none;
     color: var(--light);
@@ -38,8 +38,8 @@ const redirects = [
     }/>
 ));
 
-export default () => (
-    <Main id='main'>
+export const Main = () => (
+    <Style id='main'>
         <Switch>
             <Route path='/raw' render={() => window.location.reload()} />
             {redirects}
@@ -53,5 +53,5 @@ export default () => (
 
             <Route path='*' component={Missing} />
         </Switch>
-    </Main>
+    </Style>
 )

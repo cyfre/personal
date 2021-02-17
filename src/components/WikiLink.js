@@ -1,14 +1,14 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const WikiLink = styled.a`
+const Style = styled.a`
 `
 
-export default ({ path }) => {
+export const WikiLink = ({ path }) => {
     let wiki = path.split('/').filter(p => p && ['projects', 'home', 'about'].indexOf(p) < 0).join('/');
     return (
-        <WikiLink className="wiki-link" href={`https://github.com/cfreshman/personal/wiki/${wiki}`}>
+        <Style className="wiki-link" href={`https://github.com/cfreshman/personal/wiki/${wiki}`}>
             [ wiki ]
-        </WikiLink>
+        </Style>
     )
 }

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, Fragment } from 'react'
+import React, { useState, useRef } from 'react'
 import styled from 'styled-components';
-import api from '../lib/api';
+import api from '../../lib/api';
 
-const Contact = styled.div`
+const Style = styled.div`
   display: flex;
   flex-direction: column;
   font-size: .8rem;
@@ -69,7 +69,7 @@ const Contact = styled.div`
   }
 `
 
-export default () => {
+export const Contact = () => {
   const content = useRef();
   const contact = useRef();
   const [sent, setSent] = useState(false);
@@ -93,7 +93,7 @@ export default () => {
   }
 
   return (
-    <Contact className={sent ? 'sent' : ''}>
+    <Style className={sent ? 'sent' : ''}>
       <textarea ref={content}
         className='content' rows='5'
         placeholder='send me a message  :-)' />
@@ -105,6 +105,6 @@ export default () => {
         ? <div className='confirmation'>sent!</div>
         : <button className='send' onClick={handle.send}>send</button>
       }
-    </Contact>
+    </Style>
   )
 }

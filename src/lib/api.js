@@ -16,24 +16,31 @@ const api = {};
     api[service] = (path, params, callback) => {
         if (!options) callback = params;
 
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             fetch('/api' + path.replace(/^\/api/, ''), {
                 method: verb,
                 ...( options ? {
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(params),
-                    auth
+                    body: JSON.stringify({ ...params, auth }),
                 } : {}),
             })
-                .then(res => res
-                    .json()
-                    .then(data => {
+                .then(res => res.json().then(data => {
                         if (res.ok) {
-                            callback && callback(data);
-                            resolve(data);
-                        } else alert(`Failed to ${service} ${path}: ` + data.message);
+                            if (data.error) {
+                                reject(data);
+                            } else {
+                                callback && callback(data);
+                                resolve(data);
+                            }
+                        } else {
+                            alert(`Failed to ${service} ${path}: ` + data.message)
+                            reject('server error')
+                        };
                     }))
-                .catch(err => alert("Error in sending data to server: " + err.message));
+                .catch(err => {
+                    alert("Error in sending data to server: " + err.message)
+                    reject('connection error');
+                });
         });
     }
 })

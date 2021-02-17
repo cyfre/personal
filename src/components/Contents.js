@@ -4,7 +4,7 @@ import { useParams, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTitle, useTimeout, useInterval, useEventListener } from '../lib/hooks';
 
-import ErrorBoundary from './ErrorBoundary';
+import { ErrorBoundary } from './ErrorBoundary';
 
 // https://projects.lukehaas.me/css-loaders/
 const Loader = styled.div`

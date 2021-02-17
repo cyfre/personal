@@ -4,9 +4,14 @@ import styled from 'styled-components';
 import { useInput, useEventListener, useAnimate } from '../../lib/hooks';
 import { dist, end } from './util';
 import { isValidWord } from './dict';
-import { Player, Tile, Board } from './board';
-import { Info, Save } from './save';
+import { IPos, Pos, Player, ITile, Tile, Board } from './board';
+import { Info, Save, Flip } from './save';
 import { fetchInfo, fetchSave } from './data';
+
+const globals = {
+    wordCheck: true,
+    flipMs: 700,
+};
 
 const orange = '#ff9900';
 const blue = '#4bdbff';
@@ -46,9 +51,10 @@ const WordbaseDiv = styled.div`
         display: flex;
         flex-direction: row;
         align-items: center;
+        user-select: none;
         &.preview-container {
             justify-content: center;
-            margin: .4rem 0 .3rem 0;
+            margin: .4rem .4rem .3rem .4rem;
             height: 2.15rem;
         }
         &.control-container {
@@ -56,17 +62,21 @@ const WordbaseDiv = styled.div`
             margin: 0 25%;
         }
 
-        .preview, .control {
+        .preview, .last, .control {
             padding: 0 .3rem;
             border-radius: .3rem;
             font-family: 'Ubuntu', sans-serif;
             text-transform: uppercase;
         }
-        .preview {
+        .preview, .last {
             background: white;
             color: black;
             font-size: 2rem;
             line-height: 2.2rem;
+        }
+        .last {
+            &.p1 { background: ${blue}; margin-left: auto; }
+            &.p2 { background: ${orange}; margin-right: auto; }
         }
         .control {
             background: black;
@@ -84,16 +94,22 @@ const WordbaseDiv = styled.div`
         justify-content: center;
     }
     .board {
-        background: #5a5a5a;
+        // background: #5a5a5a;
+        // background: white;
+        background: black;
         display: flex;
         flex-direction: column;
+        &.loading {
+            display: none;
+            .tile::after { animation: none !important; }
+        }
 
-        & .tile { &.selected, &.active { background: white; } }
-        &.p1 .tile {
+        &.p1 .tile, &.p2 .tile { &.selected, &.active { background: white; } }
+        &.p2 .tile {
             &.selected { &::after { background: ${orange}88; } }
             &.active { &::after { background: ${orange}bb; } }
         }
-        &.p0 .tile {
+        &.p1 .tile {
             &.selected { &::after { background: ${blue}88; } }
             &.active { &::after { background: ${blue}bb; } }
         }
@@ -134,41 +150,37 @@ const WordbaseDiv = styled.div`
         margin: 0;
         font-family: 'Ubuntu', sans-serif;
         font-weight: bolder;
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         user-select: none;
         background: transparent;
-        z-index: 2;
+        z-index: 100;
+        overflow: visible;
         &.bomb {
             color: white;
         }
-        &::after {
-            content: ""; position: absolute; width: 100%; height: 100%; z-index: -1;
-            transform-style: preserve-3d;
-            transform: rotateY(0deg);
-            background: white;
-            // backface-visibility: hidden;
-        }
-        &.p1::after {
-            animation: p1-flip 1s;
-            @keyframes p1-flip {
-                0% { transform: rotateY(180deg); }
-                100% { transform: rotateY(0deg); }
-            }
-            background: ${blue};
-        }
-        &.p2::after {
-            animation: p2-flip 1s;
-            @keyframes p2-flip {
-                0% { transform: rotateY(-180deg); }
-                100% { transform: rotateY(0deg); }
-            }
-            background: ${orange};
-        }
-        &.bomb::after {
-            background: black;
-        }
 
         position: relative;
+        &::after {
+            content: ""; position: absolute; width: 100%; height: 100%;
+            z-index: -100;
+            background: white;
+        }
+        &.bomb::after { background: black; }
+        &.p1::after { background: ${blue}; }
+        &.p2::after { background: ${orange}; }
+        &.flip {
+            &::after {
+                z-index: -99;
+                transform-style: flat;
+                animation: flip ${globals.flipMs}ms;
+                transform: translateZ(-100px);
+                @keyframes flip {
+                    0% { transform: translateZ(-100px) rotateY(-180deg); }
+                    100% { }
+                }
+            }
+        }
+
         & .hover-target {
             position: absolute;
             height: 100%;
@@ -180,6 +192,8 @@ const WordbaseDiv = styled.div`
 
 let tilePx = 50;
 const playerClass = ['p1', 'p2'];
+let startTile: ITile;
+let lastTouch: IPos;
 const TileElem = ({tile, word, handle}) => {
     const [selected, setSelected] = useState(false);
     const [active, setActive] = useState(false);
@@ -189,14 +203,35 @@ const TileElem = ({tile, word, handle}) => {
         setActive(Tile.eq(end(word), tile));
     }, [word]);
 
+    const touchFunc = (e, func) => {
+        let touch = e.touches[0];
+        let refRect = (touch.target as Element).getBoundingClientRect();
+        let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
+        let col = tile.col + (touch.clientX - refRect.x)/refRect.width;
+        if (dist(.5, .5, row % 1, col % 1) <= .35) {
+            let pos = { row: Math.floor(row), col: Math.floor(col) };
+            Pos.eq(lastTouch, pos) || func(pos.row, pos.col);
+            lastTouch = pos;
+        }
+    }
+
     return (<div
-        onPointerDown={() => handle.select(tile.row, tile.col)}
+        onPointerDown={() => {
+            startTile = tile;
+            handle.select(tile.row, tile.col)
+        }}
+        onPointerUp={() => {
+            if (!Tile.eq(startTile, tile)) {
+                handle.select(tile.row, tile.col)
+            }
+        }}
         className={[
             'tile',
             playerClass[tile.owner] || '',
             tile.isBomb ? 'bomb' : '',
             selected ? 'selected' : '',
             active ? 'active' : '',
+            tile.flipped ? 'flip' : '',
             ].join(' ')}>
 
         {tile.letter}
@@ -204,30 +239,25 @@ const TileElem = ({tile, word, handle}) => {
         <div
             className='hover-target'
             onPointerOver={() => handle.hover(tile.row, tile.col)}
-            onTouchMove={(e) => {
-                let touch = e.touches[0];
-                let refRect = (touch.target as Element).getBoundingClientRect();
-                let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
-                let col = tile.col + (touch.clientX - refRect.x)/refRect.width;
-                if (dist(.5, .5, row % 1, col % 1) <= .5) {
-                    handle.hover(Math.floor(row), Math.floor(col));
-                }
-            }}></div>
+            onTouchMove={e => touchFunc(e, handle.hover)}></div>
     </div>)
 }
 
 
 const Row = ({row, word, handle}) => {
     return (<div className='board-row' style={{height: `${tilePx}px`}}>
-        {(row as Tile[]).map((tile, i) => <TileElem key={i} tile={tile} word={word} handle={handle}/>)}
+        {(row as ITile[]).map((tile, i) => <TileElem key={i} tile={tile} word={word} handle={handle}/>)}
     </div>)
 }
 
+Object.assign(window, { wordbaseSettings: globals });
 export const Wordbase = ({toggleMenu, gameInfo}) => {
     const [info, setInfo]: [Info, any] = useState(gameInfo);
     const [save, setSave]: [Save, any] = useState(Save.new());
     const [selected, setSelected] = useState(false);
-    const [word, setWord]: [Tile[], any] = useState([]);
+    const [word, setWord]: [ITile[], any] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [flip, setFlip]: [Flip, any] = useState(undefined);
 
     useEffect(() => {
         handle.resize();
@@ -235,7 +265,21 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
     }, []);
     useEffect(() => {
         Object.assign(window, { save });
+        // console.log(save.history[0]);
     }, [save]);
+    useEffect(() => {
+        if (flip) {
+            let anim = () => {
+                if (flip.hasNext()) {
+                    setSave(flip.next(globals.flipMs/3, () => anim()));
+                } else {
+                    setSave(flip.curr());
+                    setFlip(undefined);
+                }
+            }
+            anim();
+        }
+    }, [flip]);
 
     const handle = {
         update: () => {
@@ -243,25 +287,25 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
         },
         select: (row, col) => {
             if (info.status !== Player.none) return;
-            console.log(row, col);
+            // console.log(row, col);
             let player = save.turn % 2;
-            let tile: Tile = save.board.get(row, col);
+            let tile: ITile = save.board.get(row, col);
             if (selected) {
-                console.log('in selected');
+                // console.log('in selected');
                 if (word.length > 1 && Tile.eq(end(word), tile)) {
                     // don't cancel the word
-                    console.log('dont cancel');
+                    // console.log('dont cancel');
                 } else {
                     setWord([]);
                 }
                 setSelected(false);
             } else {
                 if (tile.owner === player) {
-                    console.log('in player');
+                    // console.log('in player');
                     setWord([tile]);
                     setSelected(true);
                 } else if (Tile.eq(end(word), tile)) {
-                    console.log('in other');
+                    // console.log('in other');
                     setSelected(true);
                 }
             }
@@ -297,6 +341,7 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
             board.style.width = width + 'px';
             board.style.height = width * ratio + 'px';
             tilePx = width / Board.COLS;
+            setTimeout(() => setLoading(false), 100);
         },
         cancel: () => {
             setWord([]);
@@ -304,10 +349,14 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
         },
         submit: () => {
             let letters = word.map(tile => tile.letter).join('');
-            if (isValidWord(letters)) {
+            if (isValidWord(letters) || !globals.wordCheck) {
                 setWord([]);
                 setSelected(false);
-                setSave(save.play(word));
+                if (globals.flipMs) {
+                    setFlip(new Flip(save, word));
+                } else {
+                    setSave(save.play(word));
+                }
             } else {
                 console.log(`${letters} not in dict`);
             }
@@ -325,10 +374,6 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
             info.progress = [0, 100];
         },
     }
-
-    useEffect(() => {
-        console.log(save.history)
-    }, [save]);
     useEventListener(window, 'resize', handle.resize, false);
     useEventListener(window, 'keydown', handle.keypress, false);
 
@@ -342,7 +387,8 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
             <div className='game-progress' style={{
                 background: `linear-gradient(90deg, ${progressGradient})`
             }}>
-                <div className='player-name p2'>orange</div>
+                <div className='player-name p2'>
+                    {info.p2 + (save.p2 ? ' <' : '')}</div>
                 <div className='game-status'>{(() => {
                     switch (info.status) {
                         case Player.none: return '';
@@ -350,12 +396,18 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
                         case Player.p2: return 'orange wins!';
                     }
                 })()}</div>
-                <div className='player-name p1'>blue</div>
+                <div className='player-name p1'>
+                    {(save.p1 ? '> ' : '') + info.p1}</div>
             </div>
 
             <div className='ui'>
                 <div className='preview-container'>
-                    <div className='preview'>{word.map(t => t.letter).join('')}</div>
+                    {word.length
+                    ? <div className='preview'>{word.map(t => t.letter).join('')}</div>
+                    : <div className={`last ${save.p1 ? 'p2' : 'p1'}`}>
+                        {save.history.length ? save.history[0].map(t => t.letter).join('') : ''}</div>
+                    }
+
                 </div>
                 {!word.length ? '' :
                 <div className='control-container'>
@@ -375,7 +427,11 @@ export const Wordbase = ({toggleMenu, gameInfo}) => {
             </div>
 
             <div className='board-container'>
-                <div className={'board ' + ((save.turn%2) ? 'p1' : 'p0')}>
+                <div className={[
+                    'board',
+                    flip ? '' : save.p1 ? 'p1' : 'p2',
+                    loading ? 'loading' : ''].join(' ')}>
+
                     {save.board.rows((row, i) =>
                     <Row key={i} row={row} word={word} handle={handle}/>)}
                 </div>

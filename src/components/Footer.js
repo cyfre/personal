@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Footer = styled.div`
+const Style = styled.div`
     position: relative;
     & .signature {
         position: absolute;
@@ -12,8 +12,8 @@ const Footer = styled.div`
     }
 `
 
-export default () => (
-    <Footer id="footer" className="centering">
+export const Footer = () => (
+    <Style id="footer" className="centering">
         <span className="signature">Cyrus Freshman 2020</span>
-    </Footer>
+    </Style>
 )
