@@ -1,36 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../lib/api';
-import styled from 'styled-components';
-import { useInput, useEventListener, useAnimate } from '../../lib/hooks';
-import { dist, end } from './util';
-import { isValidWord } from './dict';
-import { Player, Tile, Board } from './board';
-import { Info } from './save';
-import './fonts.css';
 import { WordbaseMenu } from './menu';
 import { Wordbase } from './game';
-import { localInfo, localSave } from './data';
+import './fonts.css';
 
 export default () => {
-    const [isMenu, setMenu] = useState(true);
-    const [gameList, setGameList]: [Info[], any] = useState([localInfo]);
-    const [selected, setSelected]: [Info, any] = useState(localInfo);
+    const [selected, setSelected]: [string, any] = useState(window.location.hash.slice(1));
+    const [isMenu, setMenu] = useState(!selected);
 
     useEffect(() => {
         document.title = "Wordbase";
     }, []);
-    const toggleMenu = () => {
-        setMenu(!isMenu);
+    useEffect(() => {
+        if (isMenu) setSelected(undefined);
+    }, [isMenu])
+    useEffect(() => {
+        window.location.hash = selected || '';
+    }, [selected])
+    const handle = {
+        setMenu,
+        selectGame: (id: string) => {
+            console.log(id);
+            setSelected(id);
+            setMenu(false);
+        }
     }
-    const selectGame = (id) => {
-        setSelected(gameList.find(item => item.id === id));
-        setMenu(false);
-    }
-
-    return <Wordbase toggleMenu={toggleMenu} gameInfo={selected} />;
-    // return (
-    //     isMenu
-    //         ? <WordbaseMenu gameList={gameList} selectGame={selectGame} />
-    //         : <Wordbase toggleMenu={toggleMenu} gameInfo={selected} />
-    // );
+    return (
+        isMenu
+            ? <WordbaseMenu selectGame={handle.selectGame} />
+            : <Wordbase setMenu={handle.setMenu} gameId={selected} />
+    );
 }

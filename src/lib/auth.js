@@ -1,4 +1,3 @@
-import { rejects } from 'assert';
 import api from './api';
 import { fetchCookie, saveCookie } from './util';
 
@@ -10,7 +9,13 @@ async function sha256(message) {
     return hashHex;
 }
 
-const authTriggers = [];
+const authTriggers = [
+    auth => auth.user && verify(auth.user, auth.token).then(res => {
+        if (!res.ok) {
+            logout();
+        }
+    })
+];
 export function addAuthTrigger(callback) {
     authTriggers.push(callback);
 }
@@ -20,18 +25,23 @@ export function removeAuthTrigger(callback) {
 }
 
 const AUTH_COOKIE = 'loginAuth'
-function setAuth(user, token) {
-    Object.assign(auth, { user, token });
+function setAuth(user, token, dropdown) {
+    Object.assign(auth, { user, token, dropdown });
     saveCookie(AUTH_COOKIE, auth);
     authTriggers.forEach(callback => callback(auth));
 }
-export const auth = fetchCookie(AUTH_COOKIE) || {};
+export const auth = fetchCookie(AUTH_COOKIE) || { user: undefined, token: undefined, dropdown: false };
+setTimeout(() => setAuth(auth.user, auth.token), 500); // verify auth after api has loaded
 window.auth = auth;
 
 export function logout() {
-    setAuth(undefined, undefined);
+    setAuth('', '');
 }
 window.logout = logout;
+
+export function openLogin() {
+    setAuth(auth.user, auth.token, true);
+}
 
 function signin(path, user, pass) {
     return new Promise((resolve, reject) => {
@@ -65,14 +75,9 @@ export function signup(user, pass) {
 window.signup = signup;
 
 export function verify(user, token) {
-    api.post('/login/verify', {
+    return api.post('/login/verify', {
         user,
         token,
-    }, res => {
-        console.log(res);
-        if (!res.ok) {
-            logout();
-        }
     });
 }
 window.verify = verify;

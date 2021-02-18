@@ -1,4 +1,3 @@
-import { resolveModuleName } from 'typescript';
 import { auth } from './auth';
 
 const api = {};
@@ -16,27 +15,33 @@ const api = {};
     api[service] = (path, params, callback) => {
         if (!options) callback = params;
 
+        let req = {
+            method: verb,
+            headers: {
+                'X-Freshman-Auth-User': auth.user,
+                'X-Freshman-Auth-Token': auth.token,
+            }
+        }
+        if (options) {
+            req.headers['Content-Type'] = 'application/json';
+            req.body = JSON.stringify(params);
+        }
+        console.log(req.headers['X-Freshman-Auth-User']);
         return new Promise((resolve, reject) => {
-            fetch('/api' + path.replace(/^\/api/, ''), {
-                method: verb,
-                ...( options ? {
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...params, auth }),
-                } : {}),
-            })
+            fetch('/api' + path.replace(/^\/api/, ''), req)
                 .then(res => res.json().then(data => {
-                        if (res.ok) {
-                            if (data.error) {
-                                reject(data);
-                            } else {
-                                callback && callback(data);
-                                resolve(data);
-                            }
+                    if (res.ok) {
+                        if (data.error) {
+                            reject(data);
                         } else {
-                            alert(`Failed to ${service} ${path}: ` + data.message)
-                            reject('server error')
-                        };
-                    }))
+                            callback && callback(data);
+                            resolve(data);
+                        }
+                    } else {
+                        alert(`Failed to ${service} ${path}: ` + data.message)
+                        reject('server error')
+                    };
+                }))
                 .catch(err => {
                     alert("Error in sending data to server: " + err.message)
                     reject('connection error');

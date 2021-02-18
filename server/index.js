@@ -28,6 +28,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     login.auth(req).then(user => {
         req.user = user;
+        console.log('user request', user);
         next();
     });
 });
@@ -38,6 +39,7 @@ app.use('/api/graffiti', require('./graffiti').routes);
 app.use('/api/cityhall', require('./cityhall').routes);
 app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
+app.use('/api/wordbase', require('./wordbase').routes);
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));

@@ -53,6 +53,7 @@ async function signup(user, passHash) {
 
 async function check(user, token) {
     let entry = await _get(user);
+    // console.log(user, entry && entry.token, token);
     return { ok: entry && entry.token === token };
 }
 

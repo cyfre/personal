@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useRouteMatch, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { embedded } from './Contents';
-import WikiLink from './WikiLink';
 import { useAuth } from '../lib/hooks';
 import { login, signup, logout } from '../lib/auth';
 
@@ -118,17 +117,21 @@ const User = () => {
   let passRef = useRef();
 
   const handle = {
-    close: () => { setDropdown(false); setError(''); },
     signin: (func) => {
       func(userRef.current.value, passRef.current.value)
-        .then(auth => handle.close())
+        .then(auth => {})
         .catch(e => setError(e.error || 'error'));
     },
     logout: () => {
       logout();
-      handle.close();
     }
   }
+  useEffect(() => {
+    setDropdown(auth.dropdown);
+  }, [auth]);
+  useEffect(() => {
+    setError('');
+  }, [dropdown])
 
   const loggedIn = (
     <div className='dropdown'>
@@ -142,7 +145,7 @@ const User = () => {
     <div className={'dropdown' + (error ? ' error' : '')} title={error}>
       <div className='item'>
         <input ref={userRef} type='text' placeholder='username'
-          autocorrect="off" autocapitalize="none"/>
+          autoCorrect='off' autoCapitalize='off' />
       </div>
       <div className='item'>
         <input ref={passRef} type='password' placeholder='password'

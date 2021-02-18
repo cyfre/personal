@@ -1,12 +1,13 @@
 export function fetchCookie(name) {
     let namedCookie = document.cookie
-        .split(';')
+        .split(';').reverse()
         .find(cookie => cookie.startsWith(name));
     return namedCookie ? JSON.parse(namedCookie.split('=')[1]) : false;
 }
 export function saveCookie(name, value) {
     // save cookie for ten years
     document.cookie = `${name}=${JSON.stringify(value)}; max-age=${60*60*24*365*10}`;
+    fetchCookie(name);
 }
 
 export function fetchCookies(names) {

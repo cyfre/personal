@@ -25,6 +25,7 @@ export class Save {
     static new() {
         return new Save(Board.new(), 0, []);
     }
+    static empty = () => new Save(undefined, -1, []);
     clone() {
         return new Save(this.board.clone(), this.turn, this.history.slice());
     }
@@ -35,6 +36,18 @@ export class Save {
         while (flip.hasNext()) flip.next();
         return flip.curr();
     }
+
+    serialize() {
+        return JSON.stringify({
+            board: this.board.board,
+            turn: this.turn,
+            history: this.history,
+        });
+    }
+    static deserialize(str: string) {
+        let save = JSON.parse(str);
+        return new Save(new Board(save.board), save.turn, save.history);
+    }
 }
 
 export class Info {
@@ -43,18 +56,20 @@ export class Info {
     p2: string;
     status: Player;
     progress: number[];
+    turn: number;
+    lastWord: string;
 
-    constructor(id: string, p1: string, p2: string, status: Player, progress: number[]) {
-        Object.assign(this, {id, p1, p2, status, progress});
+    constructor(id: string, p1: string, p2: string, status: Player, progress: number[], turn: number, lastWord?: string) {
+        Object.assign(this, {id, p1, p2, status, progress, turn, lastWord });
     }
     static local() {
-        return new Info('local', 'blue', 'orange', Player.none, [0, 100]);
+        return new Info('local', 'blue', 'orange', Player.none, [0, 100], 0);
     }
-    clone() {
-        return new Info(this.id, this.p1, this.p2, this.status, this.progress.slice());
+    static of(info: Info) {
+        return new Info(info.id, info.p1, info.p2, info.status, info.progress, info.turn, info.lastWord);
     }
-
-    updateProgress(board: Board): Info {
+    static play(info: Info, save: Save): Info {
+        let board = save.board;
         let p0 = Board.ROWS;
         board.do(tile => {
             if (tile.owner === 0) {
@@ -69,8 +84,14 @@ export class Info {
         });
         let total = Math.max(Board.ROWS, p1 + (Board.ROWS - p0));
 
-        let newProgress = [p1/total, (p0+1)/total].map(x => Math.round(x * 100));
-        return new Info(this.id, this.p1, this.p2, board.gameStatus(), newProgress);
+        return Info.of({ ...info,
+            status: board.gameStatus(),
+            progress: [p1/total, (p0+1)/total].map(x => Math.round(x * 100)),
+            turn: save.turn,
+            lastWord: save.history.length
+                ? save.history[0].map(t => t.letter).join('')
+                : undefined,
+        });
     }
 }
 
@@ -90,9 +111,9 @@ export class Flip {
         let toFlip: ITile[][] = word.map(pos => [deep.get(pos)]);
         while (toFlip.length) {
             let newFlip = [];
-            toFlip.map(ts => {
+            toFlip.forEach(ts => {
                 this.flips.push(ts);
-                ts.map(t => {
+                ts.forEach(t => {
                     t.owner = player;
                     if (t.isBomb) {
                         t.isBomb = false;

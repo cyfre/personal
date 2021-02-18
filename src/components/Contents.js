@@ -92,9 +92,9 @@ const IFrameDiv = styled.div`
     }
 `
 
-const Loading = () => {
+const Loading = ({ ms }) => {
     const [show, setShow] = useState(false);
-    useTimeout(() => setShow(true), 500);
+    useTimeout(() => setShow(true), ms || 500);
     return (
         <Fallback className="centering seamless loading">
             {show ? <Loader /> : ''}
@@ -165,6 +165,7 @@ const EmbeddedRoute = ({name, implicit}) => (
 )
 
 export {
+    Loader,
     Loading,
     Missing,
     Page,

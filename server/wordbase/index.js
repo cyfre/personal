@@ -1,37 +1,17 @@
 const express = require('express');
 const model = require('./model');
-
-const json = (res, promise) => promise
-    .then(data => { console.log(data); res.json(data); })
-    .catch(error => { console.log(error); res.json({ error }) } );
+const { jsonRes } = require('../util.js');
 
 const routes = express.Router();
-routes.post('/', (req, res) => {
-    console.log(req.body);
-    let {user, pass} = req.body;
-    json(res, model.login(user, pass));
-});
-routes.post('/signup', (req, res) => {
-    let {user, pass} = req.body;
-    console.log(user, pass);
-    json(res, model.signup(user, pass));
-});
-routes.post('/verify', (req, res) => {
-    let {user, token} = req.body;
-    console.log(user, token);
-    json(res, model.check(user, token));
-});
-routes.post('/change-pass', (req, res) => {
-    let {user, currPass, newPass} = req.body;
-    json(res, model.changePass(user, currPass, newPass));
-});
-
-function auth(user, token) {
-    return model.check(user, token);
-}
+routes.get('/games', jsonRes(req => model.getUserInfo(req.user)));
+routes.get('/games/:id', jsonRes(req => model.getSave(req.user, req.params.id)));
+routes.post('/new', jsonRes(req => model.newGame(req.user, req.body.state)));
+routes.post('/games/:id', jsonRes(req =>
+    model.play(req.user, req.params.id, req.body.info, req.body.state)));
+routes.post('/games/:id/resign', jsonRes(req => model.resign(req.user, req.params.id)));
+routes.post('/games/:id/delete', jsonRes(req => model.remove(req.user, req.params.id)));
 
 module.exports = {
     routes,
     model,
-    auth,
 }

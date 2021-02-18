@@ -1,36 +1,34 @@
 const express = require('express');
 const model = require('./model');
-
-const json = (res, promise) => promise
-    .then(data => { console.log(data); res.json(data); })
-    .catch(error => { console.log(error); res.json({ error }) } );
+const { jsonRes } = require('../util.js');
 
 const routes = express.Router();
-routes.post('/', (req, res) => {
-    console.log(req.body);
-    let {user, pass} = req.body;
-    json(res, model.login(user, pass));
-});
-routes.post('/signup', (req, res) => {
-    let {user, pass} = req.body;
+routes.post('/', jsonRes(req => {
+    let { user, pass } = req.body;
     console.log(user, pass);
-    json(res, model.signup(user, pass));
-});
-routes.post('/verify', (req, res) => {
-    let {user, token} = req.body;
-    console.log(user, token);
-    json(res, model.check(user, token));
-});
-routes.post('/change-pass', (req, res) => {
-    let {user, currPass, newPass} = req.body;
-    json(res, model.changePass(user, currPass, newPass));
-});
+    return model.login(user, pass);
+}));
+routes.post('/signup', jsonRes(req => {
+    let { user, pass } = req.body;
+    console.log(user, pass);
+    return model.signup(user, pass);
+}));
+routes.post('/verify', jsonRes(req => {
+    let { user, token } = req.body;
+    return model.check(user, token);
+}));
+routes.post('/change-pass', jsonRes(req => {
+    let { user, currPass, newPass } = req.body;
+    return model.changePass(user, currPass, newPass);
+}));
 
 async function auth(req) {
-    let { auth } = req.body;
-    if (auth) {
-        let result = await model.check(auth.user, auth.token);
-        if (result.ok) return auth.user;
+    let user = req.header('X-Freshman-Auth-User');
+    let token = req.header('X-Freshman-Auth-Token');
+    if (user && token) {
+        let result = await model.check(user, token);
+        console.log(user, result);
+        if (result.ok) return user;
     }
     return false;
 }

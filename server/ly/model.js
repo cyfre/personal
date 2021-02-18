@@ -1,20 +1,9 @@
 const { ObjectID } = require('mongodb');
 const util = require('../util');
 const db = require('../db');
+const { randAlphanum } = require('../rand');
 
 const name = 'ly';
-
-const alphanum = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM';
-const randi = n => {
-    return Math.floor(Math.random() * n);
-}
-const randAlphanum = n => {
-    let str = '';
-    for (let i = 0; i < n; i++) {
-        str += alphanum[randi(alphanum.length)];
-    }
-    return str;
-}
 
 // const get = util.genGet(name);
 async function get(hash) {

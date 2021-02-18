@@ -22,14 +22,17 @@ function genRemove(name) {
     return async (id) => db.collection(name).deleteOne({ _id: ObjectID(id) });
 }
 
-function wrapReturn(func) {
+function jsonRes(func) {
     return (req, res) => func(req)
         .then(data => {
             console.log(req.method, req.originalUrl);
-            console.log(data);
+            // console.log(data);
             res.json(data);
         })
-        .catch(error => res.json(error));
+        .catch(error => {
+            console.log(error);
+            res.json({ error })
+        });
 }
 
 function genModelRoutes(model, routes) {
@@ -52,16 +55,7 @@ function genModelRoutes(model, routes) {
         method: 'delete', path: '/:id',
         modelFunc: req => (model.remove || genRemove(model.name))(req.params.id)
     }].forEach(config => {
-        routes[config.method](config.path, (req, res) => {
-            config
-                .modelFunc(req)
-                .then(data => {
-                    console.log(req.method, req.originalUrl);
-                    console.log(data);
-                    res.json(data);
-                })
-                .catch(error => res.json(error));
-        });
+        routes[config.method](config.path, jsonRes(config.modelFunc));
     });
 
     return routes;
@@ -71,6 +65,6 @@ module.exports = {
     update,
     genGetAll,
     genGet,
-    wrapReturn,
+    jsonRes,
     genModelRoutes
 }
