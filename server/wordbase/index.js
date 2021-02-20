@@ -1,17 +1,33 @@
 const express = require('express');
-const model = require('./model');
-const { jsonRes } = require('../util.js');
+const M = require('./model');
+const { J } = require('../util.js');
 
-const routes = express.Router();
-routes.get('/games', jsonRes(req => model.getUserInfo(req.user)));
-routes.get('/games/:id', jsonRes(req => model.getSave(req.user, req.params.id)));
-routes.post('/new', jsonRes(req => model.newGame(req.user, req.body.state)));
-routes.post('/games/:id', jsonRes(req =>
-    model.play(req.user, req.params.id, req.body.info, req.body.state)));
-routes.post('/games/:id/resign', jsonRes(req => model.resign(req.user, req.params.id)));
-routes.post('/games/:id/delete', jsonRes(req => model.remove(req.user, req.params.id)));
+const R = express.Router();
+const P = {
+    invites: '/i(nvites)?',
+    games: '/g(ames)?',
+    gameId: `/g(ames)?/:id`
+}
+
+// get & play info/save
+R.get(P.games, J(rq => M.getUserInfo(rq.user)));
+R.get(P.gameId, J(rq => M.getState(rq.user, rq.params.id)));
+R.post(P.gameId, J(rq => M.play(rq.user, rq.params.id, rq.body.info, rq.body.state)));
+
+// game options
+R.post(`${P.gameId}/resign`, J(rq => M.resign(rq.user, rq.params.id)));
+R.post(`${P.gameId}/delete`, J(rq => M.remove(rq.user, rq.params.id)));
+R.post(`${P.gameId}/rematch`, J(rq => M.rematch(rq.user, rq.params.id, rq.body.state)));
+R.post(`${P.gameId}/accept`, J(rq => M.accept(rq.user, rq.params.id)));
+
+// invites
+R.get(P.invites, J(rq => M.getInvites()));
+R.post(`${P.invites}/accept`, J(rq => M.accept(rq.user)));
+R.post(`${P.invites}/open`, J(rq => M.open(rq.user, rq.body.state)));
+R.post(`${P.invites}/private`, J(rq => M.create(rq.user, undefined, rq.body.state)));
+R.post(`${P.invites}/friend/:user`, J(rq => M.create(rq.user, rq.params.user, rq.body.state)));
 
 module.exports = {
-    routes,
-    model,
+    routes: R,
+    model: M,
 }

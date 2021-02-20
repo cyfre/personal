@@ -26,25 +26,25 @@ const api = {};
             req.headers['Content-Type'] = 'application/json';
             req.body = JSON.stringify(params);
         }
-        console.log(req.headers['X-Freshman-Auth-User']);
         return new Promise((resolve, reject) => {
             fetch('/api' + path.replace(/^\/api/, ''), req)
                 .then(res => res.json().then(data => {
                     if (res.ok) {
                         if (data.error) {
+                            console.log('api error', data.error);
                             reject(data);
                         } else {
                             callback && callback(data);
                             resolve(data);
                         }
                     } else {
-                        alert(`Failed to ${service} ${path}: ` + data.message)
-                        reject('server error')
+                        let msg = `server error, failed ${service} ${path}: ` + data.message;
+                        console.log(msg); reject(msg);
                     };
                 }))
                 .catch(err => {
-                    alert("Error in sending data to server: " + err.message)
-                    reject('connection error');
+                    let msg = 'connection error: ' + err.message;
+                    console.log(msg); reject(msg);
                 });
         });
     }

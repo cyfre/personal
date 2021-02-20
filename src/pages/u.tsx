@@ -1,0 +1,170 @@
+import React, { useState, useEffect, useRef, Fragment } from 'react';
+import styled from 'styled-components';
+import { useRouteMatch, useHistory } from 'react-router-dom';
+import api from '../lib/api';
+import { useAuth } from '../lib/hooks';
+import { Loader } from '../components/Contents';
+
+const UserEntry = ({user}) => {
+    let history = useHistory();
+    return (<div className='user-entry' onClick={() => history.push(`/u/${user}`)}>
+        {user}
+    </div>)
+}
+const UserList = ({users}) => <Fragment>
+    {users ? users.map(u => <UserEntry user={u} key={u} />) : ''}
+</Fragment>
+
+// eslint-disable-next-line import/no-anonymous-default-export
+export default () => {
+    let auth = useAuth();
+    let history = useHistory();
+    let user = useRouteMatch('/u/:user')?.params.user || (() => {
+        history.push(`/u/${auth.user}`);
+        return auth.user;
+    })();
+    let [loaded, setLoaded] = useState(false);
+    let [profile, setProfile] = useState(undefined);
+    let [info, setInfo]: [{ [key: string]: any }, any] = useState({});
+    let searchRef = useRef();
+
+    useEffect(() => {
+        handle.load();
+    }, [user, auth.user])
+    const handle = {
+        load: () => api.get(`/profile/${user}`).then(handle.parse),
+        follow: () => api.post(`/profile/${user}/follow`, {}).then(handle.parse),
+        unfollow: () => api.post(`/profile/${user}/unfollow`, {}).then(handle.parse),
+        parse: data => {
+            console.log(data);
+            setLoaded(true);
+            setProfile(data.profile)
+            let { friends, follows, followers } = data.profile;
+            info = {};
+            if (auth.user) {
+                info.isUser = user === auth.user;
+                let friendSet = new Set(friends);
+                let followerSet = new Set(followers);
+                if (info.isUser) {
+                    info.requests = followers.filter(f => !friendSet.has(f));
+                } else {
+                    info.isFriend = friendSet.has(auth.user);
+                    info.canFollow = !followerSet.has(auth.user);
+                    info.canUnfollow = followerSet.has(auth.user);
+                }
+            }
+            setInfo(info);
+        },
+        search: () => {
+            let current = searchRef.current;
+            if (current) {
+                let search = (current as HTMLInputElement).value
+                search && history.push(`/u/${search}`)
+            }
+        },
+    }
+
+    return <Style>
+        <div className='search'>
+            <input ref={searchRef} type='text' placeholder='find user'
+                autoCorrect='off' autoCapitalize='off'
+                onKeyDown={e => e.key === 'Enter' && handle.search()}/>
+            <span className='submit' onClick={handle.search}>go</span>
+        </div>
+        {profile ?
+        <div className='profile'>
+            <div className='user'>
+                {profile.user}
+                {info.canFollow ?
+                <div className='follow button' onClick={handle.follow}>follow</div> : ''}
+                {info.canUnfollow ?
+                <div className='follow button' onClick={handle.unfollow}>unfollow</div> : ''}
+                {info.isFriend ? <div className='lil-badge'>friend!</div> : ''}
+            </div>
+            {profile.bio ? <div className='bio'>{profile.bio}</div> : ''}
+            <div className='friends'>
+                <UserList users={profile.friends} />
+            </div>
+            {info.isUser
+            ? <div className='requests'>
+                <UserList users={info.requests} />
+            </div>
+            : ''}
+        </div>
+        : loaded
+        ? <div className='profile'>
+            <div className='user'>
+                '{user}' does not exist
+            </div>
+        </div>
+        : ''}
+    </Style>
+}
+
+const Style = styled.div`
+    height: 100%; width: 100%;
+    background: white;
+    color: black;
+    .search {
+        padding: .3rem .3rem;
+        padding-top: .1rem;
+        background: black;
+        // background: #a2ddff;
+        display: flex;
+        input {
+            width: 8rem;
+            font-size: .8rem;
+            background: white;
+            border: white;
+            color: black;
+            padding: 0 .3rem;
+            border-radius: .3rem;
+        }
+        .submit {
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            border: 2px solid white;
+            padding: 0 .3rem;
+            border-radius: .3rem;
+            margin-left: .3rem;
+        }
+    }
+    .profile {
+        padding: 1rem;
+        > *::before { display: block; }
+        .lil-badge { display: inline-block; }
+        > *::before, .lil-badge {
+            width: fit-content;
+            font-size: .8rem;
+            opacity: .5;
+            background: #00000022;
+            padding: 0 .3rem;
+            border-radius: .3rem;
+        }
+        > * {
+            margin-bottom: .5rem;
+            min-height: 3rem;
+        }
+        .user::before { content: "user" }
+        .bio::before { content: "bio" }
+        .friends::before { content: "friends" }
+        .requests::before { content: "requests" }
+
+        .button {
+            cursor: pointer;
+            display: inline-block;
+            width: fit-content;
+            font-size: .8rem;
+            border: 2px solid black;
+            padding: 0 .3rem;
+            border-radius: .3rem;
+            &.follow {
+                margin: 0 .5rem;
+            }
+        }
+        .user-entry {
+            cursor: pointer;
+        }
+    }
+`

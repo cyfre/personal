@@ -9,6 +9,22 @@ function update(target, source) {
         }
     }
 }
+function squash(objList) {
+    return Object.assign({}, ...objList);
+}
+function pick(obj, spaceDelimitedProps) {
+    return squash(spaceDelimitedProps.split(' ').map(prop => ({ [prop]: obj[prop] })));
+}
+function entryMap(obj, func) {
+    return squash(Object.entries(obj).map(e => ({ [e[0]]: func(e[1]) }) ))
+}
+function remove(arr, item) {
+    return arr.filter(x => x !== item);
+    // let copy = arr.slice();
+    // let index = copy.indexOf(item);
+    // if (index > -1) copy.splice(index, 1);
+    // return copy;
+}
 
 function genGetAll(name) {
     return async () => db.collection(name).find().toArray();
@@ -25,7 +41,6 @@ function genRemove(name) {
 function jsonRes(func) {
     return (req, res) => func(req)
         .then(data => {
-            console.log(req.method, req.originalUrl);
             // console.log(data);
             res.json(data);
         })
@@ -63,8 +78,11 @@ function genModelRoutes(model, routes) {
 
 module.exports = {
     update,
+    pick,
+    entryMap,
+    remove,
     genGetAll,
     genGet,
-    jsonRes,
+    jsonRes, J: jsonRes,
     genModelRoutes
 }

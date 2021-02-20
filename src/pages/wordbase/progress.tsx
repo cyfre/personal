@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Player } from './board';
 import { theme } from './game';
+import { useHistory } from 'react-router-dom';
 
 const Style = styled.div`
 &.game-progress {
@@ -22,10 +23,18 @@ const Style = styled.div`
         width: 100%;
         left: 0;
     }
+    .player-name {
+        cursor: pointer;
+        z-index: 100;
+        :hover { text-decoration: underline; }
+    }
 }
 `
 
 export const GameProgress = ({info}) => {
+    const history = useHistory();
+    const openUser = user => history.push(`/u/${user}`)
+
     const isTurn = info.status === Player.none
         ? [0, (info.turn + 1)%2, info.turn%2]
         : [1, 0, 0];
@@ -34,15 +43,17 @@ export const GameProgress = ({info}) => {
     <Style className='game-progress' style={{
         background: `linear-gradient(90deg, ${progressGradient})`}}>
 
-        <div className='player-name p2'>{info.p2 + (isTurn[2] ? ' <' : '')}</div>
+        <div className='player-name p2' onClick={() => openUser(info.p2)}>
+            {info.p2 + (isTurn[2] ? ' <' : '')}</div>
         <div className='game-status'>{(() => {
             switch (info.status) {
                 case Player.none: return '';
-                case Player.p1: return 'blue wins!';
-                case Player.p2: return 'orange wins!';
+                case Player.p1: return `${info.p1} wins!`;
+                case Player.p2: return `${info.p2} wins!`;
             }
         })()}</div>
-        <div className='player-name p1'>{(isTurn[1] ? '> ' : '') + (info.p1 || 'invite')}</div>
+        <div className='player-name p1' onClick={() => openUser(info.p1)}>
+            {(isTurn[1] ? '> ' : '') + (info.p1 || 'invite')}</div>
     </Style>
     )
 }

@@ -5,13 +5,13 @@ import { useEventListener, useInterval } from '../../lib/hooks';
 import { dist, end } from './util';
 import { isValidWord } from './dict';
 import { IPos, Pos, Player, ITile, Tile, Board } from './board';
-import { Info, Save, Flip } from './save';
-import { fetchGame, localInfo, updateGame } from './data';
+import { Info, Save } from './save';
+import { fetchGame, localInfo, updateGame, rematchGame } from './data';
 import { auth, openLogin } from '../../lib/auth';
 import { GameProgress } from './progress';
 
-const globals = {
-    wordCheck: true,
+export const globals = {
+    wordCheck: false,
     flipMs: 700,
 };
 
@@ -28,32 +28,47 @@ let lastTouch: IPos;
 const TileElem = ({tile, word, handle}) => {
     const [selected, setSelected] = useState(false);
     const [active, setActive] = useState(false);
+    const [flip, setFlip] = useState(false);
+    const [swapped, setSwapped] = useState(false);
 
     useEffect(() => {
         setSelected(Tile.has(word, tile));
         setActive(Tile.eq(end(word), tile));
     }, [word]);
+    useEffect(() => {
+        setSwapped(false);
+        setFlip(false);
+        if (tile.swap) {
+            setTimeout(() => {
+                tile.swap.new = false;
+                setFlip(true);
+                setTimeout(() => {
+                    setSwapped(true);
+                }, globals.flipMs/2);
+            }, tile.swap.ms);
+        }
+    }, [tile.swap]);
 
-    const touchFunc = (e, func) => {
+    const touchFunc = (e, func: (_: Pos) => any) => {
         let touch = e.touches[0];
         let refRect = (touch.target as Element).getBoundingClientRect();
         let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
         let col = tile.col + (touch.clientX - refRect.x)/refRect.width;
         if (dist(.5, .5, row % 1, col % 1) <= .45) {
             let pos = { row: Math.floor(row), col: Math.floor(col) };
-            Pos.eq(lastTouch, pos) || func(pos.row, pos.col);
+            Pos.eq(lastTouch, pos) || func(pos);
             lastTouch = pos;
         }
     }
 
+    const visual = (tile.swap && (tile.swap.new ? true : !swapped)) ? tile.swap.from : tile;
+    // const visual = tile.swap ? tile.swap.from : tile;
     return (<div
         onPointerDown={() => {
             startTile = tile;
-            console.log(tile);
-            handle.select(tile.row, tile.col)
+            handle.select(tile)
         }}
         onPointerUp={() => {
-            console.log('up', tile);
             if (!Tile.eq(startTile, tile)) {
                 handle.unselect();
             }
@@ -61,18 +76,18 @@ const TileElem = ({tile, word, handle}) => {
         onTouchEnd={() => handle.unselect()}
         className={[
             'tile',
-            playerClass[tile.owner] || '',
-            tile.isBomb ? 'bomb' : '',
+            playerClass[visual.owner] || '',
+            visual.isBomb ? 'bomb' : '',
             selected ? 'selected' : '',
             active ? 'active' : '',
-            tile.flipped ? 'flip' : '',
+            flip ? 'flip' : '',
             ].join(' ')}>
 
         {tile.letter}
 
         <div
             className='hover-target'
-            onPointerOver={() => handle.hover(tile.row, tile.col)}
+            onPointerOver={() => handle.hover(tile)}
             onTouchMove={e => touchFunc(e, handle.hover)}></div>
     </div>)
 }
@@ -85,123 +100,81 @@ const Row = ({row, word, handle}) => {
 }
 
 Object.assign(window, { wordbaseSettings: globals });
-export const Wordbase = ({setMenu, gameId}) => {
+export const Wordbase = ({setOpenGame, gameId}) => {
     const [info, setInfo]: [Info, any] = useState(Info.local());
     const [save, setSave]: [Save, any] = useState(Save.empty());
     const [loaded, setLoaded] = useState(false);
     const [selected, setSelected] = useState(false);
     const [word, setWord]: [ITile[], any] = useState([]);
-    const [flip, setFlip]: [Flip, any] = useState(undefined);
 
-    useEffect(() => {
-        handle.resize();
-    }, []);
-    useEffect(() => {
-        handle.fetch();
-    }, [gameId]);
+    const isLocal = gameId === localInfo.id;
+    const canPlay = info.status === Player.none &&
+        (isLocal || !info.p1 || auth.user === (save.p1 ? info.p1 : info.p2));
+
+    useEffect(() => { handle.resize(); }, []);
+    useEffect(() => { handle.fetch(); }, [gameId]);
     useInterval(() => {
-        console.log(gameId);
+        console.log(canPlay);
+        // canPlay || handle.fetch();
         handle.fetch();
-    }, 5000);
+    }, 3000);
     useEffect(() => {
         Object.assign(window, { save });
-        // console.log(save.history[0]);
     }, [save]);
-    useEffect(() => {
-        if (flip) {
-            let anim = () => {
-                if (flip.hasNext()) {
-                    setSave(flip.next(globals.flipMs/3, () => anim()));
-                } else {
-                    setSave(flip.curr());
-                    setFlip(undefined);
-                    handle.fetch();
-                }
-            }
-            anim();
-        }
-    }, [flip]);
 
     const handle = {
         fetch: () => {
             fetchGame(gameId).then(data => {
-                console.log(data);
-                if (save.turn < data.save.turn) {
+                console.log(data.info.turn);
+                if (save.turn < data.save.turn || info.status !== data.info.status) {
+                    console.log(data);
                     setInfo(data.info);
                     setSave(data.save);
                     setLoaded(true);
-                } else if (save.turn > data.save.turn) {
-                    updateGame(info, save);
                 }
             });
         },
-        update: () => {
-            setSave(save.clone());
+        send: (info: Info, save: Save) => {
+            console.log('send', info, save);
+            updateGame(info, save);
+            setInfo(info);
+            setSave(save);
         },
-        select: (row, col) => {
-            if (info.status !== Player.none) return;
-            if (info.id !== localInfo.id && info.p1 &&
-                auth.user !== (save.p1 ? info.p1 : info.p2)) return;
-            // console.log(row, col);
-            let tile: ITile = save.board.get(row, col);
+        select: (pos: Pos) => {
+            if (!canPlay) return;
+            let tile: ITile = save.board.get(pos);
+            let wordIndex = word.indexOf(word.find(t => Tile.eq(t, tile)));
             if (selected) {
-                // console.log('in selected');
-                if (word.length > 1 && Tile.eq(end(word), tile)) {
-                    // don't cancel the word
-                    // console.log('dont cancel');
-                } else {
-                    setWord([]);
-                }
-                setSelected(false);
-            } else {
-                if (tile.owner === save.player) {
-                    // console.log('in player');
-                    setWord([tile]);
-                    setSelected(true);
-                } else if (Tile.has(word, tile)) {
-                    let index = word.indexOf(word.find(t => Tile.eq(t, tile)));
-                    setWord(word.slice(0, index+1));
-                    setSelected(true);
-                }
+                handle.unselect();
+            } else if (wordIndex > -1) {
+                setWord(word.slice(0, wordIndex + 1));
+                setSelected(true);
+            } else if (tile.owner === save.player) {
+                setWord([tile]);
+                setSelected(true);
             }
-            handle.update();
         },
         unselect: () => {
             setSelected(false);
+            if (word.length === 1) setWord([]);
         },
-        hover: (row, col) => {
-            if (info.status !== Player.none) return;
-            if (save.board.get(row, col) && selected && word.length > 0) {
-                if (Tile.eq(end(word, 2), {row, col})) {
+        hover: (pos: Pos) => {
+            if (!canPlay) return;
+            if (save.board.get(pos) && selected && word.length > 0) {
+                if (Tile.eq(end(word, 2), pos)) {
                     setWord(word.slice(0, word.length - 1));
                 } else {
                     let curr = word.slice(-1)[0];
-                    if (Tile.isAdj(curr, {row, col})) {
-                        let tile = save.board.get(row, col);
+                    if (Tile.isAdj(curr, pos)) {
+                        let tile = save.board.get(pos);
                         if (!Tile.has(word, tile)) {
                             setWord(word.concat(tile));
                         }
                     }
                 }
-                handle.update();
             }
         },
-        resize: () => {
-            let wordbase: HTMLElement = document.querySelector('.wordbase');
-            wordbase.style.width = '100%';
-            let board: HTMLElement = document.querySelector('.board');
-            let containerRect = board.parentElement.getBoundingClientRect();
-            console.log(containerRect);
-
-            let ratio = Board.ROWS / Board.COLS;
-            let width = Math.min(containerRect.width, containerRect.height / ratio);
-            wordbase.style.width = width + 'px';
-            board.style.width = width + 'px';
-            board.style.height = width * ratio + 'px';
-            tilePx = width / Board.COLS;
-            // setTimeout(() => setLoading(false), 100);
-        },
-        cancel: () => {
+        clear: () => {
             setWord([]);
             setSelected(false);
         },
@@ -220,33 +193,45 @@ export const Wordbase = ({setMenu, gameId}) => {
                 return;
             }
 
-            setWord([]);
-            setSelected(false);
-            if (globals.flipMs) {
-                setFlip(new Flip(save, word));
-            } else {
-                setSave(save.play(word));
-            }
+            let newSave = save.play(word);
+            let newInfo = Info.play(info, newSave);
+            console.log('submit', newInfo, newInfo.turn, newInfo.lastWord,
+                newSave.history[0].map(t => t.letter).join(''),
+                newSave);
+            handle.clear();
+            handle.send(newInfo, newSave);
+        },
+        rematch: () => {
+            rematchGame(info, (newInfo, newSave) => {
+                setOpenGame(newInfo.id)
+                setInfo(newInfo);
+                setSave(newSave);
+            });
         },
         keypress: (e: React.KeyboardEvent) => {
             switch (e.key) {
-                case 'Esc': handle.cancel(); break;
+                case 'Esc': handle.clear(); break;
                 case 'Enter': handle.submit(); break;
             }
         },
-        newGame: () => {
-            setSave(Save.new());
-            setSelected(false);
-            setWord([]);
-            info.progress = [0, 100];
+        resize: () => {
+            let wordbase: HTMLElement = document.querySelector('.wordbase');
+            wordbase.style.width = '100%';
+            let board: HTMLElement = document.querySelector('.board');
+            let containerRect = board.parentElement.getBoundingClientRect();
+            console.log(containerRect);
+
+            let ratio = Board.ROWS / Board.COLS;
+            let width = Math.min(containerRect.width, containerRect.height / ratio);
+            wordbase.style.width = width + 'px';
+            board.style.width = width + 'px';
+            board.style.height = width * ratio + 'px';
+            tilePx = width / Board.COLS;
+            // setTimeout(() => setLoading(false), 100);
         },
     }
-    useEventListener(window, 'resize', handle.resize, false);
     useEventListener(window, 'keydown', handle.keypress, false);
-
-    useEffect(() => {
-        save && save.board && setInfo(Info.play(info, save));
-    }, [save]);
+    useEventListener(window, 'resize', handle.resize, false);
 
     return (
         <Style className='wordbase'>
@@ -263,26 +248,25 @@ export const Wordbase = ({setMenu, gameId}) => {
                 <div className='control-container'>
                     {word.length
                     ? <Fragment>
-                        <div className='control button' onClick={handle.cancel}>cancel</div>
+                        <div className='control button' onClick={handle.clear}>cancel</div>
                         <div className='control button' onClick={handle.submit}>submit</div>
                     </Fragment>
                     : info.status === Player.none
-                    ? <div className='control button left' onClick={() => setMenu(true)}>menu</div>
+                    ? <div className='control button left' onClick={() => setOpenGame(false)}>menu</div>
                     : <Fragment>
-                        <div className='control button' onClick={() => setMenu(true)}>menu</div>
-                        <div className='control button' onClick={handle.newGame}>new game</div>
+                        <div className='control button' onClick={() => setOpenGame(false)}>menu</div>
+                        <div className='control button' onClick={handle.rematch}>rematch</div>
                     </Fragment>}
                 </div>
             </div>
 
             <div className='board-container'>
-                {!auth.user && (info.id !== localInfo.id || !save.board)
-                ? <div className='board-block' onClick={openLogin}><span>log in to play</span></div>
-                : ''}
+                {auth.user || (isLocal && save.board) ? ''
+                : <div className='board-block' onClick={openLogin}><span>log in to play</span></div>}
 
                 <div className={[
                     'board',
-                    flip ? '' : save.p1 ? 'p1' : 'p2',
+                    save.p1 ? 'p1' : 'p2',
                     loaded ? '' : 'loading'].join(' ')}>
 
                     {!loaded ? '' : save.board.rows((row, i) =>

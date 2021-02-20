@@ -13,7 +13,7 @@ pass: hash
 token: uuid
 */
 
-async function _get(user) {
+async function get(user) {
     return db.collection(name).findOne({ user });
 }
 
@@ -27,10 +27,10 @@ async function _update(entry) {
 }
 
 async function login(user, passHash) {
-    let entry = await _get(user);
+    let entry = await get(user);
     console.log(entry);
     if (entry && entry.pass === passHash) {
-        entry.token = genToken();
+        // entry.token = genToken();
         await _update(entry);
         return userAndToken(entry);
     }
@@ -38,8 +38,8 @@ async function login(user, passHash) {
 }
 
 async function signup(user, passHash) {
-    let entry = await _get(user);
-    if (await _get(user)) return { error: 'user already exists' };
+    let entry = await get(user);
+    if (await get(user)) return { error: 'user already exists' };
 
     entry = {
         user,
@@ -52,14 +52,14 @@ async function signup(user, passHash) {
 }
 
 async function check(user, token) {
-    let entry = await _get(user);
+    let entry = await get(user);
     // console.log(user, entry && entry.token, token);
     return { ok: entry && entry.token === token };
 }
 
 
 async function changePass(user, currPass, newPass) {
-    let entry = await _get(user);
+    let entry = await get(user);
     if (entry && entry.pass === currPass) {
         entry.pass = newPass;
         entry.token = genToken();
@@ -71,6 +71,7 @@ async function changePass(user, currPass, newPass) {
 
 module.exports = {
     name,
+    get,
     login,
     signup,
     check,

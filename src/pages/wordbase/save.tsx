@@ -32,9 +32,44 @@ export class Save {
     get = (pos_or_row: (IPos | number), col?: number): ITile => this.board.get(pos_or_row, col);
 
     play(word: IPos[]): Save {
-        let flip = new Flip(this, word);
-        while (flip.hasNext()) flip.next();
-        return flip.curr();
+        let deep = this.board.deep();
+        let tiles = word.map(pos => deep.get(pos));
+        let msDelay = 300;
+        let currMs = -msDelay;
+
+        deep.do(t => {
+            t.swap = undefined;
+        });
+        let flip = (t, player, ms, bombFlips?) => {
+            if (!t.swap) {
+                t.swap = { ms, from: Tile.new(t), new: true };
+            }
+            t.owner = player;
+            if (t.isBomb) {
+                t.isBomb = false;
+                bombFlips && bombFlips.push(deep.square(t));
+            }
+        }
+
+        let { player, opponent } = this;
+        let bombFlips: ITile[][] = [];
+        tiles.forEach(t => {
+            currMs += msDelay;
+            flip(t, player, currMs, bombFlips);
+        });
+
+        while (bombFlips.length) {
+            currMs += 2 * msDelay;
+            bombFlips.shift().forEach(t => flip(t, player, currMs, bombFlips));
+        }
+
+        currMs += 2 * msDelay;
+        let oppoSafe = deep.bfs(opponent);
+        deep.tiles()
+            .filter(t => t.owner === opponent && !Tile.has(oppoSafe, t))
+            .forEach(t => flip(t, Player.none, currMs));
+
+        return new Save(deep, this.turn + 1, [tiles].concat(this.history));
     }
 
     serialize() {
@@ -92,73 +127,5 @@ export class Info {
                 ? save.history[0].map(t => t.letter).join('')
                 : undefined,
         });
-    }
-}
-
-export class Flip {
-    private save: Save;
-    private tiles: ITile[];
-    private flips: ITile[][];
-
-    constructor(save: Save, word: IPos[]) {
-        this.save = save.clone();
-        this.tiles = word.map(pos => this.save.get(pos));
-        this.flips = [];
-
-        let deep = save.board.deep();
-        let { player, opponent } = save;
-
-        let toFlip: ITile[][] = word.map(pos => [deep.get(pos)]);
-        while (toFlip.length) {
-            let newFlip = [];
-            toFlip.forEach(ts => {
-                this.flips.push(ts);
-                ts.forEach(t => {
-                    t.owner = player;
-                    if (t.isBomb) {
-                        t.isBomb = false;
-                        newFlip.push(deep.square(t));
-                    }
-                });
-            });
-            toFlip = newFlip;
-        }
-        let oppoSafe = deep.bfs(opponent);
-        let oppoLose = deep.tiles()
-            .filter(t => t.owner === opponent && !Tile.has(oppoSafe, t))
-            .map(t => {
-                t.owner = Player.none;
-                return t;
-            });
-        this.flips.push(oppoLose);
-
-        this.flips.forEach(ts => ts.forEach(t => {
-            save.get(t).flipped = false;
-        }));
-    }
-
-    curr = () => this.save.clone();
-    hasNext = () => this.flips.length;
-    next(swapMs?: number, swapCallback?: () => any): Save {
-        let swaps = [];
-        let swap = () => swapMs
-            ? setTimeout(() => { swaps.forEach(a => a()); swapCallback(); }, swapMs)
-            : swaps.forEach(action => action());
-
-        if (this.flips.length) {
-            this.flips.shift().forEach(t => {
-                let actual = this.save.get(t);
-                actual.flipped = true;
-                swaps.push(() => {
-                    actual.owner = t.owner;
-                    actual.isBomb = t.isBomb;
-                });
-            });
-            swap();
-            if (!this.flips.length) {
-                this.save = new Save(this.save.board, this.save.turn + 1, [this.tiles].concat(this.save.history));
-            }
-        }
-        return this.save.clone();
     }
 }

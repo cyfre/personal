@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Link, useRouteMatch, useLocation } from 'react-router-dom';
+import { Link, useRouteMatch, useLocation, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 import { embedded } from './Contents';
 import { useAuth } from '../lib/hooks';
@@ -115,6 +115,7 @@ const User = () => {
   let [error, setError] = useState('');
   let userRef = useRef();
   let passRef = useRef();
+  let history = useHistory();
 
   const handle = {
     signin: (func) => {
@@ -124,7 +125,8 @@ const User = () => {
     },
     logout: () => {
       logout();
-    }
+    },
+
   }
   useEffect(() => {
     setDropdown(auth.dropdown);
@@ -135,8 +137,8 @@ const User = () => {
 
   const loggedIn = (
     <div className='dropdown'>
-      <div className='item'>profile</div>
-      <div className='item'>friends</div>
+      <div className='item' onClick={() => history.push(`/u/${auth.user}`)}>profile</div>
+      {/* <div className='item'>friends</div> */}
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>
   )
@@ -144,7 +146,7 @@ const User = () => {
   const loggedOut = (
     <div className={'dropdown' + (error ? ' error' : '')} title={error}>
       <div className='item'>
-        <input ref={userRef} type='text' placeholder='username'
+        <input ref={userRef} type='text' maxlength='8' placeholder='username'
           autoCorrect='off' autoCapitalize='off' />
       </div>
       <div className='item'>
@@ -196,10 +198,10 @@ export const Header = () => {
   return (
     <Style id="header">
       <div>
-        <Link to="/">
+        <Link to="/projects">
           <img className="profile" src="/profile.jpeg" alt="profile"/>
         </Link>
-        {isImplicitProject && <Link to='/projects'>/projects</Link>}
+        {/* {isImplicitProject && <Link to='/projects'>/projects</Link>} */}
         {crumbs.map(crumb => <Link to={crumb} key={crumb}>/{crumb.split('/').pop()}</Link>)}
         {isEmbeddedProject && <a className='raw-link' href={`/raw${crumbs[0]}${location.hash}`}>view raw</a>}
       </div>

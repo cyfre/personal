@@ -27,7 +27,6 @@ async function auth(req) {
     let token = req.header('X-Freshman-Auth-Token');
     if (user && token) {
         let result = await model.check(user, token);
-        console.log(user, result);
         if (result.ok) return user;
     }
     return false;

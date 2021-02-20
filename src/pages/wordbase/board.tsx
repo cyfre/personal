@@ -25,18 +25,23 @@ export class Dirs {
     static map = (func: (dir: IPos) => any) => Dirs.LIST.map(func);
 }
 
+export interface Swap {
+    from: ITile,
+    ms: number,
+    new: boolean,
+}
 export interface ITile extends IPos {
     letter: string,
     owner: number,
     isBomb: boolean,
-    flipped?: boolean,
+    swap?: Swap,
 }
 export class Tile extends Pos implements ITile {
-    letter: string; owner: number; isBomb: boolean; flipped?: boolean;
+    letter: string; owner: number; isBomb: boolean; swap?: Swap;
 
-    constructor(row: number, col: number, letter: string, owner: number, isBomb: boolean, flipped?: boolean) {
+    constructor(row: number, col: number, letter: string, owner: number, isBomb: boolean) {
         super(row, col);
-        Object.assign(this, { letter, owner, isBomb, flipped });
+        Object.assign(this, { letter, owner, isBomb });
     }
     static new = (props: ITile) => Object.assign({}, props);
 

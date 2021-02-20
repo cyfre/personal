@@ -7,39 +7,38 @@ const login = require('./login');
 
 const app = express();
 const port = 5000;
+
+// parse JSON requests
 app.use(bodyParser.json({
     extended: true,
     limit: '50mb'
-})); // parses JSON requests
-
+}));
+// user auth
+app.use((req, res, next) => {
+    login.auth(req).then(user => {
+        req.user = user;
+        next();
+    });
+});
 // log errors
 app.use((err, req, res, next) => {
     console.log(err);
     next();
 });
-
 // log timestamped url requests
 app.use((req, res, next) => {
-    console.log(String(Date.now()), req.method, req.originalUrl);
+    console.log(String(Date.now()), req.method, req.originalUrl, req.user);
     next();
 });
 
-// authorize user
-app.use((req, res, next) => {
-    login.auth(req).then(user => {
-        req.user = user;
-        console.log('user request', user);
-        next();
-    });
-});
-
 app.use('/api/login', login.routes);
-app.use('/api/turt', require('./turt').routes);
+app.use('/api/profile', require('./profile').routes);
+app.use('/api/wordbase', require('./wordbase').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
+app.use('/api/turt', require('./turt').routes);
 app.use('/api/cityhall', require('./cityhall').routes);
 app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
-app.use('/api/wordbase', require('./wordbase').routes);
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));

@@ -1,153 +1,189 @@
 const db = require('../db');
+const { pick, entryMap } = require('../util');
 const { randAlphanum } = require('../rand');
 
 const names = {
     user: 'wordbase-user',
-    /*
-        user: string
-        games: number[]
-    */
+        // user: string
+        // games: number[]
     info: 'wordbase-info',
-    /*
-        id: string
-        p1: string
-        p2: string
-        status: {0 1 2}
-        progress: [number, number]
-        turn: number
-        lastWord: string
-    */
+        // id: string
+        // p1: string
+        // p2: string
+        // status: {0 1 2}
+        // progress: [number, number]
+        // turn: number
+        // lastWord: string
     save: 'wordbase-save',
-    /*
-        id: string
-        state: string
-    */
+        // id: string
+        // state: string
+    invite: 'wordbase-invite',
+        // id: string,
+        // user: string,
 }
+const C = entryMap(names, name => () => db.collection(name));
 
-async function getUser(user) {
-    let entry = await db.collection(names.user).findOne({ user });
+async function _getGames(user) {
+    if (!user) throw Error('user not signed in');
+    let entry = await C.user().findOne({ user });
     if (!entry) {
         let entry = { user, games: [] };
-        db.collection(names.user).insertOne(entry);
+        C.user().insertOne(entry);
+    }
+    return entry.games;
+}
+async function _getInfo(user, id) {
+    let entry = await C.info().findOne({ id });
+    if (!entry) throw Error(`game ${id} does not exist`);
+    if (entry.p1 && ![entry.p1, entry.p2].includes(user)) {
+        throw Error(`${user} isn't in game ${id}`);
     }
     return entry;
 }
-async function getInfo(id) {
-    return db.collection(names.info).findOne({ id });
+async function _setInfo(info) {
+    C.info().updateOne(
+        { id: info.id },
+        { $set: info },
+    );
 }
 
 async function getUserInfo(user) {
-    if (!user) return { error: 'sign in to view games' };
-    let { games } = await getUser(user);
-    let infoList = await db.collection(names.info).find({ id: { $in: games } }).toArray();
-    // console.log(user, games, infoList);
+    let games = await _getGames(user);
+    let infoList = await C.info().find({ id: { $in: games } }).toArray();
     return { infoList };
 }
-async function getSave(user, id) {
-    let info = await getInfo(id);
-    let { games } = await getUser(user);
-    // console.log(id, info, games);
-    if (info.p1 && !games.includes(id)) return { error: `${user} isn't in game ${id}` }
-
-    let save = await db.collection(names.save).findOne({ id });
+async function getState(user, id) {
+    let info = await _getInfo(user, id);
+    let save = await C.save().findOne({ id });
     return { info, state: save.state };
 }
 
-async function addUserGame(user, id) {
-    let { games } = await getUser(user);
+async function _updateGames(user, games) {
+    games = games.filter(g => typeof g === 'string');
+    C.user().updateOne(
+        { user },
+        { $set: { games } },
+    );
+}
+async function _addGame(user, id) {
+    let games = await _getGames(user);
     if (!games.includes(id)) {
-        db.collection(names.user).updateOne(
-            { user },
-            { $set: {
-                user,
-                games: [id].concat(games),
-            } },
-        );
+        _updateGames(user, [id].concat(games));
     }
 }
-async function removeUserGame(user, id) {
-    let { games } = await getUser(user);
+async function _removeGame(user, id) {
+    let games = await _getGames(user);
     if (games.includes(id)) {
-        db.collection(names.user).updateOne(
-            { user },
-            { $set: {
-                user,
-                games: games.filter(other => other !== id),
-            } },
-        );
+        _updateGames(user, games.filter(other => other !== id));
+        C.invite().deleteOne({ id });
     }
 }
 
-async function newGame(user, state) {
-    if (!user) return { error: 'sign in to create game invite' };
+async function play(user, id, newInfo, state) {
+    let info = await _getInfo(user, id);
+    if (!info.p1) {
+        info.p1 = user;
+        _addGame(user, id);
+        C.invite().deleteOne({ id });
+    }
+
+    Object.assign(info, pick(newInfo, 'turn status progress lastWord'));
+    console.log(info);
+    _setInfo(info);
+    C.save().updateOne(
+        { id },
+        { $set: { state } },
+    );
+    return { info }
+}
+
+async function resign(user, id) {
+    let info = await _getInfo(user, id);
+    if (info.status === -1) {
+        info.status = (info.p1 === user) ? 1 : 0;
+        _setInfo(info);
+    }
+    return { info }
+}
+async function remove(user, id) {
+    _removeGame(user, id);
+    return resign(user, id);
+}
+async function rematch(user, id, state) {
+    let info = await _getInfo(user, id);
+    if (info.status === -1) throw Error('game still in progress');
+
+    let players = [info.p1, info.p2];
+    if (info.status === 0) players.reverse(); // if p1 won, swap
+    return await create(...players, state);
+}
+async function accept(user, id) {
+    if (!id) {
+        let entry = await C.invite().findOne({});
+        if (!entry) throw Error('no open invites');
+        id = entry.id;
+    }
+    console.log('accept', user, id);
+    let info = await _getInfo(user, id);
+    console.log(info);
+    if (info.p1) {
+        C.invite().deleteOne({ id });
+        throw Error('game already accepted');
+    }
+    info.p1 = user;
+    console.log(info);
+    _setInfo(info);
+    _addGame(user, id);
+    return { info };
+}
+
+async function getInvites() {
+    let idList = await C.invite().find({}).toArray();
+    return { idList }
+}
+async function create(user, other, state) {
+    if (!user) throw Error('sign in to create game');
     let info = {
         id: randAlphanum(7),
-        p1: undefined,
-        p2: user,
+        p1: other ? user : undefined,
+        p2: other ? other : user,
+        turn: 0,
         status: -1,
         progress: [0, 100],
-        turn: 0,
         lastWord: undefined,
     }
-    addUserGame(user, info.id);
-    db.collection(names.info).insertOne(info);
-    db.collection(names.save).insertOne({
+    console.log(info);
+    _addGame(user, info.id);
+    other && _addGame(other, info.id);
+    C.info().insertOne(info);
+    C.save().insertOne({
         id: info.id,
         state,
     });
     return { info }
 }
-async function play(user, id, newInfo, state) {
-    let info = await getInfo(id);
-    let { games } = await getUser(user);
-    if (info.p1 && !games.includes(id)) return { error: `${user} isn't in game ${id}` };
-
-    if (!info.p1) {
-        addUserGame(user, id);
-        newInfo.p1 = user;
-    }
-
-    db.collection(names.info).updateOne(
-        { id },
-        { $set: newInfo },
-    );
-    db.collection(names.save).updateOne(
-        { id },
-        { $set: {
-            id,
-            state
-        } },
-    );
-    return { info: newInfo }
-}
-
-async function resign(user, id) {
-    let info = await getInfo(id);
-    let { games } = await getUser(user);
-    if (!games.includes(id)) return { error: `${user} isn't in game ${id}` };
-
-    info.status = (info.p1 === user) ? 1 : 0;
-    db.collection(names.info).updateOne(
-        { id },
-        { $set: info },
-    );
+async function open(user, state) {
+    let { info } = await create(user, undefined, state);
+    C.invite().insertOne({
+        id: info.id,
+        user,
+    });
     return { info }
-}
-async function remove(user, id) {
-    let { games } = await getUser(user);
-    if (!games.includes(id)) return { error: `${user} isn't in game ${id}` };
-
-    await resign(user, id);
-    removeUserGame(user, id);
-    return { ok: true };
 }
 
 module.exports = {
     names,
+
     getUserInfo,
-    getSave,
-    newGame,
+    getState,
     play,
+
     resign,
-    remove
+    remove,
+    rematch,
+    accept,
+
+    getInvites,
+    create,
+    open,
 }
