@@ -241,6 +241,7 @@ export const Base = () => {
         </Links>
         <Switch>
           <Route exact path='/' component={Home} />
+          <Route exact path='/home' component={Home} />
           <Route exact path='/about' component={About} />
           <Route exact path='/projects' component={Projects} />
         </Switch>

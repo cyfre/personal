@@ -9,9 +9,10 @@ export async function fetchGame(gameId: string): Promise<{info: Info, save: Save
     return new Promise(resolve => {
         if (gameId === localInfo.id) resolve({ info: localInfo, save: localSave });
         else api.get(`/wordbase/g/${gameId}`).then(data => {
+            let save = Save.deserialize(data.state);
             resolve({
-                info: Info.of(data.info),
-                save: Save.deserialize(data.state),
+                info: Info.play(Info.of(data.info), save),
+                save,
             });
         }).catch(err => console.log(err, err.error));
     });

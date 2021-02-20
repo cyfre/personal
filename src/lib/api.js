@@ -13,8 +13,6 @@ const api = {};
     { service: 'update', verb: 'PUT', options: true },
 ].forEach(({ service, verb, options }) => {
     api[service] = (path, params, callback) => {
-        if (!options) callback = params;
-
         let req = {
             method: verb,
             headers: {
@@ -24,10 +22,12 @@ const api = {};
         }
         if (options) {
             req.headers['Content-Type'] = 'application/json';
-            req.body = JSON.stringify(params);
-        }
+            req.body = JSON.stringify(params || {});
+        } else callback = params
+
+        console.log('/api' + path.replace(/^\/api/, '').replace(/^\/*/, '/'));
         return new Promise((resolve, reject) => {
-            fetch('/api' + path.replace(/^\/api/, ''), req)
+            fetch('/api' + path.replace(/^\/api/, '').replace(/^\/*/, '/'), req)
                 .then(res => res.json().then(data => {
                     if (res.ok) {
                         if (data.error) {

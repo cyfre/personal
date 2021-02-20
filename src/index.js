@@ -1,19 +1,19 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import styled from 'styled-components';
-import * as serviceWorker from './serviceWorker';
-import './index.css';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import styled from 'styled-components'
+import * as serviceWorker from './serviceWorker'
+import './index.css'
 
-import { Base } from './components/base/Base';
+import { Base } from './components/base/Base'
 
-import { Header } from './components/Header';
-import { Main } from './components/Main';
+import { Header } from './components/Header'
+import { Main } from './components/Main'
 
 const Style = styled.div`
-  // background: #13112522;
-  // background: #13112544;
-  // background: #131125;
+  // background: #13112522
+  // background: #13112544
+  // background: #131125
   background: #ffffff44;
   display: flex;
   flex-direction: column;
@@ -62,11 +62,11 @@ const App = () => (
       </Route>
     </Switch>
   </Router>
-);
+)
 
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'))
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+serviceWorker.unregister()

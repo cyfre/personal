@@ -5,110 +5,6 @@ import { embedded } from './Contents';
 import { useAuth } from '../lib/hooks';
 import { login, signup, logout } from '../lib/auth';
 
-const Style = styled.div`
-  width: 100%;
-  height: 2.5rem;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  // padding-left: .25rem;
-  // padding-top: .25rem;
-  // padding-bottom: .25rem;
-  position: relative;
-  background: #131125;
-  border-top-left-radius: .2rem;
-  border-top-right-radius: .2rem;
-
-  > div {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-  }
-
-  .profile {
-    height: 2rem;
-    border-radius: 50%;
-    // border: 1px solid var(--light);
-    box-shadow: 1px 2px 4px #00000020;
-  }
-  a, a:hover {
-    color: var(--light);
-    padding-left: .25rem;
-    text-shadow: 1px 2px 4px #00000020;
-  }
-
-  // & .wiki-link, & .raw-link {
-  //   font-size: 0.8rem;
-  //   opacity: .9;
-  //   margin-right: .5rem;
-  // }
-
-  .raw-link {
-    opacity: .5;
-    margin-left: .75rem;
-    background: #ffffff44;
-    padding: 0 .25rem;
-    border-radius: .15rem;
-    font-size: .7rem;
-  }
-
-  .user {
-    // text-decoration: underline;
-    cursor: pointer;
-    user-select: none;
-    font-size: 0.8rem;
-    color: var(--light);
-    margin-right: .5rem;
-    position: relative;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .display {
-      opacity: .8;
-      &:hover { span { text-decoration: underline; } }
-    }
-    &.active .display {
-      opacity: 1;
-    }
-    .dropdown {
-      position: absolute;
-      top: 100%;
-      right: -.5rem;
-      min-width: calc(100% + 1rem);
-      padding: 0 .5rem;
-      padding-bottom: .25rem;
-      border-bottom-left-radius: .2rem;
-      border-bottom-right-radius: .2rem;
-      z-index: 100;
-      background: #131125;
-
-      .item {
-        padding: .15rem 0;
-        input {
-          border-color: black;
-        }
-        &:not(.signin):hover { text-decoration: underline; }
-        &.signin span:hover {
-          text-decoration: underline;
-        }
-      }
-
-      &.error {
-        input {
-          // border-color: #ff0000dd;
-          // border-radius: .2rem;
-          // background: #ff0000;
-          background: #ffdbdb;
-        }
-      }
-    }
-  }
-`
-
 const User = () => {
   let auth = useAuth();
   let [dropdown, setDropdown] = useState(false);
@@ -116,28 +12,51 @@ const User = () => {
   let userRef = useRef();
   let passRef = useRef();
   let history = useHistory();
+  let [verify, setVerify] = useState(false);
+  let verifyRef = useRef();
 
   const handle = {
     signin: (func) => {
       func(userRef.current.value, passRef.current.value)
-        .then(auth => {})
-        .catch(e => setError(e.error || 'error'));
+        .then(auth => {
+          setDropdown(false)
+          setVerify(false)
+        })
+        .catch(e => {
+          setError(e.error || 'error')
+        })
+    },
+    signup: () => {
+      if (verify) {
+        if (verifyRef.current?.value === passRef.current?.value) {
+          handle.signin(signup)
+        } else {
+          setError('passwords mismatch')
+        }
+      } else {
+        setVerify(true)
+      }
     },
     logout: () => {
-      logout();
+      setDropdown(false)
+      logout()
     },
-
+    nav: path => {
+      setDropdown(false);
+      history.push(path);
+    }
   }
   useEffect(() => {
     setDropdown(auth.dropdown);
   }, [auth]);
   useEffect(() => {
-    setError('');
+    dropdown || setError('');
   }, [dropdown])
 
   const loggedIn = (
     <div className='dropdown'>
-      <div className='item' onClick={() => history.push(`/u/${auth.user}`)}>profile</div>
+      <div className='item' onClick={() => handle.nav(`/u/${auth.user}`)}>profile</div>
+      <div className='item' onClick={() => handle.nav('/search')}>search</div>
       {/* <div className='item'>friends</div> */}
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>
@@ -153,11 +72,16 @@ const User = () => {
         <input ref={passRef} type='password' placeholder='password'
           onKeyDown={e => e.key === 'Enter' && handle.signin(login)}/>
       </div>
+      {verify ? <div className='item'>
+        <input ref={verifyRef} type='password' placeholder='verify'
+          onKeyDown={e => e.key === 'Enter' && handle.signup()}/>
+      </div> : ''}
       <div className='item signin'>
-        <span onClick={() => handle.signin(login)}>log in</span>
+        <span onClick={() => handle.signup()}>sign up</span>
         {' / '}
-        <span onClick={() => handle.signin(signup)}>sign up</span>
+        <span onClick={() => handle.signin(login)}>log in</span>
       </div>
+      {error ? <div className='error-msg'>{error}</div> : ''}
     </div>
   )
 
@@ -213,3 +137,116 @@ export const Header = () => {
     </Style>
   )
 }
+
+const Style = styled.div`
+  width: 100%;
+  height: 2.5rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  // padding-left: .25rem;
+  // padding-top: .25rem;
+  // padding-bottom: .25rem;
+  position: relative;
+  background: #131125;
+  border-top-left-radius: .2rem;
+  border-top-right-radius: .2rem;
+
+  > div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .profile {
+    height: 2rem;
+    border-radius: 50%;
+    // border: 1px solid var(--light);
+    box-shadow: 1px 2px 4px #00000020;
+  }
+  a, a:hover {
+    color: var(--light);
+    padding-left: .25rem;
+    text-shadow: 1px 2px 4px #00000020;
+  }
+
+  // & .wiki-link, & .raw-link {
+  //   font-size: 0.8rem;
+  //   opacity: .9;
+  //   margin-right: .5rem;
+  // }
+
+  .raw-link {
+    opacity: .5;
+    margin-left: .75rem;
+    background: #ffffff44;
+    padding: 0 .25rem;
+    border-radius: .15rem;
+    font-size: .7rem;
+  }
+
+  .user {
+    // text-decoration: underline;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.9rem;
+    color: var(--light);
+    margin-right: .5rem;
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .display {
+      opacity: .8;
+      &:hover { span { text-decoration: underline; } }
+    }
+    &.active .display {
+      opacity: 1;
+    }
+    .dropdown {
+      position: absolute;
+      top: 100%;
+      right: -.5rem;
+      min-width: calc(100% + 1rem);
+      padding: 0 .5rem;
+      padding-bottom: .25rem;
+      border-bottom-left-radius: .2rem;
+      border-bottom-right-radius: .2rem;
+      z-index: 10000;
+      background: #131125;
+
+      .item {
+        padding: .15rem 0;
+        input {
+          border-color: black;
+        }
+        &:not(.signin):hover { text-decoration: underline; }
+        &.signin {
+          display: flex;
+          justify-content: space-between;
+          span:hover { text-decoration: underline; }
+        }
+      }
+
+      &.error {
+        input {
+          // border-color: #ff0000dd;
+          // border-radius: .2rem;
+          // background: #ff0000;
+          background: #ffdbdb;
+        }
+      }
+
+      .error-msg {
+        height: 0;
+        line-height: 2rem;
+        color: black;
+        font-size: .8em;
+      }
+    }
+  }
+`

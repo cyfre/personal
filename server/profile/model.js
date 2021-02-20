@@ -72,9 +72,17 @@ async function unfollow(user, other) {
     }
 }
 
+async function checkin(user, path) {
+    let viewer = await _getUser(user);
+    let recents = [path].concat(remove(viewer.recents || [], path)).slice(0, 3);
+    let profile = await update(user, { recents });
+    return { profile }
+}
+
 module.exports = {
     names,
     get,
     follow,
     unfollow,
+    checkin,
 }

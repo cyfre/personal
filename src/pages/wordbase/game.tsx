@@ -9,17 +9,7 @@ import { Info, Save } from './save';
 import { fetchGame, localInfo, updateGame, rematchGame } from './data';
 import { auth, openLogin } from '../../lib/auth';
 import { GameProgress } from './progress';
-
-export const globals = {
-    wordCheck: false,
-    flipMs: 700,
-};
-
-export const theme = {
-    orange: '#ff9900',
-    blue: '#4bdbff',
-    background: '#fbfbfb88',
-}
+import { theme, globals } from './common';
 
 let tilePx = 50;
 const playerClass = ['p1', 'p2'];
@@ -100,21 +90,20 @@ const Row = ({row, word, handle}) => {
 }
 
 Object.assign(window, { wordbaseSettings: globals });
-export const Wordbase = ({setOpenGame, gameId}) => {
-    const [info, setInfo]: [Info, any] = useState(Info.local());
-    const [save, setSave]: [Save, any] = useState(Save.empty());
+export const Wordbase = ({open, info, save, setInfo, setSave}) => {
+    // const [info, setInfo]: [Info, any] = useState(startInfo);
+    // const [save, setSave]: [Save, any] = useState(startSave);
     const [loaded, setLoaded] = useState(false);
     const [selected, setSelected] = useState(false);
     const [word, setWord]: [ITile[], any] = useState([]);
 
-    const isLocal = gameId === localInfo.id;
+    const isLocal = info.id === localInfo.id;
     const canPlay = info.status === Player.none &&
         (isLocal || !info.p1 || auth.user === (save.p1 ? info.p1 : info.p2));
 
     useEffect(() => { handle.resize(); }, []);
-    useEffect(() => { handle.fetch(); }, [gameId]);
+    useEffect(() => { handle.fetch(); }, [info.id]);
     useInterval(() => {
-        console.log(canPlay);
         // canPlay || handle.fetch();
         handle.fetch();
     }, 3000);
@@ -124,18 +113,16 @@ export const Wordbase = ({setOpenGame, gameId}) => {
 
     const handle = {
         fetch: () => {
-            fetchGame(gameId).then(data => {
-                console.log(data.info.turn);
+            fetchGame(info.id).then(data => {
+                setLoaded(true);
                 if (save.turn < data.save.turn || info.status !== data.info.status) {
-                    console.log(data);
+                    console.log('set', data);
                     setInfo(data.info);
                     setSave(data.save);
-                    setLoaded(true);
                 }
             });
         },
         send: (info: Info, save: Save) => {
-            console.log('send', info, save);
             updateGame(info, save);
             setInfo(info);
             setSave(save);
@@ -195,15 +182,15 @@ export const Wordbase = ({setOpenGame, gameId}) => {
 
             let newSave = save.play(word);
             let newInfo = Info.play(info, newSave);
-            console.log('submit', newInfo, newInfo.turn, newInfo.lastWord,
-                newSave.history[0].map(t => t.letter).join(''),
-                newSave);
+            // console.log('submit', newInfo, newInfo.turn, newInfo.lastWord,
+            //     newSave.history[0].map(t => t.letter).join(''),
+            //     newSave);
             handle.clear();
             handle.send(newInfo, newSave);
         },
         rematch: () => {
             rematchGame(info, (newInfo, newSave) => {
-                setOpenGame(newInfo.id)
+                open(newInfo.id)
                 setInfo(newInfo);
                 setSave(newSave);
             });
@@ -216,25 +203,26 @@ export const Wordbase = ({setOpenGame, gameId}) => {
         },
         resize: () => {
             let wordbase: HTMLElement = document.querySelector('.wordbase');
-            wordbase.style.width = '100%';
+            // wordbase.style.width = '100%';
             let board: HTMLElement = document.querySelector('.board');
             let containerRect = board.parentElement.getBoundingClientRect();
             console.log(containerRect);
 
             let ratio = Board.ROWS / Board.COLS;
             let width = Math.min(containerRect.width, containerRect.height / ratio);
-            wordbase.style.width = width + 'px';
+            // wordbase.style.width = width + 'px';
             board.style.width = width + 'px';
             board.style.height = width * ratio + 'px';
             tilePx = width / Board.COLS;
             // setTimeout(() => setLoading(false), 100);
+            setLoaded(true)
         },
     }
     useEventListener(window, 'keydown', handle.keypress, false);
     useEventListener(window, 'resize', handle.resize, false);
 
     return (
-        <Style className='wordbase'>
+        <Style className='wordbase-game'>
             <GameProgress info={info} />
 
             <div className='ui'>
@@ -246,22 +234,22 @@ export const Wordbase = ({setOpenGame, gameId}) => {
                     }
                 </div>
                 <div className='control-container'>
-                    {word.length
+                    {info.turn < 0 ? '' : word.length
                     ? <Fragment>
                         <div className='control button' onClick={handle.clear}>cancel</div>
                         <div className='control button' onClick={handle.submit}>submit</div>
                     </Fragment>
                     : info.status === Player.none
-                    ? <div className='control button left' onClick={() => setOpenGame(false)}>menu</div>
+                    ? <div className='control button left' onClick={() => open(false)}>menu</div>
                     : <Fragment>
-                        <div className='control button' onClick={() => setOpenGame(false)}>menu</div>
+                        <div className='control button' onClick={() => open(false)}>menu</div>
                         <div className='control button' onClick={handle.rematch}>rematch</div>
                     </Fragment>}
                 </div>
             </div>
 
             <div className='board-container'>
-                {auth.user || (isLocal && save.board) ? ''
+                {!loaded || auth.user || (isLocal && save.board) ? ''
                 : <div className='board-block' onClick={openLogin}><span>log in to play</span></div>}
 
                 <div className={[
@@ -279,19 +267,20 @@ export const Wordbase = ({setOpenGame, gameId}) => {
 
 const Style = styled.div`
     background: ${theme.background};
-    height: 100%;
-    width: 100%;
+    height: 100%; width: 100%;
     margin: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    font-size: 1.2rem;
 
     .button { cursor: pointer; user-select: none; }
     .game-progress {
-        height: 1.2rem;
+        height: 2rem;
     }
     .ui {
         height: 5rem;
+        // background: white;
     }
     .preview-container, .control-container {
         display: flex;
@@ -341,6 +330,7 @@ const Style = styled.div`
         display: flex;
         align-items: flex-end;
         justify-content: center;
+        // background: #ffffffbb;
 
         position: relative;
         .board-block {
@@ -390,7 +380,7 @@ const Style = styled.div`
             &::after {
                 content: ""; width: 100%; height: 100%;
                 position: absolute;
-                z-index: 2;
+                z-index: 100;
                 pointer-events: none;
                 background: repeating-linear-gradient(
                     -45deg,

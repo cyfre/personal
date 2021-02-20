@@ -1,16 +1,17 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
 import api from '../../lib/api';
 import { useAuth } from '../../lib/hooks';
-import styled from 'styled-components';
+import { openLogin } from '../../lib/auth';
 import { useTimeout, useInterval } from '../../lib/hooks';
 import { Player } from './board';
 import { Info, Save } from './save';
-import { theme } from './game';
+import { theme } from './common';
 import { localInfo } from './data';
 import { Loader } from '../../components/Contents';
 import { GameProgress } from './progress';
 
-const GameItem = ({info, setOpenGame, reload, edit}) => {
+const GameItem = ({info, open, reload, edit}) => {
     const auth = useAuth();
     const inviteRef = useRef();
     // const [optionsOpen, setOptionsOpen] = useState(edit);
@@ -27,13 +28,15 @@ const GameItem = ({info, setOpenGame, reload, edit}) => {
     return (
         <div className='game-entry'>
             {info.p1
-            ? <div className='main' onClick={() => setOpenGame(info.id)}>
+            ? <div className='main' onClick={() => open(info.id)}>
                 <GameProgress info={info} />
 
                 {info.status !== Player.none ? '' :
-                <div className='info'>
+                <div className={'info' + (isTurn ? ' dark':'')}>
                     <span>
                         {!edit && info.lastWord ? `${isTurn ? `they played ` : 'you played '} ${info.lastWord.toUpperCase()}` : ''}
+                        {/* {!edit && info.lastWord ? `${isTurn ? `they played ` : 'sent '} ${info.lastWord.toUpperCase()}` : ''} */}
+                        {/* {!edit && info.lastWord ? info.lastWord.toUpperCase() : ''} */}
                     </span>
                 </div>}
                 {/* {`vs ${oppo}`}
@@ -43,12 +46,12 @@ const GameItem = ({info, setOpenGame, reload, edit}) => {
                 {/* {`${info.p1 || 'invite'} vs ${info.p2} (${info.id})`} */}
             </div>
             : <div className='main'>
-                <div className='info'>
+                <div className='info dark'>
                     <span ref={inviteRef} onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
                         setCopied(true);
                     }}>
-                        {copied ? 'copied!' : `invite: /wordbase#${info.id}`}
+                        {copied ? 'copied!' : `invite  /wordbase#${info.id}`}
                     </span>
                 </div>
             </div>}
@@ -74,26 +77,47 @@ const GameItem = ({info, setOpenGame, reload, edit}) => {
         </div>
     )
 }
+const GameSection = ({name, games, open, reload, isEdit, setEdit}:
+    {name: string, games: Info[], open: any, reload: any, isEdit?: boolean, setEdit?: any}) => {
+    return games.length ? (<Fragment>
+        <div className='top'>
+            <span>{name}</span>
+            {!setEdit ?'':
+            <span className='button edit'
+                onClick={() => setEdit(!isEdit)}>{isEdit ? 'close' : 'edit'}</span>}
+        </div>
+        <div className='section'>
+            {games.map((info, i) =>
+                <GameItem {...{
+                    key: i,
+                    info,
+                    open,
+                    reload,
+                    edit: isEdit
+                }} />)}
+        </div>
+    </Fragment>) : <Fragment></Fragment>
+}
 
-export const WordbaseMenu = ({setOpenGame}) => {
+export const WordbaseMenu = ({open, infoList, setList}) => {
     const auth = useAuth();
-    const [loaded, setLoaded] = useState(!auth.user);
-    const [gameList, setGameList]: [Info[], any] = useState([]);
+    const [loaded, setLoaded] = useState(!!(auth.user && infoList));
+    // const [gameList, setGameList]: [Info[], any] = useState([]);
     const [isEdit, setEdit] = useState(false);
     const [isNew, setNew] = useState(false);
     const [friends, setFriends] = useState([]);
     const [isFriend, setFriend] = useState(false);
 
     const handle = {
-        local: () => setOpenGame(localInfo.id),
+        local: () => open(localInfo.id),
         load: () => {
             api.get('/wordbase/games').then(data => {
                 // console.log('games', data);
-                setGameList(data.infoList?.length ? data.infoList : []);
+                setList(data.infoList?.length ? data.infoList : []);
                 setLoaded(true);
             }).catch(err => {
                 console.log('games err', err.error)
-                setGameList([]);
+                setList([]);
             });
             auth.user && api.get(`/profile/${auth.user}`).then(({profile}) => {
                 // console.log('profile', profile);
@@ -116,20 +140,21 @@ export const WordbaseMenu = ({setOpenGame}) => {
         friend: user => handle.invite(`/wordbase/i/friend/${user}`),
         random: () => {
             api.post('/wordbase/i/accept')
-                .then(({info}) => setOpenGame(info.id))
+                .then(({info}) => open(info.id))
                 .catch(() => handle.open())
                 .finally(() => handle.load());
-        }
+        },
+        toggleEdit: () => setEdit(!isEdit),
     }
     useEffect(() => {
         setTimeout(() => setLoaded(true), 1000);
     }, []);
     useEffect(() => handle.load(), [auth.user]);
-    useInterval(() => { handle.load() }, 3000);
+    useInterval(() => { auth.user && handle.load() }, 3000);
     useEffect(() => { if (!isNew) setFriend(false) }, [isNew])
 
     return (
-        <Style>
+        <Style className='wordbase-menu'>
             <div className={'upper' + (isNew ? ' new' : '')}>
                 <div className='button'
                     onClick={() => handle.local()}>
@@ -145,8 +170,8 @@ export const WordbaseMenu = ({setOpenGame}) => {
                             new invite link</div>
                         <div className={'button indent' + (isFriend ? ' inverse' : '')}
                             onClick={() => setFriend(!isFriend)}>
-                            {isFriend ? 'cancel' : 'challenge friend'}</div>
-                        {!isFriend ? '' :
+                            {isFriend ? (friends.length ? 'cancel' : 'no friends :\'(') : 'challenge friend'}</div>
+                        {!isFriend || !friends.length ? '' :
                         <div className='friend-list indent'>
                             {friends.map(u =>
                                 <div className='button indent'
@@ -156,26 +181,38 @@ export const WordbaseMenu = ({setOpenGame}) => {
                             join random</div>
                     </Fragment>}
                 </Fragment>
-                : <div className='button placeholder'>log in to create & view games</div>}
+                : <div className='button placeholder' onClick={openLogin}>log in for online games</div>}
             </div>
+            {auth.user ?
             <div className='game-list'>
-                <div className='top'>
-                    <span>Your Games</span>
-                    <span className='button edit'
-                        onClick={() => setEdit(!isEdit)}>{isEdit ? 'close' : 'edit'}</span>
-                </div>
-                {loaded
-                ? <div className='section active'>
-                    {gameList.map((info, i) =>
-                        <GameItem {...{
-                            key: i,
-                            info,
-                            setOpenGame,
-                            reload: handle.load,
-                            edit: isEdit
-                        }}/>)}
-                </div>
-                : <Loader />}
+                {!loaded ? <Loader/> : <Fragment>
+                <GameSection {...{
+                    name: 'Your Turn', games: infoList.filter(i => {
+                        let isInvite = !i.p1;
+                        let canPlay = i.status === Player.none &&
+                            (!i.p1 || auth.user === (i.turn%2 ? i.p2 : i.p1));
+                        return !isInvite && canPlay;
+                    }).reverse(),
+                    open, reload: handle.load, isEdit, setEdit,
+                }}/>
+                <GameSection {...{
+                    name: 'Their Turn', games: infoList.filter(i => {
+                        let isInvite = !i.p1;
+                        let isEnded = i.status !== Player.none;
+                        let canPlay = i.status === Player.none &&
+                            (!i.p1 || auth.user === (i.turn%2 ? i.p2 : i.p1));
+                        return isInvite || (!isEnded && !canPlay);
+                    }).reverse(),
+                    open, reload: handle.load, isEdit,
+                }}/>
+                <GameSection {...{
+                    name: 'Ended', games: infoList.filter(i => {
+                        let isEnded = i.status !== Player.none;
+                        return isEnded;
+                    }).reverse(),
+                    open, reload: handle.load, isEdit,
+                }}/>
+                </Fragment>}
 
                 {/* <div className='section your-turn'>
                 </div>
@@ -183,16 +220,17 @@ export const WordbaseMenu = ({setOpenGame}) => {
                 </div>
                 <div className='section ended'>
                 </div> */}
-            </div>
+            </div> : ''}
         </Style>
     )
 }
 
-
 const Style = styled.div`
     background: ${theme.background};
-    height: 100%;
-    width: 100%;
+    height: 100%; width: 100%;
+    display: flex; flex-direction: column;
+    margin: auto;
+    position: relative;
 
     color: black;
     font-family: 'Ubuntu', sans-serif;
@@ -207,6 +245,9 @@ const Style = styled.div`
         user-select: none;
     }
     .upper {
+        position: absolute;
+        width: 100%;
+        z-index: 200;
         background: white;
         // height: 8rem;
         display: flex;
@@ -215,6 +256,7 @@ const Style = styled.div`
         padding: 1rem;
         .button {
             width: fit-content;
+            white-space: pre;
             margin-bottom: .75rem;
             &:last-child { margin-bottom: 0 }
             font-size: 1.5rem;
@@ -231,10 +273,26 @@ const Style = styled.div`
             margin-left: 2rem;
             margin-bottom: .75rem;
         }
+        .friend-list {
+            width: calc(100% - 2rem);
+            padding-left: 2rem;
+            margin-bottom: .25rem;
+            > .button {
+                margin: 0;
+                margin-bottom: .5rem;
+                margin-right: .5rem;
+            }
+            display: flex;
+            flex-wrap: wrap;
+        }
     }
     .game-list {
         // height: calc(100% - 8rem);
+        margin-top: 7.2rem;
         padding: .5rem 1rem;
+        overflow: scroll;
+        height: 0;
+        flex-grow: 1;
         .top {
             text-transform: uppercase;
             display: flex;
@@ -272,9 +330,15 @@ const Style = styled.div`
                 align-items: center;
                 justify-content: center;
                 span {
+                    white-space: pre;
                     background: #00000088;
+                    // background: #00000044;
+                    // background: #ffffff22;
                     padding: 0 .3rem;
                     border-radius: .2rem;
+                }
+                &.dark span {
+                    background: #00000088;
                 }
             }
         }

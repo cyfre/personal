@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Route } from 'react-router-dom';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTitle, useTimeout, useInterval, useEventListener } from '../lib/hooks';
 
@@ -105,7 +105,8 @@ const Missing = () =>
 
 const Page = () => {
     let { id } = useParams();
-    useTitle(id);
+    let location = useLocation();
+    useTitle(location.pathname);
     let Page = React.lazy(() => import('../pages/' + id));
     return (
         <Suspense fallback={<Loading />}>

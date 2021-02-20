@@ -100,28 +100,38 @@ export class Info {
     static local() {
         return new Info('local', 'blue', 'orange', Player.none, [0, 100], 0);
     }
+    static empty = () => new Info('local', '', '', Player.none, [0, 100], -1);
     static of(info: Info) {
         return new Info(info.id, info.p1, info.p2, info.status, info.progress, info.turn, info.lastWord);
     }
     static play(info: Info, save: Save): Info {
-        let board = save.board;
-        let p0 = Board.ROWS;
+        let board = save.board
+        let total = Board.ROWS - 1
+        let p1 = total
         board.do(tile => {
-            if (tile.owner === 0) {
-                p0 = Math.min(p0, tile.row);
+            if (tile.owner === Player.p1) {
+                p1 = Math.min(p1, tile.row);
             }
         });
-        let p1 = 0;
+        let p2 = 0;
         board.do(tile => {
-            if (tile.owner === 1) {
-                p1 = Math.max(p1, tile.row);
+            if (tile.owner === Player.p2) {
+                p2 = Math.max(p2, tile.row);
             }
         });
-        let total = Math.max(Board.ROWS, p1 + (Board.ROWS - p0));
+
+        let progress;
+        if (p2 >= p1) {
+            p2 = total - p2;
+            let ratio = p1 / (p1 + p2);
+            progress = [ratio, ratio]
+        } else {
+            progress = [p2/total, p1/total]
+        }
 
         return Info.of({ ...info,
             status: board.gameStatus(),
-            progress: [p1/total, (p0+1)/total].map(x => Math.round(x * 100)),
+            progress: progress.map(x => Math.round(x * 100)),
             turn: save.turn,
             lastWord: save.history.length
                 ? save.history[0].map(t => t.letter).join('')

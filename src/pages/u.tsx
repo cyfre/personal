@@ -7,7 +7,7 @@ import { Loader } from '../components/Contents';
 
 const UserEntry = ({user}) => {
     let history = useHistory();
-    return (<div className='user-entry' onClick={() => history.push(`/u/${user}`)}>
+    return (<div className='entry' onClick={() => history.push(`/u/${user}`)}>
         {user}
     </div>)
 }
@@ -15,12 +15,22 @@ const UserList = ({users}) => <Fragment>
     {users ? users.map(u => <UserEntry user={u} key={u} />) : ''}
 </Fragment>
 
+const PathEntry = ({path}) => {
+    let history = useHistory();
+    return (<div className='entry' onClick={() => history.push(path)}>
+        {path}
+    </div>)
+}
+const PathList = ({paths}) => <Fragment>
+    {paths ? paths.map(p => <PathEntry path={p} key={p} />) : ''}
+</Fragment>
+
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
     let auth = useAuth();
     let history = useHistory();
     let user = useRouteMatch('/u/:user')?.params.user || (() => {
-        history.push(`/u/${auth.user}`);
+        history.replace(`/u/${auth.user}`);
         return auth.user;
     })();
     let [loaded, setLoaded] = useState(false);
@@ -30,6 +40,7 @@ export default () => {
 
     useEffect(() => {
         handle.load();
+        // document.title = `/u/${user || auth.user || ''}`
     }, [user, auth.user])
     const handle = {
         load: () => api.get(`/profile/${user}`).then(handle.parse),
@@ -39,21 +50,23 @@ export default () => {
             console.log(data);
             setLoaded(true);
             setProfile(data.profile)
-            let { friends, follows, followers } = data.profile;
-            info = {};
-            if (auth.user) {
-                info.isUser = user === auth.user;
-                let friendSet = new Set(friends);
-                let followerSet = new Set(followers);
-                if (info.isUser) {
-                    info.requests = followers.filter(f => !friendSet.has(f));
-                } else {
-                    info.isFriend = friendSet.has(auth.user);
-                    info.canFollow = !followerSet.has(auth.user);
-                    info.canUnfollow = followerSet.has(auth.user);
+            if (data.profile) {
+                let { friends, follows, followers } = data.profile;
+                info = {};
+                if (auth.user) {
+                    info.isUser = user === auth.user;
+                    let friendSet = new Set(friends);
+                    let followerSet = new Set(followers);
+                    if (info.isUser) {
+                        info.requests = followers.filter(f => !friendSet.has(f));
+                    } else {
+                        info.isFriend = friendSet.has(auth.user);
+                        info.canFollow = !followerSet.has(auth.user);
+                        info.canUnfollow = followerSet.has(auth.user);
+                    }
                 }
+                setInfo(info);
             }
-            setInfo(info);
         },
         search: () => {
             let current = searchRef.current;
@@ -66,7 +79,7 @@ export default () => {
 
     return <Style>
         <div className='search'>
-            <input ref={searchRef} type='text' placeholder='find user'
+            <input ref={searchRef} type='text' placeholder='find a user'
                 autoCorrect='off' autoCapitalize='off'
                 onKeyDown={e => e.key === 'Enter' && handle.search()}/>
             <span className='submit' onClick={handle.search}>go</span>
@@ -81,6 +94,9 @@ export default () => {
                 <div className='follow button' onClick={handle.unfollow}>unfollow</div> : ''}
                 {info.isFriend ? <div className='lil-badge'>friend!</div> : ''}
             </div>
+            {profile.recents ? <div className='recents'>
+                <PathList paths={profile.recents} />
+            </div> : ''}
             {profile.bio ? <div className='bio'>{profile.bio}</div> : ''}
             <div className='friends'>
                 <UserList users={profile.friends} />
@@ -119,6 +135,7 @@ const Style = styled.div`
             color: black;
             padding: 0 .3rem;
             border-radius: .3rem;
+            min-width: 42%;
         }
         .submit {
             cursor: pointer;
@@ -149,6 +166,7 @@ const Style = styled.div`
         .user::before { content: "user" }
         .bio::before { content: "bio" }
         .friends::before { content: "friends" }
+        .recents::before { content: "recents" }
         .requests::before { content: "requests" }
 
         .button {
@@ -163,8 +181,9 @@ const Style = styled.div`
                 margin: 0 .5rem;
             }
         }
-        .user-entry {
+        .entry {
             cursor: pointer;
+            :hover { text-decoration: underline; }
         }
     }
 `

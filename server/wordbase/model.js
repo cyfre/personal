@@ -14,6 +14,8 @@ const names = {
         // progress: [number, number]
         // turn: number
         // lastWord: string
+        // lastUpdate: number
+        // rematch: string
     save: 'wordbase-save',
         // id: string
         // state: string
@@ -43,7 +45,7 @@ async function _getInfo(user, id) {
 async function _setInfo(info) {
     C.info().updateOne(
         { id: info.id },
-        { $set: info },
+        { $set: { ...info, lastUpdate: Date.now() } },
     );
 }
 
