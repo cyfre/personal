@@ -18,6 +18,7 @@ export default () => {
             <DomainList domains={[
                 'freshman.dev',
                 'cyfr.dev',
+                'cyfre.dev',
                 'cyrusfreshman.com',
                 'cfreshman.io',
                 '00010110.page',

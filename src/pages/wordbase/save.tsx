@@ -92,17 +92,18 @@ export class Info {
     status: Player;
     progress: number[];
     turn: number;
-    lastWord: string;
+    lastWord?: string;
+    lastUpdate?: number;
 
-    constructor(id: string, p1: string, p2: string, status: Player, progress: number[], turn: number, lastWord?: string) {
-        Object.assign(this, {id, p1, p2, status, progress, turn, lastWord });
+    constructor(id: string, p1: string, p2: string, status: Player, progress: number[], turn: number, lastWord?: string, lastUpdate?: number) {
+        Object.assign(this, {id, p1, p2, status, progress, turn, lastWord, lastUpdate});
     }
     static local() {
         return new Info('local', 'blue', 'orange', Player.none, [0, 100], 0);
     }
     static empty = () => new Info('local', '', '', Player.none, [0, 100], -1);
     static of(info: Info) {
-        return new Info(info.id, info.p1, info.p2, info.status, info.progress, info.turn, info.lastWord);
+        return new Info(info.id, info.p1, info.p2, info.status, info.progress, info.turn, info.lastWord, info.lastUpdate);
     }
     static play(info: Info, save: Save): Info {
         let board = save.board

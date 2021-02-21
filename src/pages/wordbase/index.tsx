@@ -50,7 +50,7 @@ export default () => {
     // );
 }
 
-const dividerWidth = '1rem'
+const dividerWidth = '0rem'
 const Style = styled.div`
     width: 100%; height: 100%;
     max-width: 77vh;

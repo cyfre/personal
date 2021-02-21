@@ -13,8 +13,8 @@ export const Home = () => (
     <p>B.S. in Computer Science</p>
   </Title>
 
+  <Link to="/wordbase">wordbase (word game)</Link>
+  <Link to="/graffiti">graffiti wall</Link>
   <Link to="/terrain">terrain generation</Link>
-  <Link to="/nonogram">nonogram solver</Link>
-  <Link to="/snakes">snakes</Link>
   </Fragment>
 )

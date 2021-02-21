@@ -50,6 +50,11 @@ function jsonRes(func) {
         });
 }
 
+function requireUser(rq) {
+    if (!rq.user) throw Error('user not signed in');
+    return rq.user
+}
+
 function genModelRoutes(model, routes) {
     if (routes === undefined) routes = express.Router();
 
@@ -84,5 +89,6 @@ module.exports = {
     genGetAll,
     genGet,
     jsonRes, J: jsonRes,
+    requireUser, U: requireUser,
     genModelRoutes
 }

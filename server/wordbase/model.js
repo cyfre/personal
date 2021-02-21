@@ -45,7 +45,7 @@ async function _getInfo(user, id) {
 async function _setInfo(info) {
     C.info().updateOne(
         { id: info.id },
-        { $set: { ...info, lastUpdate: Date.now() } },
+        { $set: info },
     );
 }
 
@@ -91,6 +91,7 @@ async function play(user, id, newInfo, state) {
 
     Object.assign(info, pick(newInfo, 'turn status progress lastWord'));
     console.log(info);
+    info.lastUpdate = Date.now();
     _setInfo(info);
     C.save().updateOne(
         { id },
@@ -103,6 +104,7 @@ async function resign(user, id) {
     let info = await _getInfo(user, id);
     if (info.status === -1) {
         info.status = (info.p1 === user) ? 1 : 0;
+        info.lastUpdate = Date.now();
         _setInfo(info);
     }
     return { info }
@@ -115,9 +117,19 @@ async function rematch(user, id, state) {
     let info = await _getInfo(user, id);
     if (info.status === -1) throw Error('game still in progress');
 
-    let players = [info.p1, info.p2];
-    if (info.status === 0) players.reverse(); // if p1 won, swap
-    return await create(...players, state);
+    let rematch
+    if (info.rematch) {
+        console.log(info.rematch)
+        rematch = { info: await _getInfo(user, info.rematch) }
+    } else {
+        console.log('new')
+        let players = [info.p1, info.p2];
+        if (info.status === 0) players.reverse(); // if p1 won, swap
+        rematch = await create(...players, state);
+        info.rematch = rematch.info.id;
+        _setInfo(info)
+    }
+    return rematch
 }
 async function accept(user, id) {
     if (!id) {
@@ -134,6 +146,7 @@ async function accept(user, id) {
     }
     info.p1 = user;
     console.log(info);
+    info.lastUpdate = Date.now();
     _setInfo(info);
     _addGame(user, id);
     return { info };
@@ -153,6 +166,7 @@ async function create(user, other, state) {
         status: -1,
         progress: [0, 100],
         lastWord: undefined,
+        lastUpdate: Date.now(),
     }
     console.log(info);
     _addGame(user, info.id);

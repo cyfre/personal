@@ -28,6 +28,7 @@ const Style = styled.div`
         padding: 0 .3rem;
         border-radius: .2rem;
         line-height: 1.5rem;
+        user-select: none;
     }
     .game-status {
         // flex-grow: 1;

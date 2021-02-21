@@ -3,6 +3,10 @@
 # database
 /data/*
 
+# secrets
+/server/secrets/secrets.json
+/server/secrets/files/*
+
 # dependencies
 /node_modules
 /.pnp

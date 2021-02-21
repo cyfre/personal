@@ -1,5 +1,5 @@
 import api from './api';
-import { fetchCookie, saveCookie } from './util';
+import { getStored, setStored } from './util';
 
 async function sha256(message) {
     const msgUint8 = new TextEncoder().encode(message);
@@ -27,10 +27,10 @@ export function removeAuthTrigger(callback) {
 const AUTH_COOKIE = 'loginAuth'
 function setAuth(user, token, dropdown) {
     Object.assign(auth, { user, token, dropdown });
-    saveCookie(AUTH_COOKIE, auth);
+    setStored(AUTH_COOKIE, auth);
     authTriggers.forEach(callback => callback(auth));
 }
-export const auth = fetchCookie(AUTH_COOKIE) || { user: undefined, token: undefined, dropdown: false };
+export const auth = getStored(AUTH_COOKIE) || { user: undefined, token: undefined, dropdown: false };
 setTimeout(() => setAuth(auth.user, auth.token), 500); // verify auth after api has loaded
 window.auth = auth;
 

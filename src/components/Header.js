@@ -65,7 +65,7 @@ const User = () => {
   const loggedOut = (
     <div className={'dropdown' + (error ? ' error' : '')} title={error}>
       <div className='item'>
-        <input ref={userRef} type='text' maxlength='8' placeholder='username'
+        <input ref={userRef} type='text' maxLength='8' placeholder='username'
           autoCorrect='off' autoCapitalize='off' />
       </div>
       <div className='item'>
@@ -168,8 +168,9 @@ const Style = styled.div`
   }
   a, a:hover {
     color: var(--light);
-    padding-left: .25rem;
     text-shadow: 1px 2px 4px #00000020;
+    // padding-left: .25rem;
+    &:first-child { padding: 0 .25rem; }
   }
 
   // & .wiki-link, & .raw-link {
@@ -202,7 +203,7 @@ const Style = styled.div`
 
     .display {
       opacity: .8;
-      &:hover { span { text-decoration: underline; } }
+      &:hover span { text-decoration: underline; }
     }
     &.active .display {
       opacity: 1;

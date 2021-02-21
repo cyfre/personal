@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../lib/hooks';
-import { Loader } from '../components/Contents';
 
 const UserEntry = ({user}) => {
     let history = useHistory();
@@ -82,7 +81,7 @@ export default () => {
             <input ref={searchRef} type='text' placeholder='find a user'
                 autoCorrect='off' autoCapitalize='off'
                 onKeyDown={e => e.key === 'Enter' && handle.search()}/>
-            <span className='submit' onClick={handle.search}>go</span>
+            <span className='submit' onClick={handle.search}>[ <span>go</span> ]</span>
         </div>
         {profile ?
         <div className='profile'>
@@ -92,7 +91,8 @@ export default () => {
                 <div className='follow button' onClick={handle.follow}>follow</div> : ''}
                 {info.canUnfollow ?
                 <div className='follow button' onClick={handle.unfollow}>unfollow</div> : ''}
-                {info.isFriend ? <div className='lil-badge'>friend!</div> : ''}
+                {info.isFriend ? <div className='lil-badge'>
+friend!</div> : ''}
             </div>
             {profile.recents ? <div className='recents'>
                 <PathList paths={profile.recents} />
@@ -123,7 +123,7 @@ const Style = styled.div`
     color: black;
     .search {
         padding: .3rem .3rem;
-        padding-top: .1rem;
+        // padding-top: .1rem;
         background: black;
         // background: #a2ddff;
         display: flex;
@@ -141,10 +141,13 @@ const Style = styled.div`
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             color: white;
-            border: 2px solid white;
+            // border: 2px solid white;
             padding: 0 .3rem;
             border-radius: .3rem;
             margin-left: .3rem;
+            white-space: pre;
+            font-size: .9rem;
+            &:hover span { text-decoration: underline; }
         }
     }
     .profile {

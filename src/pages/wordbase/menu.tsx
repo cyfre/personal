@@ -55,8 +55,8 @@ const GameItem = ({info, open, reload, edit}) => {
                     </span>
                 </div>
             </div>}
-            {edit
-            ? <div className='options open'>
+            {(edit || true)
+            ? <div className={'options' + (edit ?' open':' closed')}>
                 {/* <span onClick={() => setOptionsOpen(false)}>{'>'}</span> */}
                 {info.status === Player.none
                 ? <span onClick={() => {
@@ -113,7 +113,8 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
         load: () => {
             api.get('/wordbase/games').then(data => {
                 // console.log('games', data);
-                setList(data.infoList?.length ? data.infoList : []);
+                setList(data.infoList?.length ? data.infoList.sort((a, b) =>
+                    (b.lastUpdate || 0) - (a.lastUpdate || 0)) : []);
                 setLoaded(true);
             }).catch(err => {
                 console.log('games err', err.error)
@@ -202,15 +203,15 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
                         let canPlay = i.status === Player.none &&
                             (!i.p1 || auth.user === (i.turn%2 ? i.p2 : i.p1));
                         return isInvite || (!isEnded && !canPlay);
-                    }).reverse(),
-                    open, reload: handle.load, isEdit,
+                    }),
+                    open, reload: handle.load, isEdit, setEdit,
                 }}/>
                 <GameSection {...{
                     name: 'Ended', games: infoList.filter(i => {
                         let isEnded = i.status !== Player.none;
                         return isEnded;
-                    }).reverse(),
-                    open, reload: handle.load, isEdit,
+                    }),
+                    open, reload: handle.load, isEdit, setEdit,
                 }}/>
                 </Fragment>}
 
@@ -301,9 +302,11 @@ const Style = styled.div`
             margin-bottom: .5rem;
             .edit {
                 text-transform: lowercase;
-                foont-size: 1rem;
+                font-size: 1rem;
+                display: none;
             }
         }
+        .top:first-child .edit { display: initial; }
     }
     .game-entry {
         height: 2.5rem;
@@ -361,11 +364,13 @@ const Style = styled.div`
                 padding: 0 .3rem;
                 border-radius: .2rem;
                 cursor: pointer;
+                margin-right: .5rem;
+                &:last-child { margin-right: 0; }
             }
             transition: .5s;
             overflow: hidden;
-            &.closed { width: 0; padding: 0; }
-            &.open { width: 42% }
+            &.closed { max-width: 0; padding: 0; }
+            &.open { max-width: 100%; }
         }
     }
 `

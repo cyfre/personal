@@ -1,27 +1,27 @@
 const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
+const { SECRETS_PATH, readSecret, writeSecret } = require('../secrets');
 
 let gmail;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = [
-    'https://www.googleapis.com/auth/gmail.send'
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.readonly',
 ];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = __dirname + '/token.json';
-const CREDS_PATH = __dirname + '/credentials.json';
+const TOKEN_SECRET = '/mail/token.json';
+const CREDS_SECRET = '/mail/credentials.json';
 
 // Load client secrets from a local file.
-fs.readFile(CREDS_PATH, (err, content) => {
-  if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials, then call the Gmail API.
-  authorize(JSON.parse(content), (auth) => {
+readSecret(CREDS_SECRET).then(creds => {
+  authorize(creds, (auth) => {
     gmail = google.gmail({version: 'v1', auth});
   });
-});
+}).catch(console.log)
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -35,11 +35,13 @@ function authorize(credentials, callback) {
       client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client, callback);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client);
-  });
+  readSecret(TOKEN_SECRET).then(token => {
+    oAuth2Client.setCredentials(token)
+    callback(oAuth2Client)
+  }).catch(err => {
+    console.log(err)
+    getNewToken(oAuth2Client, callback)
+  })
 }
 
 /**
@@ -64,34 +66,68 @@ function getNewToken(oAuth2Client, callback) {
       if (err) return console.error('Error retrieving access token', err);
       oAuth2Client.setCredentials(token);
       // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-        if (err) return console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
-      callback(oAuth2Client);
+      writeSecret(TOKEN_SECRET, token)
+      callback(oAuth2Client)
     });
   });
 }
 
+function buildRequest(subject, from, to, message, extraHeaders) {
+  const str = [
+    'Content-Type: text/plain; charset="UTF-8"',
+    'MIME-Version: 1.0',
+    'Content-Transfer-Encoding: 7bit',
+    `Subject: ${subject}`,
+    `From: ${from}`,
+    `To: ${to}`,
+    ...(extraHeaders || []),
+    '',
+    message,
+  ].join('\n');
+  return {
+    auth: gmail.context.auth,
+    userId: 'me',
+    resource: {
+      raw: Buffer.from(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_')
+    },
+  }
+}
+function execRequest(func, request) {
+  return new Promise((resolve, reject) => {
+    func(request,(err, res) => {
+      if (err) {
+        console.log(err)
+        return reject(err)
+      }
+      console.log(res)
+      return resolve(res)
+    });
+  })
+}
+
 module.exports = {
-  send: (to, from, subject, message) => {
-    const str = [
-      'Content-Type: text/plain; charset="UTF-8"',
-      'MIME-Version: 1.0',
-      'Content-Transfer-Encoding: 7bit',
-      `to: ${to}`,
-      `from: ${from}`,
-      `subject: ${subject}`,
-      '',
-      message,
-    ].join('\n');
-    console.log(str);
-    gmail.users.messages.send({
+  send: async (to, from, subject, message) => {
+    return execRequest(
+      gmail.users.messages.send,
+      buildRequest(subject, from, to, message),
+    )
+  },
+  chain: async (baseId, message) => {
+    let res = await gmail.users.messages.get({
       auth: gmail.context.auth,
       userId: 'me',
-      resource: {
-          raw: Buffer.from(str).toString("base64").replace(/\+/g, '-').replace(/\//g, '_')
-      }
-    }, (err, response) => err && console.log(err));
+      id: baseId
+    })
+    let [subject, from, to, refId] =
+      'subject from to message-id'
+        .split(' ')
+        .map(field => res.data.payload.headers
+          .find(item => item.name.toLowerCase() === field).value)
+    let request = buildRequest(subject, from, to, message, [
+      `In-Reply-To: ${refId}`,
+      `References: ${refId}`,
+    ])
+    request.resource['threadId'] = baseId
+    return execRequest(gmail.users.messages.send, request)
   },
 }

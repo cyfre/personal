@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import styled from 'styled-components'
 import * as serviceWorker from './serviceWorker'
+import { useNotify } from './lib/notify'
 import './index.css'
 
 import { Base } from './components/base/Base'
@@ -50,7 +51,7 @@ const Style = styled.div`
   }
 `
 
-const App = () => (
+const App = () => { useNotify(); return (
   <Router>
     <Switch>
       <Route exact path='/(|projects|about|contact)' component={Base} />
@@ -62,7 +63,7 @@ const App = () => (
       </Route>
     </Switch>
   </Router>
-)
+)}
 
 ReactDOM.render(<App />, document.getElementById('root'))
 
