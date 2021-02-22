@@ -57,6 +57,7 @@ const User = () => {
     <div className='dropdown'>
       <div className='item' onClick={() => handle.nav(`/u/${auth.user}`)}>profile</div>
       <div className='item' onClick={() => handle.nav('/search')}>search</div>
+      <div className='item' onClick={() => handle.nav('/notify')}>notify</div>
       {/* <div className='item'>friends</div> */}
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>

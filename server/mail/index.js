@@ -72,13 +72,13 @@ function getNewToken(oAuth2Client, callback) {
   });
 }
 
-function buildRequest(subject, from, to, message, extraHeaders) {
+function buildRequest(subject, to, message, extraHeaders) {
   const str = [
     'Content-Type: text/plain; charset="UTF-8"',
     'MIME-Version: 1.0',
     'Content-Transfer-Encoding: 7bit',
     `Subject: ${subject}`,
-    `From: ${from}`,
+    `From: cyrus@freshman.dev`,
     `To: ${to}`,
     ...(extraHeaders || []),
     '',
@@ -92,24 +92,23 @@ function buildRequest(subject, from, to, message, extraHeaders) {
     },
   }
 }
-function execRequest(func, request) {
+function execRequest(request) {
   return new Promise((resolve, reject) => {
-    func(request,(err, res) => {
+    gmail.users.messages.send(request, (err, res) => {
       if (err) {
         console.log(err)
         return reject(err)
       }
-      console.log(res)
+      console.log('mail success', res.data.id)
       return resolve(res)
     });
   })
 }
 
 module.exports = {
-  send: async (to, from, subject, message) => {
+  send: async (to, subject, message) => {
     return execRequest(
-      gmail.users.messages.send,
-      buildRequest(subject, from, to, message),
+      buildRequest(subject, to, message),
     )
   },
   chain: async (baseId, message) => {
@@ -118,16 +117,16 @@ module.exports = {
       userId: 'me',
       id: baseId
     })
-    let [subject, from, to, refId] =
-      'subject from to message-id'
+    let [subject, to, refId] =
+      'subject to message-id'
         .split(' ')
         .map(field => res.data.payload.headers
           .find(item => item.name.toLowerCase() === field).value)
-    let request = buildRequest(subject, from, to, message, [
+    let request = buildRequest(subject, to, message, [
       `In-Reply-To: ${refId}`,
       `References: ${refId}`,
     ])
     request.resource['threadId'] = baseId
-    return execRequest(gmail.users.messages.send, request)
+    return execRequest(request)
   },
 }

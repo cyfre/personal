@@ -1,5 +1,6 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { useHistory } from 'react-router-dom';
 import api from '../../lib/api';
 import { useAuth } from '../../lib/hooks';
 import { openLogin } from '../../lib/auth';
@@ -79,12 +80,19 @@ const GameItem = ({info, open, reload, edit}) => {
 }
 const GameSection = ({name, games, open, reload, isEdit, setEdit}:
     {name: string, games: Info[], open: any, reload: any, isEdit?: boolean, setEdit?: any}) => {
+
+    const history = useHistory();
     return games.length ? (<Fragment>
         <div className='top'>
             <span>{name}</span>
-            {!setEdit ?'':
-            <span className='button edit'
-                onClick={() => setEdit(!isEdit)}>{isEdit ? 'close' : 'edit'}</span>}
+            <div className='controls'>
+                <div className='button'
+                    onClick={() => history.push('/notify')}>
+                        /notify</div>
+                {!setEdit ?'':
+                <span className='button'
+                    onClick={() => setEdit(!isEdit)}>{isEdit ? 'close' : 'edit'}</span>}
+            </div>
         </div>
         <div className='section'>
             {games.map((info, i) =>
@@ -300,13 +308,16 @@ const Style = styled.div`
             align-items: center;
             justify-content: space-between;
             margin-bottom: .5rem;
-            .edit {
+            .controls {
                 text-transform: lowercase;
                 font-size: 1rem;
                 display: none;
+                .button {
+                    margin-left: .5rem;
+                }
             }
         }
-        .top:first-child .edit { display: initial; }
+        .top:first-child .controls { display: flex; }
     }
     .game-entry {
         height: 2.5rem;

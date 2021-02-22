@@ -6,7 +6,7 @@ import { dist, end } from './util';
 import { isValidWord } from './dict';
 import { IPos, Pos, Player, ITile, Tile, Board } from './board';
 import { Info, Save } from './save';
-import { fetchGame, localInfo, updateGame, rematchGame } from './data';
+import { fetchInfo, fetchGame, localInfo, updateGame, rematchGame } from './data';
 import { auth, openLogin } from '../../lib/auth';
 import { GameProgress } from './progress';
 import { theme, globals } from './common';
@@ -101,17 +101,20 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
     const canPlay = info.status === Player.none &&
         (isLocal || !info.p1 || auth.user === (save.p1 ? info.p1 : info.p2));
 
-    useEffect(() => { handle.resize(); }, []);
-    useEffect(() => { handle.fetch(); }, [info.id]);
-    useInterval(() => {
-        // canPlay || handle.fetch();
-        handle.fetch();
-    }, 3000);
-    useEffect(() => {
-        Object.assign(window, { save });
-    }, [save]);
+    useEffect(() => { handle.resize() }, []);
+    useEffect(() => { handle.fetch() }, [info.id]);
+    useInterval(() => { handle.check() }, 3000);
+    useEffect(() => { Object.assign(window, { save }) }, [save]);
 
     const handle = {
+        check: () => {
+            fetchInfo(info.id).then(data => {
+                if (info.turn < data.info.turn || info.status !== data.info.status) {
+                    console.log('fetch board', data);
+                    handle.fetch()
+                }
+            });
+        },
         fetch: () => {
             fetchGame(info.id).then(data => {
                 setLoaded(true);

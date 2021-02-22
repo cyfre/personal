@@ -1,6 +1,7 @@
 const db = require('../db');
 const { pick, entryMap } = require('../util');
 const { randAlphanum } = require('../rand');
+const notify = require('../notify').model
 
 const names = {
     user: 'wordbase-user',
@@ -54,6 +55,10 @@ async function getUserInfo(user) {
     let infoList = await C.info().find({ id: { $in: games } }).toArray();
     return { infoList };
 }
+async function getInfo(user, id) {
+    let info = await _getInfo(user, id);
+    return { info };
+}
 async function getState(user, id) {
     let info = await _getInfo(user, id);
     let save = await C.save().findOne({ id });
@@ -90,13 +95,21 @@ async function play(user, id, newInfo, state) {
     }
 
     Object.assign(info, pick(newInfo, 'turn status progress lastWord'));
-    console.log(info);
+    // console.log(info);
     info.lastUpdate = Date.now();
     _setInfo(info);
     C.save().updateOne(
         { id },
         { $set: { state } },
     );
+
+    let other = info.p1 === user ? info.p2 : info.p1;
+    notify.send(other, 'wordbase',
+        [info.status === -1
+        ? `${user} played ${info.lastWord.toUpperCase()}`
+        : `${user} won with ${info.lastWord.toUpperCase()}`,
+        `freshman.dev/wordbase#${info.id}`].join(' – '))
+
     return { info }
 }
 
@@ -106,6 +119,10 @@ async function resign(user, id) {
         info.status = (info.p1 === user) ? 1 : 0;
         info.lastUpdate = Date.now();
         _setInfo(info);
+
+        let other = info.p1 === user ? info.p2 : info.p1;
+        notify.send(other, 'wordbase',
+            `${user} resigned, you win! – freshman.dev/wordbase#${info.id}`)
     }
     return { info }
 }
@@ -128,6 +145,10 @@ async function rematch(user, id, state) {
         rematch = await create(...players, state);
         info.rematch = rematch.info.id;
         _setInfo(info)
+
+        let other = info.p1 === user ? info.p2 : info.p1;
+        notify.send(other, 'wordbase',
+            `${user} requested a rematch! – freshman.dev/wordbase#${info.rematch}`)
     }
     return rematch
 }
@@ -191,6 +212,7 @@ module.exports = {
     names,
 
     getUserInfo,
+    getInfo,
     getState,
     play,
 

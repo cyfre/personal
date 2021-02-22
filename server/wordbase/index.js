@@ -11,7 +11,8 @@ const P = {
 
 // get & play info/save
 R.get(P.games, J(rq => M.getUserInfo(rq.user)));
-R.get(P.gameId, J(rq => M.getState(rq.user, rq.params.id)));
+R.get(P.gameId, J(rq => M.getInfo(rq.user, rq.params.id)));
+R.get(`${P.gameId}/board`, J(rq => M.getState(rq.user, rq.params.id)));
 R.post(P.gameId, J(rq => M.play(rq.user, rq.params.id, rq.body.info, rq.body.state)));
 
 // game options

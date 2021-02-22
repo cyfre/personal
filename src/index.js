@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom'
 import styled from 'styled-components'
 import * as serviceWorker from './serviceWorker'
 import { useNotify } from './lib/notify'
@@ -51,8 +51,14 @@ const Style = styled.div`
   }
 `
 
-const App = () => { useNotify(); return (
+const Notify = () => {
+  useNotify(useHistory());
+  return <Fragment></Fragment>
+}
+
+const App = () => (
   <Router>
+    <Notify />
     <Switch>
       <Route exact path='/(|projects|about|contact)' component={Base} />
       <Route path='*'>
@@ -63,7 +69,7 @@ const App = () => { useNotify(); return (
       </Route>
     </Switch>
   </Router>
-)}
+)
 
 ReactDOM.render(<App />, document.getElementById('root'))
 

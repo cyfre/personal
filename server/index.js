@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 
 app.use('/api/login', login.routes);
 app.use('/api/profile', require('./profile').routes);
+app.use('/api/notify', require('./notify').routes);
 app.use('/api/wordbase', require('./wordbase').routes);
 app.use('/api/graffiti', require('./graffiti').routes);
 app.use('/api/turt', require('./turt').routes);

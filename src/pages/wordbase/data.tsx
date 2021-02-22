@@ -5,10 +5,21 @@ import { ITile, Tile, Board } from './board';
 export let localInfo = Info.local();
 export let localSave = Save.new();
 
+export async function fetchInfo(gameId: string): Promise<{info: Info}> {
+    return new Promise(resolve => {
+        if (gameId === localInfo.id) resolve({ info: localInfo });
+        else api.get(`/wordbase/g/${gameId}`).then(data => {
+            resolve({
+                info: Info.of(data.info)
+            });
+        }).catch(err => console.log(err, err.error));
+    });
+}
+
 export async function fetchGame(gameId: string): Promise<{info: Info, save: Save}> {
     return new Promise(resolve => {
         if (gameId === localInfo.id) resolve({ info: localInfo, save: localSave });
-        else api.get(`/wordbase/g/${gameId}`).then(data => {
+        else api.get(`/wordbase/g/${gameId}/board`).then(data => {
             let save = Save.deserialize(data.state);
             resolve({
                 info: Info.play(Info.of(data.info), save),

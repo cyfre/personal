@@ -3,6 +3,8 @@ import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
 
 // reference here: https://rangle.io/blog/simplifying-controlled-inputs-with-hooks/
 
+const useE = (func, ...props) => useEffect(func, props)
+
 const useInput = (initialValue) => {
     const [value, setValue] = useState(initialValue);
 
@@ -18,7 +20,7 @@ const useInput = (initialValue) => {
 };
 
 const useScript = (src) => {
-    useEffect(() => {
+    useE(() => {
         let script = document.createElement('script');
         script.src = src;
         document.body.appendChild(script);
@@ -29,7 +31,7 @@ const useScript = (src) => {
 }
 
 const useTitle = (title) => {
-    useEffect(() => {
+    useE(() => {
         const prevTitle = document.title;
         document.title = title;
         return () => {
@@ -41,7 +43,7 @@ const useTitle = (title) => {
 }
 
 const useLink = (href, rel) => {
-    useEffect(() => {
+    useE(() => {
         let link = document.createElement('link');
         link.href = href;
         link.rel = rel;
@@ -55,23 +57,21 @@ const useLink = (href, rel) => {
 const cleanupId = (id, callback) => () => callback(id);
 
 const useTimeout = (callback, ms) =>
-    useEffect(
-        () => cleanupId(setTimeout(callback, ms), id => clearTimeout(id)),
+    useE(() => cleanupId(setTimeout(callback, ms), id => clearTimeout(id)),
         [callback, ms]);
 
 const useInterval = (callback, ms) =>
-    useEffect(
-        () => cleanupId(setInterval(callback, ms), id => clearInterval(id)),
+    useE(() => cleanupId(setInterval(callback, ms), id => clearInterval(id)),
         [callback, ms]);
 
 const useEventListener = (target, type, callback, useCapture) =>
-    useEffect(() => cleanupId(
+    useE(() => cleanupId(
         target.addEventListener(type, callback, useCapture),
         () => target.removeEventListener(type, callback, useCapture),
     ), [target, type, callback, useCapture]);
 
 const useAnimate = (animate) =>
-    useEffect(() => {
+    useE(() => {
         let id;
         const wrappedAnimate = () => {
             id = requestAnimationFrame(wrappedAnimate);
@@ -83,7 +83,7 @@ const useAnimate = (animate) =>
 
 const useAuth = () => {
     const [localAuth, setLocalAuth] = useState(Object.assign({}, auth));
-    useEffect(() => {
+    useE(() => {
         let callback = auth => setLocalAuth(Object.assign({}, auth))
         addAuthTrigger(callback);
         return () => removeAuthTrigger(callback);
@@ -93,6 +93,7 @@ const useAuth = () => {
 }
 
 export {
+    useE,
     useInput,
     useScript,
     useTitle,

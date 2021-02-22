@@ -18,6 +18,7 @@ const _projects = {
     models: 'simple 3d trees & things created in Blender',
     domains: 'list of domains for this site',
     u: 'user profiles',
+    notify: 'manage page notifications',
     home: 'landing page',
     about: 'bio and contact',
     projects: 'highlighted project list',
