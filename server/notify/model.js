@@ -14,6 +14,8 @@ const names = {
 }
 const C = entryMap(names, name => () => db.collection(name));
 
+const alwaysAllowed = 'reset'.split(' ')
+
 async function get(user) {
     let notify = await C.notify().findOne({ user });
     if (!notify) {
@@ -67,7 +69,6 @@ async function read(user, _app) {
         delete clearedMsg[_app]
     }
     update(user, { msg: clearedMsg })
-    console.log(msg)
     return { msg }
 }
 async function send(user, app, text) {
@@ -78,7 +79,9 @@ async function send(user, app, text) {
 
     console.log('SEND', user, app, text)
     // will notify if not read & cleared within 10s
-    if (notify.email && notify.apps.includes(app)) {
+    if (notify.email &&
+        notify.apps.concat(alwaysAllowed).includes(app)) {
+
         setTimeout(async () => {
             let { notify } = await get(user)
             let { msg } = notify

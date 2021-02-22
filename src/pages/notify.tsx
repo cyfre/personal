@@ -184,6 +184,7 @@ const Style = styled.div`
         border-radius: .2rem;
         // background: #00000011;
         // border-radius: 1rem;
+        box-shadow: none;
       }
     }
     .button {

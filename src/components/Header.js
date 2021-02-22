@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { embedded } from './Contents';
 import { useAuth } from '../lib/hooks';
 import { login, signup, logout } from '../lib/auth';
+import api from '../lib/api';
 
 const User = () => {
   let auth = useAuth();
@@ -35,6 +36,7 @@ const User = () => {
         }
       } else {
         setVerify(true)
+        setError(false)
       }
     },
     logout: () => {
@@ -44,7 +46,13 @@ const User = () => {
     nav: path => {
       setDropdown(false);
       history.push(path);
-    }
+    },
+    reset: () => {
+      setError('check email for link')
+      api.post('reset/request', {
+        user: userRef.current.value
+      })
+    },
   }
   useEffect(() => {
     setDropdown(auth.dropdown);
@@ -67,22 +75,30 @@ const User = () => {
     <div className={'dropdown' + (error ? ' error' : '')} title={error}>
       <div className='item'>
         <input ref={userRef} type='text' maxLength='8' placeholder='username'
-          autoCorrect='off' autoCapitalize='off' />
+          autoCorrect='off' autoCapitalize='off'
+          onKeyDown={e => e.key === 'Enter' &&
+            passRef.current.focus()}/>
       </div>
       <div className='item'>
         <input ref={passRef} type='password' placeholder='password'
           onKeyDown={e => e.key === 'Enter' && handle.signin(login)}/>
       </div>
-      {verify ? <div className='item'>
+      {verify ? <div className='item info'>
         <input ref={verifyRef} type='password' placeholder='verify'
           onKeyDown={e => e.key === 'Enter' && handle.signup()}/>
       </div> : ''}
-      <div className='item signin'>
+      {!error?'': <div className='item info' style={{
+          color: 'red'}}>
+        {error}</div>}
+      {error !== 'incorrect password' ?'': <div className='item'
+        onClick={handle.reset}>
+        reset password?</div>}
+      <div className='item info signin'>
         <span onClick={() => handle.signup()}>sign up</span>
         {' / '}
         <span onClick={() => handle.signin(login)}>log in</span>
       </div>
-      {error ? <div className='error-msg'>{error}</div> : ''}
+      {/* {error ? <div className='error-msg'>{error}</div> : ''} */}
     </div>
   )
 
@@ -226,7 +242,7 @@ const Style = styled.div`
         input {
           border-color: black;
         }
-        &:not(.signin):hover { text-decoration: underline; }
+        &:not(.info):hover { text-decoration: underline; }
         &.signin {
           display: flex;
           justify-content: space-between;
@@ -239,7 +255,7 @@ const Style = styled.div`
           // border-color: #ff0000dd;
           // border-radius: .2rem;
           // background: #ff0000;
-          background: #ffdbdb;
+          // background: #ffdbdb;
         }
       }
 

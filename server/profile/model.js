@@ -22,6 +22,14 @@ async function get(user) {
         if (await login.get(user)) {
             profile = { user, bio: '', friends: [], follows: [], followers: [] };
             C.profile().insertOne(profile);
+        } else {
+            let similar = (await C.profile().find({
+                user: {
+                    $regex: `${user}`,
+                    $options: 'i',
+                }
+            }).toArray()).map(entry => entry.user).sort()
+            return { similar }
         }
     }
     return { profile }

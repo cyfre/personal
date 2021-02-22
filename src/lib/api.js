@@ -25,7 +25,7 @@ const api = {};
             req.body = JSON.stringify(params || {});
         } else callback = params
 
-        console.log('/api' + path.replace(/^\/api/, '').replace(/^\/*/, '/'));
+        // console.log('/api' + path.replace(/^\/api/, '').replace(/^\/*/, '/'));
         return new Promise((resolve, reject) => {
             fetch('/api' + path.replace(/^\/api/, '').replace(/^\/*/, '/'), req)
                 .then(res => res.json().then(data => {

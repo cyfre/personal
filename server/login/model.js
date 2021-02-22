@@ -10,7 +10,7 @@ const userAndToken = entry => entry ? { user: entry.user, token: entry.token } :
 /* login
 user: string
 pass: hash
-token: uuid
+reset: string
 */
 
 async function get(user) {
@@ -58,13 +58,19 @@ async function check(user, token) {
 }
 
 
+async function setPass(user, pass) {
+    let entry = await get(user);
+    entry.pass = pass;
+    entry.token = genToken();
+    console.log(entry)
+    _update(entry);
+    return userAndToken(entry);
+}
+
 async function changePass(user, currPass, newPass) {
     let entry = await get(user);
     if (entry && entry.pass === currPass) {
-        entry.pass = newPass;
-        entry.token = genToken();
-        _update(entry);
-        return userAndToken(entry);
+        return setPass(user, newPass)
     }
     return { error: entry ? 'incorrect password' : "user doesn't exist" };
 }
@@ -75,5 +81,5 @@ module.exports = {
     login,
     signup,
     check,
-    changePass,
+    setPass,
 }

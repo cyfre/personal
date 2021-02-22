@@ -1,7 +1,7 @@
 import api from './api';
 import { getStored, setStored } from './util';
 
-async function sha256(message) {
+export async function sha256(message) {
     const msgUint8 = new TextEncoder().encode(message);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -25,22 +25,28 @@ export function removeAuthTrigger(callback) {
 }
 
 const AUTH_COOKIE = 'loginAuth'
-function setAuth(user, token, dropdown) {
+function setAuth(user, token, dropdown?) {
     Object.assign(auth, { user, token, dropdown });
     setStored(AUTH_COOKIE, auth);
     authTriggers.forEach(callback => callback(auth));
 }
 export const auth = getStored(AUTH_COOKIE) || { user: undefined, token: undefined, dropdown: false };
 setTimeout(() => setAuth(auth.user, auth.token), 500); // verify auth after api has loaded
-window.auth = auth;
 
 export function logout() {
     setAuth('', '');
 }
-window.logout = logout;
 
 export function openLogin() {
     setAuth(auth.user, auth.token, true);
+}
+
+export function handleAuth(data) {
+    console.log(data);
+    if (data.token) {
+        setAuth(data.user, data.token);
+    }
+    return auth
 }
 
 function signin(path, user, pass) {
@@ -50,13 +56,7 @@ function signin(path, user, pass) {
                 user,
                 pass: hash,
             }))
-            .then(data => {
-                console.log(data);
-                if (data.token) {
-                    setAuth(user, data.token);
-                    resolve(auth);
-                }
-            })
+            .then(data => resolve(handleAuth(data)))
             .catch(err => {
                 console.log('err', err);
                 reject(err);
@@ -67,12 +67,10 @@ function signin(path, user, pass) {
 export function login(user, pass) {
     return signin('/login', user, pass);
 }
-window.login = login;
 
 export function signup(user, pass) {
     return signin('/login/signup', user, pass);
 }
-window.signup = signup;
 
 export function verify(user, token) {
     return api.post('/login/verify', {
@@ -80,4 +78,3 @@ export function verify(user, token) {
         token,
     });
 }
-window.verify = verify;

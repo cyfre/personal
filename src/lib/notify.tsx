@@ -5,13 +5,15 @@ import { useInterval, useTimeout } from './hooks'
 import { auth } from './auth'
 import { useHistory } from 'react-router-dom'
 
+const Notification = ('Notification' in window) ? window.Notification : undefined
+
 export function twitter(handle?) {
     return api.post(`notify/twitter`, { handle })
 }
 
 export function sub(page) {
     console.log(Notification.permission)
-    if ('granted' !== Notification.permission) {
+    if (Notification && 'granted' !== Notification.permission) {
         Notification.requestPermission()
     }
     return api.put(`notify/sub/${page}`)
@@ -28,7 +30,7 @@ export function useNotify(history) {
     useInterval(() => {
         auth.user && api.get('notify/msg').then(
             ({msg}: {msg: { [key: string]: string[] }}) => {
-            console.log(msg)
+            // console.log(msg)
             Object.entries(msg)
                 .filter(entry => !notifyFilters.some(f => f(entry)))
                 .forEach(async entry => {
@@ -36,7 +38,6 @@ export function useNotify(history) {
                         await Notification.requestPermission()
                     }
                     let [app, list] = entry
-                    console.log(entry)
                     list.forEach(text => {
                         let [body, link] = text.split(' – ')
                         console.log(body, link, history)
