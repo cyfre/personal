@@ -99,7 +99,7 @@ function execRequest(request) {
         console.log(err)
         return reject(err)
       }
-      console.log('mail success', res.data.id)
+      console.log('[MAILED]', res.data.id)
       return resolve(res)
     });
   })

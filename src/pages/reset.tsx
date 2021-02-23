@@ -72,16 +72,16 @@ const Style = styled.div`
     .label { display: block; }
     .lil-badge { display: inline-block; }
     .label, .lil-badge {
-        width: fit-content;
-        font-size: .8rem;
-        opacity: .5;
-        background: #00000022;
-        padding: 0 .3rem;
-        border-radius: .3rem;
+      width: fit-content;
+      font-size: .8rem;
+      opacity: .5;
+      background: #00000022;
+      padding: 0 .3rem;
+      border-radius: .3rem;
     }
     > * {
-        margin-bottom: .5rem;
-        min-height: 3rem;
+      margin-bottom: .5rem;
+      min-height: 3rem;
     }
 
     .entry {
@@ -106,6 +106,7 @@ const Style = styled.div`
       border-radius: .2rem;
       box-shadow: none;
       margin: .5rem 0;
+      -webkit-appearance: none;
     }
     .button {
       display: inline-block;

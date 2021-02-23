@@ -21,6 +21,7 @@ const GameItem = ({info, open, reload, edit}) => {
   let isP1 = info.p1 === auth.user;
   let oppo = isP1 ? info.p2 : info.p1 || 'invite';
   let isTurn = info.turn%2 === (isP1 ? 0 : 1);
+  let resigned = info.lastWord === '.resign'
 
   useEffect(() => {
     if (copied) setTimeout(() => setCopied(false), 2000);
@@ -32,10 +33,15 @@ const GameItem = ({info, open, reload, edit}) => {
       ? <div className='main' onClick={() => open(info.id)}>
         <GameProgress info={info} />
 
-        {info.status !== Player.none ? '' :
-        <div className={'info' + (isTurn ? ' dark':'')}>
+        {<div className={'info' + (isTurn ? ' dark':'')}>
           <span>
-            {!edit && info.lastWord ? `${isTurn ? `they played ` : 'you played '} ${info.lastWord.toUpperCase()}` : ''}
+            {edit || !info.lastWord
+            ? (!info.lastWord ? '' : resigned
+              ? `resigned`
+              : `${info.lastWord.toUpperCase()}`)
+            : resigned
+            ? `${isTurn ? `they resigned` : 'you resigned'}`
+            : `${isTurn ? `they played ` : 'you played '} ${info.lastWord.toUpperCase()}`}
             {/* {!edit && info.lastWord ? `${isTurn ? `they played ` : 'sent '} ${info.lastWord.toUpperCase()}` : ''} */}
             {/* {!edit && info.lastWord ? info.lastWord.toUpperCase() : ''} */}
           </span>
@@ -46,19 +52,19 @@ const GameItem = ({info, open, reload, edit}) => {
 
         {/* {`${info.p1 || 'invite'} vs ${info.p2} (${info.id})`} */}
       </div>
-      : <div className='main'>
+      : <div className='main' onClick={() => {
+          navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
+          setCopied(true);
+        }}>
+
         <div className='info dark'>
-          <span ref={inviteRef} onClick={() => {
-            navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
-            setCopied(true);
-          }}>
+          <span ref={inviteRef}>
             {copied ? 'copied!' : `invite  /wordbase#${info.id}`}
           </span>
         </div>
       </div>}
       {(edit || true)
       ? <div className={'options' + (edit ?' open':' closed')}>
-        {/* <span onClick={() => setOptionsOpen(false)}>{'>'}</span> */}
         {info.status === Player.none
         ? <span onClick={() => {
           api.post(`/wordbase/g/${info.id}/resign`).then(() => reload());
@@ -70,10 +76,6 @@ const GameItem = ({info, open, reload, edit}) => {
           api.post(`/wordbase/g/${info.id}/delete`).then(() => reload());
         }}>delete</span>
       </div>
-      // : <div className='options closed'
-      //     onClick={() => setOptionsOpen(true)}>
-      //     <span>{'<'}</span>
-      // </div>}
       : <div className='options closed'></div>}
     </div>
   )
@@ -115,12 +117,16 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
   const [isNew, setNew] = useState(false);
   const [friends, setFriends] = useState([]);
   const [isFriend, setFriend] = useState(false);
-  const [howTo, setHowTo] = useState(false);
+
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (copied) setTimeout(() => setCopied(false), 3000);
+  }, [copied])
 
   const handle = {
     local: () => open(localInfo.id),
     load: () => {
-      api.get('/wordbase/games').then(data => {
+      auth.user && api.get('/wordbase/games').then(data => {
         // console.log('games', data);
         setList(data.infoList?.length ? data.infoList.sort((a, b) =>
           (b.lastUpdate || 0) - (a.lastUpdate || 0)) : []);
@@ -154,7 +160,13 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
       })
     },
     open: () => handle.invite('/wordbase/i/open'),
-    private: () => handle.invite('/wordbase/i/private'),
+    private: () => {
+      setCopied(true)
+      handle.invite('/wordbase/i/private')
+      .then(data => {
+        navigator.clipboard.writeText(`${window.location.origin}/wordbase#${data.info.id}`);
+      })
+    },
     friend: user => handle.invite(`/wordbase/i/friend/${user}`)
       .then(data => open(data.info.id)),
     random: () => {
@@ -187,7 +199,7 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
         ? <Fragment>
           <div className={'button' + (isNew ? ' inverse' : '')}
             onClick={() => setNew(!isNew)}>
-            {isNew ? 'cancel' : 'online game'}</div>
+            {isNew ? 'cancel' : copied ? 'copied!' : 'online game'}</div>
           {!isNew ? '' :
           <Fragment>
             <div className='button indent' onClick={() => handle.private()}>
@@ -293,12 +305,12 @@ const Style = styled.div`
     min-height: 4rem; max-height: 8rem;
     &.new { min-height: 12rem; max-height: 100%; }
     .indent {
-      margin-left: 2rem;
+      margin-left: 1rem;
       margin-bottom: .75rem;
     }
     .friend-list {
-      width: calc(100% - 2rem);
-      padding-left: 2rem;
+      width: calc(100% - 1rem);
+      padding-left: 1rem;
       margin-bottom: .25rem;
       > .button {
         margin: 0;
@@ -364,6 +376,7 @@ const Style = styled.div`
           // background: #ffffff22;
           padding: 0 .3rem;
           border-radius: .2rem;
+          user-select: none;
         }
         &.dark span {
           background: #00000088;

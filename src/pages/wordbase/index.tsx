@@ -22,8 +22,12 @@ export default () => {
         _open(window.location.hash.slice(1))
     }, []);
 
-    const open = id => {
+    const open = (id, update?) => {
         window.history.replaceState(null, 'Wordbase', '/wordbase' + (id ? `#${id}` : ''))
+        if (update) {
+            let toUpdate = infoList.find(info => info.id === update.id)
+            if (toUpdate) Object.assign(toUpdate, update)
+        }
         _open(id);
     }
     const _open = id => {

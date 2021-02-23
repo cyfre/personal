@@ -84,7 +84,7 @@ const User = () => {
           onKeyDown={e => e.key === 'Enter' && handle.signin(login)}/>
       </div>
       {verify ? <div className='item info'>
-        <input ref={verifyRef} type='password' placeholder='verify'
+        <input ref={verifyRef} type='password' placeholder='verify password'
           onKeyDown={e => e.key === 'Enter' && handle.signup()}/>
       </div> : ''}
       {!error?'': <div className='item info' style={{

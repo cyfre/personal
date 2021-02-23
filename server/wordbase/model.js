@@ -30,7 +30,7 @@ async function _getGames(user) {
     if (!user) throw Error('user not signed in');
     let entry = await C.user().findOne({ user });
     if (!entry) {
-        let entry = { user, games: [] };
+        entry = { user, games: [] };
         C.user().insertOne(entry);
     }
     return entry.games;
@@ -91,6 +91,7 @@ async function play(user, id, newInfo, state) {
     if (!info.p1) {
         info.p1 = user;
         _addGame(user, id);
+        _addGame(info.p2, id);
         C.invite().deleteOne({ id });
     }
 
@@ -118,6 +119,7 @@ async function resign(user, id) {
     if (info.status === -1) {
         info.status = (info.p1 === user) ? 1 : 0;
         info.lastUpdate = Date.now();
+        info.lastWord = '.resign'
         _setInfo(info);
 
         let other = info.p1 === user ? info.p2 : info.p1;
@@ -170,6 +172,7 @@ async function accept(user, id) {
     info.lastUpdate = Date.now();
     _setInfo(info);
     _addGame(user, id);
+    _addGame(info.p2, id);
     return { info };
 }
 

@@ -27,6 +27,7 @@ export function removeAuthTrigger(callback) {
 const AUTH_COOKIE = 'loginAuth'
 function setAuth(user, token, dropdown?) {
     Object.assign(auth, { user, token, dropdown });
+    // console.log('auth', auth)
     setStored(AUTH_COOKIE, auth);
     authTriggers.forEach(callback => callback(auth));
 }
@@ -42,9 +43,9 @@ export function openLogin() {
 }
 
 export function handleAuth(data) {
-    console.log(data);
+    // console.log(data);
     if (data.token) {
-        setAuth(data.user, data.token);
+        setTimeout(() => setAuth(data.user, data.token), 0);
     }
     return auth
 }

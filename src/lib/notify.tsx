@@ -8,55 +8,57 @@ import { useHistory } from 'react-router-dom'
 const Notification = ('Notification' in window) ? window.Notification : undefined
 
 export function twitter(handle?) {
-    return api.post(`notify/twitter`, { handle })
+  return api.post(`notify/twitter`, { handle })
 }
 
 export function sub(page) {
-    console.log(Notification.permission)
-    if (Notification && 'granted' !== Notification.permission) {
-        Notification.requestPermission()
-    }
-    return api.put(`notify/sub/${page}`)
+  console.log(Notification?.permission
+    || 'notifications not supported')
+  if (Notification && 'granted' !== Notification.permission) {
+    Notification.requestPermission()
+  }
+  return api.put(`notify/sub/${page}`)
 }
 export function unsub(page) {
-    return api.delete(`notify/sub/${page}`)
+  return api.delete(`notify/sub/${page}`)
 }
 export function subbed(page) {
-    return api.get(`notify/sub/${page}`)
+  return api.get(`notify/sub/${page}`)
 }
 
 const notifyFilters = []
 export function useNotify(history) {
-    useInterval(() => {
-        auth.user && api.get('notify/msg').then(
-            ({msg}: {msg: { [key: string]: string[] }}) => {
-            // console.log(msg)
-            Object.entries(msg)
-                .filter(entry => !notifyFilters.some(f => f(entry)))
-                .forEach(async entry => {
-                    if ('default' === Notification.permission) {
-                        await Notification.requestPermission()
-                    }
-                    let [app, list] = entry
-                    list.forEach(text => {
-                        let [body, link] = text.split(' – ')
-                        console.log(body, link, history)
-                        let notif = new Notification(`/${app}`, {
-                            body,
-                            tag: link
-                        })
-                        notif.onclick = () => {
-                            history.push(link.replace('freshman.dev', ''))
-                        }
-                    })
-                })
+  useInterval(() => {
+    auth.user && api.get('notify/msg').then(
+      ({msg}: {msg: { [key: string]: string[] }}) => {
+      // console.log(msg)
+      Object.entries(msg)
+        .forEach(async entry => {
+          if ('default' === Notification.permission) {
+            await Notification.requestPermission()
+          }
+          let [app, list] = entry
+          list
+          .filter(text => !notifyFilters.some(f => f(app, text)))
+          .forEach(text => {
+            let [body, link] = text.split(' – ')
+            console.log(body, link, history)
+            let notif = new Notification(`/${app}`, {
+              body,
+              tag: link
+            })
+            notif.onclick = () => {
+              history.push(link.replace('freshman.dev', ''))
+            }
+          })
         })
-    }, 3000);
+    })
+  }, 3000);
 }
 export function useNotifyFilter(
-    filter: (msgEntry: [string, string]) => boolean) {
-    useEffect(() => {
-        notifyFilters.push(filter)
-        return () => remove(notifyFilters, filter);
-    }, [filter])
+  filter: (app: string, text: string) => boolean) {
+  useEffect(() => {
+    notifyFilters.push(filter)
+    return () => remove(notifyFilters, filter);
+  }, [filter])
 }

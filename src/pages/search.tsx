@@ -19,6 +19,7 @@ const _projects = {
     domains: 'list of domains for this site',
     u: 'user profiles',
     notify: 'manage page notifications',
+    reset: 'change password',
     home: 'landing page',
     about: 'bio and contact',
     projects: 'highlighted project list',
@@ -32,19 +33,19 @@ searchProjects.forEach(key => {
 export const projects = _projects;
 
 const SearchEntry = ({page, term}) => {
-    let history = useHistory();
     let p = projects[page];
     let reg = RegExp(`(${term})`, 'gi')
 
-    let highlight = html => html.split('<a').map((text, i) => {
-        if (i > 0) {
-            let split = text.split('>')
-            split[1] = split[1].replace(reg, `<span class="highlight">$1</span>`)
-            return split.join('>')
-        } else {
-            return text.replace(reg, `<span class="highlight">$1</span>`)
-        }
-    }).join('<a')
+    let highlight = html => !term ? html : html.split('<a')
+        .map((text, i) => {
+            if (i > 0) {
+                let split = text.split('>')
+                split[1] = split[1].replace(reg, `<span class="highlight">$1</span>`)
+                return split.join('>')
+            } else {
+                return text.replace(reg, `<span class="highlight">$1</span>`)
+            }
+        }).join('<a')
 
     return (<div className='entry'>
         <Link className='title' to={`/${page}`} dangerouslySetInnerHTML={{__html:
@@ -117,6 +118,7 @@ const Style = styled.div`
     height: 100%; width: 100%;
     background: white;
     color: black;
+    display: flex; flex-direction: column;
     .search {
         padding: .3rem .3rem;
         // padding-top: .1rem;
@@ -147,6 +149,9 @@ const Style = styled.div`
         }
     }
     .body {
+        flex-grow: 1;
+        overflow-y: scroll;
+
         padding: 1rem;
         > *::before { display: block; margin-bottom: .25rem }
         .lil-badge { display: inline-block; }

@@ -28,7 +28,7 @@ const PathList = ({paths}) => <Fragment>
 export default () => {
   let auth = useAuth();
   let history = useHistory();
-  let user = useRouteMatch('/u/:user')?.params.user || (() => {
+  let user = useRouteMatch('/:page/:user')?.params.user || (() => {
     history.replace(`/u/${auth.user}`);
     return auth.user;
   })();

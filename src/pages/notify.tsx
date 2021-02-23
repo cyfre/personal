@@ -2,7 +2,7 @@ import React, { useState, useRef, Fragment } from 'react';
 import styled from 'styled-components';
 import { Link, useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api'
-import { useE, useAuth } from '../lib/hooks'
+import { useE, useF, useAuth } from '../lib/hooks'
 import { sub, unsub } from '../lib/notify'
 
 const notifyProjects = 'wordbase'.split(' ')
@@ -20,26 +20,32 @@ const NotifyEntry = ({page, enabled, toggle}) => {
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
   let auth = useAuth();
-  let [term, setTerm] = useState(window.location.hash?.slice(1) || '');
+  let [token, setToken] = useState(window.location.hash?.slice(1) || '');
   let [notify, setNotify] = useState(undefined);
   let emailRef = useRef();
   let [emailEdit, setEmailEdit] = useState(false)
 
-  useE(() => {
-    auth.user && handle.load()
-  });
-  useE(() => {
-    window.history.replaceState(null, '/notify',
-      term ? `/notify/#${term}` : '/notify')
-  }, term)
-  useE(() => {
-    console.log(notify)
-  }, notify)
-  useE(() => {
+  useF(auth.user, () => auth.user && !token && handle.load())
+  useF(token, () => {
+    if (token) {
+      console.log('token', token)
+      window.history.replaceState(null, '/notify', '/notify')
+      api.post('notify/verify', { token }).then(data => {
+        if (data.notify && !data.notify.verify) {
+          setNotify(data.notify)
+        } else {
+          handle.load();
+        }
+      })
+      setToken('');
+    }
+  })
+  useF(notify, console.log)
+  useF(emailEdit, () => {
     if (notify && emailRef?.current) {
       (emailRef.current as HTMLInputElement).value = notify.email || ''
     }
-  }, emailEdit)
+  })
 
   const handle = {
     load: () => {
@@ -67,9 +73,10 @@ export default () => {
 
   return <Style>
     <div className='body'>
-    {!notify ? '' : !auth.user ? 'log in to set notifications' : <Fragment>
-      <div className='user'>{auth.user}</div>
-      <div className='email'>
+    {!notify ? '' : !auth.user ? 'log in to manage notifications' : <Fragment>
+      <div><div className='label'>user</div>{auth.user}</div>
+      <div className='email'><div className='label inline'>email</div>
+        <span className='lil-badge'>{notify.verify ? `unverified – check email for link` : 'verified'}</span>
         <div className='text'>{emailEdit
           ? <input ref={emailRef} type='email' placeholder=''
           autoCorrect='off' autoCapitalize='off'
@@ -80,39 +87,15 @@ export default () => {
             {emailEdit ? 'save' : 'edit'}</div>
         </div>
       </div>
-      <div className='notifications'>
+      <div><div className='label'>notifications</div>
         {notifyProjects.map(page => {
-          let enabled = notify.apps.includes(page)
+          let enabled = !(notify.unsub || []).includes(page)
           return <NotifyEntry key={page} page={page}
             enabled={enabled} toggle={() =>
               handle.sub(page, !enabled)}/>})}
       </div>
     </Fragment>}</div>
   </Style>
-
-  return <Style>{!(notify && auth.user) ? 'log in' : <Fragment>
-    <div className='body'>
-      <div className='user'>{auth.user}</div>
-      <div className='email'>
-        <div className='text'>{emailEdit
-          ? <input ref={emailRef} type='email' placeholder=''
-          autoCorrect='off' autoCapitalize='off'
-          onKeyDown={e => e.key === 'Enter' && handle.email()}/>
-          : <span onClick={handle.email}>{notify.email || '(add email for notifications)'}</span>}
-          <div className='edit button'
-            onClick={handle.email}>
-            {emailEdit ? 'save' : 'edit'}</div>
-        </div>
-      </div>
-      <div className='notifications'>
-        {notifyProjects.map(page => {
-          let enabled = notify.apps.includes(page)
-          return <NotifyEntry key={page} page={page}
-            enabled={enabled} toggle={() =>
-              handle.sub(page, !enabled)}/>})}
-      </div>
-    </div>
-  </Fragment>}</Style>
 }
 
 const Style = styled.div`
@@ -133,9 +116,9 @@ const Style = styled.div`
   }
   .body {
     padding: 1rem;
-    > *::before { display: block; margin-bottom: .25rem }
-    .lil-badge { display: inline-block; }
-    > *::before, .lil-badge {
+    .label { display: block; }
+    .label.inline, .lil-badge { display: inline-block; }
+    .label, .lil-badge {
       width: fit-content;
       font-size: .8rem;
       opacity: .5;
@@ -143,13 +126,13 @@ const Style = styled.div`
       padding: 0 .3rem;
       border-radius: .3rem;
     }
+    .lil-badge {
+      margin-left: .5rem;
+    }
     > * {
       margin-bottom: .5rem;
       min-height: 3rem;
     }
-    .user::before { content: "user" }
-    .email::before { content: "email" }
-    .notifications::before { content: "notifications" }
 
     .entry {
       cursor: pointer;
@@ -167,7 +150,7 @@ const Style = styled.div`
       align-items: center;
       span, input {
         color: black;
-        flex-grow: 1;
+        // flex-grow: 1;
         border: 2px solid transparent;
         line-height: 1rem;
         height: 2.0rem;
@@ -178,6 +161,7 @@ const Style = styled.div`
         padding: 0;
       }
       input {
+        min-width: 71.5%;
         padding: 0 .5rem;
         // border-color: black;
         border-color: #00000022;
@@ -185,13 +169,14 @@ const Style = styled.div`
         // background: #00000011;
         // border-radius: 1rem;
         box-shadow: none;
+        -webkit-appearance: none;
       }
     }
     .button {
       // height: 1.5rem;
       display: flex; align-items: center; justify-content: center;
-      margin-left: .5rem;
-      float: right;
+      margin-left: 1rem;
+      // float: right;
       // margin-top: .1rem;
     }
   }

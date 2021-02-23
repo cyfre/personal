@@ -3,7 +3,14 @@ import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
 
 // reference here: https://rangle.io/blog/simplifying-controlled-inputs-with-hooks/
 
-const useE = (func, ...props) => useEffect(func, props)
+const useE = (...props) => {
+    let func = props.pop()
+    useEffect(() => func(...props), props)
+}
+const useF = (...props) => {
+    let func = props.pop()
+    useEffect(() => { func(...props) }, props)
+}
 
 const useInput = (initialValue) => {
     const [value, setValue] = useState(initialValue);
@@ -20,18 +27,18 @@ const useInput = (initialValue) => {
 };
 
 const useScript = (src) => {
-    useE(() => {
+    useE(src, () => {
         let script = document.createElement('script');
         script.src = src;
         document.body.appendChild(script);
         return () => {
             document.body.removeChild(script);
         }
-    }, [src]);
+    });
 }
 
 const useTitle = (title) => {
-    useE(() => {
+    useE(title, () => {
         const prevTitle = document.title;
         document.title = title;
         return () => {
@@ -39,11 +46,11 @@ const useTitle = (title) => {
                 document.title = prevTitle;
             }
         }
-    }, [title]);
+    });
 }
 
 const useLink = (href, rel) => {
-    useE(() => {
+    useE(href, rel, () => {
         let link = document.createElement('link');
         link.href = href;
         link.rel = rel;
@@ -51,27 +58,25 @@ const useLink = (href, rel) => {
         return () => {
             document.body.removeChild(link);
         }
-    }, [href, rel]);
+    });
 }
 
 const cleanupId = (id, callback) => () => callback(id);
 
 const useTimeout = (callback, ms) =>
-    useE(() => cleanupId(setTimeout(callback, ms), id => clearTimeout(id)),
-        [callback, ms]);
+    useE(callback, ms, () => cleanupId(setTimeout(callback, ms), id => clearTimeout(id)));
 
 const useInterval = (callback, ms) =>
-    useE(() => cleanupId(setInterval(callback, ms), id => clearInterval(id)),
-        [callback, ms]);
+    useE(callback, ms, () => cleanupId(setInterval(callback, ms), id => clearInterval(id)));
 
 const useEventListener = (target, type, callback, useCapture) =>
-    useE(() => cleanupId(
+    useE(target, type, callback, useCapture, () => cleanupId(
         target.addEventListener(type, callback, useCapture),
         () => target.removeEventListener(type, callback, useCapture),
-    ), [target, type, callback, useCapture]);
+    ));
 
 const useAnimate = (animate) =>
-    useE(() => {
+    useE(animate, () => {
         let id;
         const wrappedAnimate = () => {
             id = requestAnimationFrame(wrappedAnimate);
@@ -79,7 +84,7 @@ const useAnimate = (animate) =>
         }
         wrappedAnimate();
         return () => cancelAnimationFrame(id);
-    }, [animate]);
+    });
 
 const useAuth = () => {
     const [localAuth, setLocalAuth] = useState(Object.assign({}, auth));
@@ -87,13 +92,13 @@ const useAuth = () => {
         let callback = auth => setLocalAuth(Object.assign({}, auth))
         addAuthTrigger(callback);
         return () => removeAuthTrigger(callback);
-    }, []);
+    });
 
     return localAuth;
 }
 
 export {
-    useE,
+    useE, useF,
     useInput,
     useScript,
     useTitle,

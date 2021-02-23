@@ -9,6 +9,7 @@ import { IPos, Pos, Player, ITile, Tile, Board } from './board';
 import { Info, Save } from './save';
 import { fetchInfo, fetchGame, localInfo, updateGame, rematchGame } from './data';
 import { auth, openLogin } from '../../lib/auth';
+import { useNotifyFilter } from '../../lib/notify';
 import { GameProgress } from './progress';
 import { theme, globals } from './common';
 
@@ -41,6 +42,7 @@ const TileElem = ({tile, word, handle}) => {
   }, [tile.swap]);
 
   const touchFunc = (e, func: (_: Pos) => any) => {
+    e.preventDefault();
     let touch = e.touches[0];
     let refRect = (touch.target as Element).getBoundingClientRect();
     let row = tile.row + (touch.clientY - refRect.y)/refRect.height;
@@ -79,7 +81,8 @@ const TileElem = ({tile, word, handle}) => {
     <div
       className='hover-target'
       onPointerOver={() => handle.hover(tile)}
-      onTouchMove={e => touchFunc(e, handle.hover)}></div>
+      onTouchMove={e => touchFunc(e, handle.hover)}
+      onScroll={e => e.preventDefault()}></div>
   </div>)
 }
 
@@ -110,6 +113,10 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
   useInterval(() => { handle.check() }, 3000);
   useEffect(() => { Object.assign(window, { save }) }, [save]);
   useEffect(() => { setError('') }, [word]);
+  // useNotifyFilter((app, text) => {
+  //   let match = text.match(/\/wordbase#(\w+)/)
+  //   return match && match[1] === info.id
+  // })
 
   const handle = {
     check: () => {
@@ -200,13 +207,13 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
     },
     rematch: () => {
       rematchGame(info, (newInfo, newSave) => {
-        open(newInfo.id)
+        open(newInfo.id, newInfo)
         setInfo(newInfo);
         setSave(newSave);
       });
     },
     menu: () => {
-      open(false);
+      open(false, info);
     },
     keypress: (e: React.KeyboardEvent) => {
       switch (e.key) {
@@ -242,7 +249,15 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
         <div className='preview-container'>
           {word.length
           ? <div className='preview'>{word.map(t => t.letter).join('')}</div>
-          : <div className={`last ${save.p1 ? 'p2' : 'p1'}`}>
+          : <div className={`last ${save.p1 ? 'p2' : 'p1'}`}
+              onClick={() => {
+                save.board.do(tile => {
+                  if (tile.swap) {
+                    tile.swap = Object.assign({}, tile.swap)
+                  }
+                })
+                setSave(save.clone())
+              }}>
             {save.history.length ? save.history[0].map(t => t.letter).join('') : ''}</div>
           }
         </div>
@@ -251,25 +266,21 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
           {info.turn < 0 ? '' : word.length
           ? error ? <div className='control button'>{error}</div>
           : <Fragment>
-          <div className='control button' onClick={handle.clear}>
-            cancel</div>
-          <div className='control button' onClick={handle.submit}>
-            submit</div>
-        </Fragment>
-          : info.status === Player.none
-          ? <Fragment>
+            <div className='control button' onClick={handle.clear}>
+              cancel</div>
+            <div className='control button' onClick={handle.submit}>
+              submit</div>
+          </Fragment>
+          : <Fragment>
             <div className='control button'
               onClick={handle.menu}>
               menu</div>
+            {info.status === Player.none ?'':
+            <div className='control button' onClick={handle.rematch}>
+            rematch</div>}
             <div className='control button'
               onClick={() => setOverlay(!overlay)}>
               {overlay?'close':info.turn < 2?'how to':'history'}</div>
-          </Fragment>
-          : <Fragment>
-            <div className='control button' onClick={handle.menu}>
-              menu</div>
-            <div className='control button' onClick={handle.rematch}>
-              rematch</div>
           </Fragment>}
         </div>
       </div>
@@ -281,18 +292,18 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
             <p>How to play</p>
             <ul>
             <li>Play a chain of words from your base to the other end!</li>
-            <li>Select a tile you already own to start spelling</li>
-            <li>Cut off your opponent's tiles to clear them</li>
-            <li>Bomb tiles (black) flip adjacent tiles too</li>
+            <li>{` •  select a tile you already own to start spelling`
+            + `\n •  cut off your opponent's tiles to clear them`
+            + `\n •  bomb tiles (black) flip adjacent tiles too`}</li>
             </ul>
 
-            <p>Turn order info</p>
+            <p>Turn order</p>
             <ul>
-            <li>Check progress bar at the top to see who's up!</li>
-            <li>{`Blue (right) goes first, orange (left) goes second`
-            + `\n• new invite link – challenger goes second`
-            + `\n• challenge friend – challenger goes first`
-            + `\n• rematch – winner goes second`}</li>
+            <li>Check the progress bar at the top for current turn</li>
+            <li>Blue (right) goes first, orange (left) goes second</li>
+            <li>{` •  new invite link – challenger goes second`
+            + `\n •  challenge friend – challenger goes first`
+            + `\n •  rematch – winner goes second`}</li>
             </ul>
 
             <p>Notifications</p>
@@ -314,8 +325,8 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
               <div key={i} className={`last ${(info.turn - i)%2 ? 'p2' : 'p1'}`}>
               {item.map(t => t.letter).join('')}</div>
             )}
-            <div className='hello'>
-              hi {auth.user || ', you'}  :-)</div>
+            {/* <div className='hello'>
+              hi {auth.user || ', you'}  :-)</div> */}
           </div>}
         </div>
         {!loaded || auth.user || (isLocal && save.board) ? ''
@@ -351,23 +362,34 @@ const Style = styled.div`
     height: 2rem;
   }
   .ui {
-    height: 5rem;
+    // height: 5.2rem;
     // background: white;
+    margin: .5rem 0;
   }
   .preview-container, .control-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     user-select: none;
+
     &.preview-container {
       justify-content: center;
-      margin: .4rem .4rem .3rem .4rem;
-      height: 2.15rem;
+      margin: 0 .5rem .25rem .5rem;
+      height: 2.25rem;
     }
     &.control-container {
       justify-content: center;
-      // margin: 0 25%;
-      &.spaced { justify-content: space-between; }
+      height: 1.8rem;
+      &.spaced {
+        .button:first-child {
+          position: absolute;
+          left: 0;
+        }
+        .button:last-child {
+          position: absolute;
+          right: 0;
+         }
+       }
     }
     .control {
       background: black;
@@ -391,6 +413,7 @@ const Style = styled.div`
     line-height: 2.2rem;
   }
   .last {
+    cursor: pointer;
     width: fit-content;
     &.p1 { background: ${theme.blue}; margin-left: auto; }
     &.p2 { background: ${theme.orange}; margin-right: auto; }
@@ -400,8 +423,11 @@ const Style = styled.div`
     flex-grow: 1;
     width: 100%;
     display: flex;
-    align-items: flex-end;
+    // align-items: flex-end;
+    background: #ffffff88;
+    align-items: center;
     justify-content: center;
+    overflow: hidden;
     // background: #ffffffbb;
 
     position: relative;
@@ -537,11 +563,13 @@ const Style = styled.div`
     font-weight: bolder;
     font-size: 1.4rem;
     user-select: none;
+    touch-action: none;
     background: transparent;
     z-index: 100;
     overflow: visible;
     &.bomb {
       color: white;
+      background: white;
     }
 
     position: relative;
@@ -551,18 +579,17 @@ const Style = styled.div`
       background: white;
     }
     &.bomb::after { background: black; }
+    // &.bomb.flip::after { background: white; }
     &.p1::after { background: ${theme.blue}; }
     &.p2::after { background: ${theme.orange}; }
-    &.flip {
-      &::after {
-        z-index: -99;
-        transform-style: flat;
-        animation: flip ${globals.flipMs}ms;
-        transform: translateZ(-100px);
-        @keyframes flip {
-          0% { transform: translateZ(-100px) rotateY(-180deg); }
-          100% { }
-        }
+    &.flip::after {
+      z-index: -99;
+      transform-style: flat;
+      animation: flip ${globals.flipMs}ms;
+      transform: translateZ(-100px);
+      @keyframes flip {
+        0% { transform: translateZ(-100px) rotateY(-180deg); }
+        100% { }
       }
     }
 

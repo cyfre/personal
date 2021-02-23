@@ -1,6 +1,7 @@
 const db = require('../db');
 const { entryMap, remove } = require('../util');
 const login = require('../login').model;
+const notify = require('../notify').model;
 
 const names = {
     profile: 'profile',
@@ -9,6 +10,7 @@ const names = {
         // friends: string[]
         // follows: string[]
         // followers: string[]
+        // unfollowers: string[]
 }
 const C = entryMap(names, name => () => db.collection(name));
 
@@ -54,6 +56,10 @@ async function follow(user, other) {
         }
         viewer = (await update(user, userUpdate)).profile
         profile = (await update(other, otherUpdate)).profile
+        if (!(profile.unfollowers || []).includes(user)) {
+            notify.send(other, 'profile',
+                `@${user} followed you – freshman.dev/u/${user}`)
+        }
     }
     return {
         viewer,
@@ -65,7 +71,11 @@ async function unfollow(user, other) {
     let { profile } = await get(other);
     if (viewer.follows.includes(other)) {
         let userUpdate = { follows: remove(viewer.follows, other) }
-        let otherUpdate = { followers: remove(profile.followers, user) }
+        let otherUpdate = {
+            followers: remove(profile.followers, user),
+            unfollowers: [user].concat(
+                remove(profile.unfollowers || [], user))
+        }
         let isFriend = profile.follows.includes(user);
         if (isFriend) {
             userUpdate.friends = remove(viewer.friends, other);

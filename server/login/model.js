@@ -3,6 +3,7 @@ const util = require('../util');
 const db = require('../db');
 const crypto = require('crypto');
 const uuid = require('uuid');
+const mail = require('../mail');
 
 const name = 'login';
 const genToken = () => uuid.v4();
@@ -46,7 +47,8 @@ async function signup(user, passHash) {
         pass: passHash,
         token: genToken(),
     }
-    console.log(entry);
+    console.log('[SIGNUP]', entry.user);
+    mail.send('cyrus@freshman.dev', 'user signup', `freshman.dev/u/${entry.user}`)
     await db.collection(name).insertOne(entry);
     return userAndToken(entry);
 }

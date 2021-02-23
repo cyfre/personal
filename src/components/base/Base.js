@@ -237,7 +237,7 @@ export const Base = () => {
         <Links className={"right " + (isBase ? "base" : "")}>
           <a href="https://github.com/cyfre">github</a>
           <a href="https://twitter.com/freshman_dev">twitter</a>
-          <a href="https://www.linkedin.com/in/cyfre/">linkedin</a>
+          <a href="https://www.linkedin.com/in/cfreshman/">linkedin</a>
         </Links>
         <Switch>
           <Route exact path='/' component={Home} />
