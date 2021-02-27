@@ -76,7 +76,11 @@ export default () => {
     {!notify ? '' : !auth.user ? 'log in to manage notifications' : <Fragment>
       <div><div className='label'>user</div>{auth.user}</div>
       <div className='email'><div className='label inline'>email</div>
-        <span className='lil-badge'>{notify.verify ? `unverified – check email for link` : 'verified'}</span>
+        {!notify.email ? ''
+        : <span className='lil-badge'>{
+          notify.verify
+          ? `unverified – check email for link`
+          : 'verified'}</span>}
         <div className='text'>{emailEdit
           ? <input ref={emailRef} type='email' placeholder=''
           autoCorrect='off' autoCapitalize='off'

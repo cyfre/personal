@@ -78,11 +78,11 @@ const useEventListener = (target, type, callback, useCapture) =>
 const useAnimate = (animate) =>
     useE(animate, () => {
         let id;
-        const wrappedAnimate = () => {
+        const wrappedAnimate = (timestamp) => {
             id = requestAnimationFrame(wrappedAnimate);
-            animate();
+            animate(timestamp);
         }
-        wrappedAnimate();
+        wrappedAnimate(performance.now());
         return () => cancelAnimationFrame(id);
     });
 

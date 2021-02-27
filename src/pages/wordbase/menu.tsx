@@ -59,7 +59,7 @@ const GameItem = ({info, open, reload, edit}) => {
 
         <div className='info dark'>
           <span ref={inviteRef}>
-            {copied ? 'copied!' : `invite  /wordbase#${info.id}`}
+            {copied ? 'copied!' : `invite  #${info.id}`}
           </span>
         </div>
       </div>}
@@ -170,6 +170,8 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
     friend: user => handle.invite(`/wordbase/i/friend/${user}`)
       .then(data => open(data.info.id)),
     random: () => {
+      setNew(false)
+      setFriend(false)
       api.post('/wordbase/i/accept')
         .then(({info}) => open(info.id))
         .catch(() => handle.open())
@@ -405,7 +407,7 @@ const Style = styled.div`
         margin-right: .5rem;
         &:last-child { margin-right: 0; }
       }
-      transition: .5s;
+      transition: .4s;
       overflow: hidden;
       &.closed { max-width: 0; padding: 0; }
       &.open { max-width: 100%; }

@@ -114,9 +114,9 @@ async function send(user, app, text) {
     console.log('SEND', user, app, text)
     // will notify if not read & cleared within 10s
     console.log(notify.email, !notify.verify,
-        notify.apps.concat(alwaysAllowed).includes(app))
+        !notify.unsub.includes(app))
     if (notify.email && !notify.verify &&
-        notify.apps.concat(alwaysAllowed).includes(app)) {
+        !notify.unsub.includes(app)) {
 
         setTimeout(async () => {
             let { notify } = await get(user)

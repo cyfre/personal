@@ -23,6 +23,7 @@ const _projects = {
     home: 'landing page',
     about: 'bio and contact',
     projects: 'highlighted project list',
+    pulse: 'a stream of colorful points follow your cursor',
 }
 'cloud'.split(' ').forEach(p => {
     if (!_projects[p]) _projects[p] = '' });
@@ -79,6 +80,9 @@ export default () => {
     }
     let [results, setResults] = useState(calcResults(term));
 
+    useEffect(() => {
+        (searchRef.current as HTMLInputElement).focus();
+    }, []);
     useEffect(() => {
         setResults(calcResults(term));
         window.history.replaceState(null, '/search',

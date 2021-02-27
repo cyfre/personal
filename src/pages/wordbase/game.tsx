@@ -438,6 +438,7 @@ const Style = styled.div`
       z-index: 999;
       background: #fffffff0;
       color: black;
+      user-select: none;
       padding: 0;
       overflow: scroll;
       > div {
