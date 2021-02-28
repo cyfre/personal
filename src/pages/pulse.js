@@ -12,21 +12,18 @@ var WIDTH = SCALE,
   frustumSize = SCALE;
 var camera, scene, renderer;
 
-var points;
-var mesh;
-
 class Dot {
   constructor(pos, hue, scale) {
     let r = (n) => Math.random() * n - (n/2)
-    this.pos = [pos[0] + r(5), pos[1] + r(5)]
+    this.pos = [pos[0] + r(10), pos[1] + r(10)]
     this.hue = hue + r(.1)
     this.l = .5
-    this.scale = scale + r(.1)
+    this.scale = scale + r(.1) + .05
 
     // console.log(pos, hue, scale)
 
     this.mesh = new THREE.Mesh(
-      new THREE.CircleGeometry(5 * this.scale, 32)
+      new THREE.CircleGeometry(5 * this.scale, 16)
         .translate(...this.pos, 0),
       new THREE.MeshBasicMaterial({
         color: `white`
@@ -36,23 +33,28 @@ class Dot {
     scene.add(this.mesh)
   }
   update() {
-    this.scale += .02
-    this.hue = (this.hue + .001) % 1
-    this.l += .003
+    this.scale += .015
+    // this.scale += .2
+    // this.scale *= 1.05;
+    // this.l = this.l + .5*(1 - 1/Math.max(1, this.scale))/100;
+    // if (this.scale < 1.01) {
+    //   this.scale += .015
+    // } else {
+    //   this.scale *= 1.05;
+    // }
+    this.hue = (this.hue + .005) % 1
+    this.l += .002
     this.mesh.geometry.dispose()
-    this.mesh.geometry = new THREE.CircleGeometry(5 * this.scale, 32)
+    this.mesh.geometry = new THREE.CircleGeometry(5 * this.scale, 16)
       .translate(...this.pos, 0)
     this.mesh.material.color.setHSL(this.hue, (.9 + .2*this.l), this.l)
-    // this.mesh.material.dispose()
-    // console.log(this.hue, this.mesh.material.color)
-    // this.mesh.material = new THREE.MeshBasicMaterial({
-    //   color: `hsl(${this.hue}, 90%, 50%)`
-    // })
 
     return this.scale < .1 || this.l > 1;
   }
   clear() {
     scene.remove(this.mesh)
+    this.mesh.geometry.dispose()
+    this.mesh.material.dispose()
   }
 }
 
@@ -70,12 +72,6 @@ function init() {
   camera.position.z = 500
   scene = new THREE.Scene();
 
-  // points = [];
-  // mesh = new THREE.Mesh(
-  //   new THREE.CircleGeometry( 5, 32 ),
-  //   new THREE.MeshBasicMaterial( { color: 0xffff00 } ))
-  // scene.add(mesh);
-
   onWindowResize();
 
   return () => {
@@ -84,8 +80,6 @@ function init() {
     camera = null;
     scene = null;
     renderer = null;
-    points = null;
-    mesh = null;
   }
 }
 
@@ -128,19 +122,8 @@ function animate(timestamp) {
   }
   if (p[0] !== undefined && doDot) {
     dots.push(new Dot(p.slice(), (Date.now() / 10000)%1, .1))
-    // if (dots.length > 10) {
-    //   let toRemove = dots.shift()
-    //   toRemove.clear()
-    // }
     dot_timer = 1500
-    // console.log(dots)
   }
-
-  // mesh?.geometry?.dispose();
-  // points.forEach(p => p.update())
-  // let g2 = new THREE.CircleGeometry( 5, 32 )
-  // g2.translate(p[0], p[1], 0);
-  // mesh.geometry = g2;
 
   renderer.render(scene, camera);
 }

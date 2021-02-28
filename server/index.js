@@ -3,10 +3,12 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const db = require('./db');
 
-const login = require('./login');
-
 const app = express();
 const port = 5000;
+const server = require('http').createServer(app)
+const io = require('socket.io')(server, {})
+
+const login = require('./login');
 
 // parse JSON requests
 app.use(bodyParser.json({
@@ -42,6 +44,25 @@ app.use('/api/cityhall', require('./cityhall').routes);
 app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
 
+let n = 0
+io.on('connection', socket => {
+    console.log('client connect');
+    n += 1
+    socket.on('echo', function (data) {
+        io.emit('message', data);
+    });
+    io.emit('online', n)
+    socket.on('disconnect', () => {
+        console.log('client disconnect')
+        n -= 1
+        io.emit('online', n)
+    });
+});
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));
 app.get('/*', function (req, res) {
@@ -49,7 +70,11 @@ app.get('/*', function (req, res) {
 });
 
 // start server
-db.connect('mongodb://localhost/site', (err) =>
-    err
-        ? console.log(err)
-        : app.listen(port, () => console.log(`App started on port ${port}`)));
+db.connect('mongodb://localhost/site', (err) => {
+    if (err) {
+        console.log(err)
+    } else {
+        server.listen(port, () => `App started on port ${port}`)
+        // let appServer = app.listen(port, () => console.log(`App started on port ${port}`));
+    }
+})

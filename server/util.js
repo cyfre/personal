@@ -46,7 +46,7 @@ function jsonRes(func) {
         })
         .catch(error => {
             console.log(error);
-            res.json({ error })
+            res.json({ error: error.message })
         });
 }
 

@@ -23,7 +23,8 @@ const _projects = {
     home: 'landing page',
     about: 'bio and contact',
     projects: 'highlighted project list',
-    pulse: 'a stream of colorful points follow your cursor',
+    pulse: 'colorful points follow your cursor',
+    ly: 'link shortener & aggregator',
 }
 'cloud'.split(' ').forEach(p => {
     if (!_projects[p]) _projects[p] = '' });

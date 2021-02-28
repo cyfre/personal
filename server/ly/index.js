@@ -1,24 +1,17 @@
 const express = require('express');
-const model = require('./model');
+const M = require('./model');
+const { J, U } = require('../util.js');
 
-const routes = express.Router();
-routes.get('/:id', (req, res) => {
-    model.get(req.params.id)
-        .then(data => res.json(data))
-        .catch(error => res.json({ error }));
-});
-routes.post('/', (req, res) => {
-    model.create(req.body)
-        .then(data => res.json(data))
-        .catch(error => res.json({ error }));
-});
-routes.put('/:id', (req, res) => {
-    model.update(req.params.id, req.body)
-        .then(data => res.json(data))
-        .catch(error => res.json({ error }));
-});
+const R = express.Router();
+R.get('/', J(rq => M.getUser( U(rq) )));
+R.get('/:hash', J(rq => M.get( U(rq), rq.params.hash)));
+R.delete('/:hash', J(rq => M.remove( U(rq), rq.params.hash)));
+
+R.put('/', J(rq => M.create( U(rq), rq.body)));
+R.post('/:hash', J(rq =>
+    M.update( U(rq), rq.params.hash, rq.body)));
 
 module.exports = {
-    routes,
-    model
+    routes: R,
+    model: M,
 }
