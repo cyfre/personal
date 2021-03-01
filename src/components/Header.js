@@ -45,7 +45,7 @@ const User = () => {
     },
     nav: path => {
       setDropdown(false);
-      history.push(path);
+      path && history.push(path);
     },
     reset: () => {
       setError('check email for link')
@@ -63,10 +63,9 @@ const User = () => {
 
   const loggedIn = (
     <div className='dropdown'>
-      <div className='item' onClick={() => handle.nav(`/u/${auth.user}`)}>profile</div>
-      <div className='item' onClick={() => handle.nav('/search')}>search</div>
-      <div className='item' onClick={() => handle.nav('/notify')}>notify</div>
-      {/* <div className='item'>friends</div> */}
+      <Link to={`/u/${auth.user}`} className='item' onClick={handle.nav}>profile</Link>
+      <Link to='/search' className='item' onClick={handle.nav}>search</Link>
+      <Link to='/notify' className='item' onClick={handle.nav}>notify</Link>
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>
   )
@@ -138,7 +137,7 @@ export const Header = () => {
 
   return (
     <Style id="header">
-      <div>
+      <div className='nav'>
         <Link to="/projects">
           <img className="profile" src="/profile.jpeg" alt="profile"/>
         </Link>
@@ -177,17 +176,19 @@ const Style = styled.div`
     justify-content: flex-start;
   }
 
-  .profile {
-    height: 2rem;
-    border-radius: 50%;
-    // border: 1px solid var(--light);
-    box-shadow: 1px 2px 4px #00000020;
-  }
-  a, a:hover {
-    color: var(--light);
-    text-shadow: 1px 2px 4px #00000020;
-    // padding-left: .25rem;
-    &:first-child { padding: 0 .25rem; }
+  .nav {
+    .profile {
+      height: 2rem;
+      border-radius: 50%;
+      // border: 1px solid var(--light);
+      box-shadow: 1px 2px 4px #00000020;
+    }
+    a, a:hover {
+      color: var(--light);
+      text-shadow: 1px 2px 4px #00000020;
+      // padding-left: .25rem;
+      &:first-child { padding: 0 .25rem; }
+    }
   }
 
   // & .wiki-link, & .raw-link {
@@ -239,6 +240,8 @@ const Style = styled.div`
 
       .item {
         padding: .15rem 0;
+        display: block;
+        color: white;
         input {
           border-color: black;
         }

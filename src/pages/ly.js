@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, Fragment } from 'react';
+import React, { useState, useRef, Fragment } from 'react';
 import api from '../lib/api';
-import { useRouteMatch, useHistory, useLocation } from 'react-router-dom';
+import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { useE, useF, useInput, useEventListener, useAnimate, useAuth } from '../lib/hooks';
-import { auth } from '../lib/auth';
+import { useE, useF, useAuth } from '../lib/hooks';
+import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine } from '../components/Info'
 
 
 const alphanum = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM';
@@ -24,22 +24,23 @@ export default () => {
   let isView = history.location.hash === '#view'
   let match = useRouteMatch('/ly/:hash')
   let [error, setError] = useState('')
+  let [hash, setHash] = useState(match?.params.hash || '')
   let [ly, setLy] = useState({
-    hash: match?.params.hash || '',
+    hash,
     links: []
   })
   let [lys, setLys] = useState(undefined)
   let [edit, setEdit] = useState(false);
 
-  useE(auth.user, () => {
+  useF(auth.user, () => {
     ly.hash && handle.load();
     handle.loadAll();
   })
-  useE(ly, () => {
-    window.history.replaceState(null, '/ly',
-      (ly.hash ? `/ly/${ly.hash}` : '/ly')
-      + (isView ? '#view' : ''))
+  useF(ly, () => {
+    let newEnd = `/ly${ly.hash || ''}${isView ? '#view' : ''}`
+    window.history.replaceState(null, '/ly', newEnd)
   })
+  useF(edit, () => edit && setHash(ly.hash))
   const handle = {
     setLy,
     setEdit,
@@ -60,8 +61,6 @@ export default () => {
         setError('')
         if (data.ly) {
           if (data.ly.links.length === 1 && !isView) {
-            // window.history.replaceState(null, '',
-            //   'https://' + data.ly.links[0].replace('https://', ''))
             history.replace(`/ly/${ly.hash}#view`)
             window.location.replace(
               'https://' + data.ly.links[0].replace('https://', ''))
@@ -69,7 +68,7 @@ export default () => {
             setLy(data.ly);
           }
         } else {
-          // setError(`${ly.hash} does not exist`)
+          // setError(`/ly/${ly.hash} does not exist`)
           setEdit(true)
         }
       }).catch(e => setError(e.error))
@@ -97,7 +96,7 @@ export default () => {
       setEdit(true)
       setLy({
         hash: randAlphanum(7),
-        links: []
+        links: [],
       })
     },
     delete: () => {
@@ -105,12 +104,20 @@ export default () => {
         handle.setLy({ hash: '' })
         handle.loadAll()
       })
+    },
+    cancel: () => {
+      setEdit(false)
+      setLy({
+        hash,
+        links: [],
+      })
+      setTimeout(() => handle.load())
     }
   };
 
   return (
     <Style>
-      <div className='body'>
+      <InfoBody>
         {!error ? ''
         : <div className='error' style={{color: 'red', minHeight: '0'}}>{error}</div>}
         {edit
@@ -118,40 +125,32 @@ export default () => {
           : ly.hash
           ? <LinkView handle={handle} ly={ly} />
           : <LinkMenu handle={handle} lys={lys} />}
-      </div>
+      </InfoBody>
     </Style>
   );
 }
 
 const LinkMenu = ({handle, lys}) => {
   let auth = useAuth()
-  let history = useHistory()
 
   return auth.user && lys
   ? <Fragment>
-    <div><div className='label inline'>your links</div>
-      {/* <div className='label inline'>{auth.user}'s /ly</div> */}
-      <div className='button button-badge'
-        onPointerDown={e => handle.new()}>
-        new</div><br/>
+    <InfoSection labels={['your links', { text: 'new', func: handle.new }]} >
       {lys.length
-      ? lys.map((l, i) => <Fragment>
-        <div className='entry inline' key={i} onClick={() => {
-          // handle.setLy(l)
-          history.push(`/ly/${l.hash}#view`)
-          // history.push(`/ly/edit/${l.hash}`)
-        }}>cyfr.dev/ly/{l.hash}</div>
-        <div className='lil-badge inline'>
-          {l.links[0] + (l.links.length === 1 ? '' : ` + ${l.links.length - 1}`)}</div>
-        <br/>
-      </Fragment>)
+      ? lys.map((l, i) =>
+        <InfoLine key={i} labels={[
+            l.links[0] + (l.links.length === 1 ? '' : ` + ${l.links.length - 1}`)
+          ]}>
+          <Link className='entry link' to={`/ly/${l.hash}#view`}>
+            {window.location.host}/ly/{l.hash}
+          </Link>
+        </InfoLine>)
       : <div>no links</div>}
-    </div>
+    </InfoSection>
   </Fragment>
-  : <div><div className='label'>your links</div>
-    {/* <div className='label'>{auth.user || 'user'}'s /ly</div> */}
-  {lys ? 'sign in to create & edit links' : ''}
-  </div>
+  : <InfoSection label='your links'>
+    {lys ? 'sign in to create & edit links' : ''}
+  </InfoSection>
 }
 
 const LinkEdit = ({handle, ly}) => {
@@ -163,22 +162,22 @@ const LinkEdit = ({handle, ly}) => {
     linksInput.current.value = ly.links.join('\n');
   });
   return <Fragment>
-    <div className='edit'>
-      <div className='label inline'>link</div>
-      <div className='button button-badge'
-        onPointerDown={e => handle.save(ly)}>
-        save</div><br/>
+    <InfoSection className='edit-container' labels={[
+      'link',
+      { text: 'cancel', func: () => handle.cancel() },
+      { text: 'save', func: () => handle.save(ly) }
+    ]} >
       <input ref={hashInput}
           className='input' type='text' spellCheck='false'
           onKeyDown={e => setTimeout(() =>
             handle.setLy({...ly, hash: hashInput.current.value}), 0)} />
-    </div>
+    </InfoSection>
 
-    <div><div className='label'>author</div>
-    {ly.user || auth.user}
-    </div>
+    <InfoSection label='author'>
+      {ly.user || auth.user}
+    </InfoSection>
 
-    <div className='edit'><div className='label inline'>links</div>
+    <InfoSection className='edit-container' label='links'>
       <textarea ref={linksInput}
         className='input' spellCheck='false'
         rows={Math.max(5, ly.links.length + 1)}
@@ -189,7 +188,7 @@ const LinkEdit = ({handle, ly}) => {
             .map(l => l.trim())
           handle.setLy({ ...ly, links: newLinks})
         }, 0)} />
-    </div>
+    </InfoSection>
   </Fragment>
 }
 
@@ -198,120 +197,37 @@ const LinkView = ({handle, ly}) => {
   let history = useHistory()
   let [copied, setCopied] = useState(false)
   let [confirm, setConfirm] = useState(false)
+
+  let isUser = auth.user === ly.user;
   return <Fragment>
-    <div>
-      {auth.user !== ly.user
-      ? <div className='label'>link</div>
-      : <Fragment>
-        <div className='label inline'>link</div>
-        <div className='button button-badge'
-            onPointerDown={e => handle.setEdit(true)}>
-          edit</div>
-        {confirm
-        ? <Fragment>
-          <div className='button button-badge'
-              onPointerDown={() => setConfirm(false)}>
-            cancel</div>
-          <div className='button button-badge'
-              onPointerDown={handle.delete}>
-            really delete</div>
-        </Fragment>
-        : <div className='button button-badge'
-              onPointerDown={() => setConfirm(true)}>
-            delete</div>}
-        <br/>
-      </Fragment>}
-      <div className={copied ? '' : 'entry'} onClick={() => {
+    <InfoSection labels={[
+      'link',
+      isUser ? { text: 'edit', func: () => handle.setEdit(true) } : '',
+      (isUser && !confirm) ? { text: 'delete', func: () => setConfirm(true) } : '',
+      (isUser && confirm) ? { text: 'cancel', func: () => setConfirm(false) } : '',
+      (isUser && confirm) ? { text: 'really delete', func: handle.delete } : '',
+    ]}>
+      <div className={copied ? '' : 'entry link'} onClick={() => {
         navigator.clipboard.writeText(`${window.location.origin}/ly/${ly.hash}`);
         setCopied(true)
         setTimeout(() => setCopied(false), 3000)
         }}>
-        {copied ? 'copied!' : `cyfr.dev/ly/${ly.hash}`}</div>
-    </div>
+        {copied ? 'copied!' : `${window.location.host}/ly/${ly.hash}`}</div>
+    </InfoSection>
 
-    <div><div className='label'>author</div>
-    <div className='entry' onClick={() => {
-      history.push(`/u/${ly.user}`)
-    }}>{ly.user}</div>
-    </div>
+    <InfoUser labels={['author']} user={ly.user || auth.user} />
 
-    <div className='edit'><div className='label inline'>links</div>
-    {ly.links.map((link, i) =>
+    <InfoSection label='links'>
+      {ly.links.map((link, i) =>
       <div className='entry' key={i}>
         <a href={'https://' + link.replace('https://', '')}>
           {link}
         </a>
       </div>)}
-    </div>
+    </InfoSection>
   </Fragment>
 }
 
 
-const Style = styled.div`
-height: 100%; width: 100%;
-background: white;
-color: black;
-.body {
-  padding: 1rem;
-  .label, .lil-badge, .button-badge {
-    display: block;
-    &.inline { display: inline-block; }
-    width: fit-content;
-    font-size: .8rem;
-    padding: 0 .3rem;
-    border-radius: .3rem;
-  }
-  .label, .lil-badge {
-    opacity: .5;
-    background: #00000022;
-  }
-  .lil-badge {
-    margin-left: .5rem;
-  }
-  > * {
-    margin-bottom: .5rem;
-    min-height: 3rem;
-  }
-
-  .entry {
-    cursor: pointer;
-    user-select: all;
-    :hover { text-decoration: underline; }
-    a { color: black; }
-    &.inline { display: inline-block; }
-  }
-
-  .button {
-    display: inline-block;
-    margin-left: .5rem;
-    // float: right;
-  }
-}
-.button {
-  cursor: pointer; user-select: none;
-  display: inline-block;
-  width: fit-content;
-  font-size: .8rem;
-  border: 2px solid black;
-  padding: 0 .3rem;
-  border-radius: .3rem;
-}
-.edit {
-  width: 66%;
-  input {
-    height: 2.0rem;
-    line-height: 1rem;
-  }
-  input, textarea {
-    width: 100%;
-    color: black;
-    border: 2px solid transparent;
-    padding: 0 .5rem;
-    border-color: #00000022;
-    border-radius: .2rem;
-    box-shadow: none;
-    margin: .5rem 0;
-    -webkit-appearance: none;
-  }
-}
+const Style = styled(InfoStyles)`
 `

@@ -1,57 +1,27 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-
-const DomainEntry = ({domain}) => {
-    console.log(domain, window.location.origin, window.location.origin === domain);
-    return (<div className='entry'><a href={`https://${domain}/domains`}>
-        {domain}
-    </a>{window.location.origin.includes(domain) ? <div className='lil-badge'>here now!</div> : ''}</div>)
-}
-const DomainList = ({domains}) => <Fragment>
-    {domains ? domains.map(d => <DomainEntry domain={d} key={d} />) : ''}
-</Fragment>
+import { InfoStyles, InfoBody, InfoOutLinks } from '../components/Info'
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
-    return <Style>
-        <div className='domains'>
-            <DomainList domains={[
-                'freshman.dev',
-                'cyfr.dev',
-                'cyfre.dev',
-                'cyrusfreshman.com',
-                'cfreshman.io',
-                '00010110.page',
-            ]}/>
-        </div>
-    </Style>
+    let domains = [
+        'freshman.dev',
+        'localhost:3000',
+        'cyfr.dev',
+        'cyfre.dev',
+        'cyrusfreshman.com',
+        'cfreshman.io',
+        '00010110.page',
+    ]
+    return <InfoStyles>
+        <InfoBody>
+            <InfoOutLinks {...{
+                labels: ['why do I have so many domains?'],
+                entries: domains.map(d => ({ text: d, data: `https://${d}/domains` })),
+                entryLabels: domains.map(d => window.location.origin.includes(d)
+                    ? ['here now!']
+                    : []),
+            }} />
+        </InfoBody>
+    </InfoStyles>
 }
-
-const Style = styled.div`
-    height: 100%; width: 100%;
-    background: white;
-    color: black;
-        padding: 1rem;
-        > *::before { display: block; }
-        .lil-badge { display: inline-block; margin-left: .5rem; }
-        > *::before, .lil-badge {
-            width: fit-content;
-            font-size: .8rem;
-            opacity: .5;
-            background: #00000022;
-            padding: 0 .3rem;
-            border-radius: .3rem;
-        }
-        > * {
-            margin-bottom: .5rem;
-            min-height: 3rem;
-        }
-        .current::before { content: "current" }
-        .domains::before { content: "why do I have so many domains ?" }
-
-        .entry {
-            cursor: pointer;
-            :hover { text-decoration: underline; }
-            a { color: black; }
-        }
-`

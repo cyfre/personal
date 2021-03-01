@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { embedded, EmbeddedRoute, Page, Missing  } from './Contents';
 
+
 const Style = styled.div`
     width: 100%;
     background: none;
@@ -30,6 +31,7 @@ const Style = styled.div`
 const redirects = [
     ['/projects', ''],
     ['/project', '/raw'],
+    ['/profile', '/u'],
 ].map(pair => (
     <Route path={pair[0]} key={pair.join()} render={routeProps =>
         <Redirect to={

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import styled from 'styled-components';
-import { Link, useRouteMatch, useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
+import { InfoStyles, InfoBody, InfoSection, InfoAutoSearch } from '../components/Info'
+import { useF } from '../lib/hooks'
 
 const _projects = {
     search: 'search through all pages',
@@ -81,14 +83,12 @@ export default () => {
     }
     let [results, setResults] = useState(calcResults(term));
 
-    useEffect(() => {
-        (searchRef.current as HTMLInputElement).focus();
-    }, []);
-    useEffect(() => {
+    useF(() => (searchRef.current as HTMLInputElement).focus());
+    useF(term, () => {
         setResults(calcResults(term));
         window.history.replaceState(null, '/search',
             term ? `/search/#${term}` : '/search')
-    }, [term])
+    })
     const handle = {
         search: () => {
             let current = searchRef.current;
@@ -104,83 +104,31 @@ export default () => {
     }
 
     return <Style>
-        <div className='search'>
-            <input ref={searchRef} type='text' placeholder='find a page'
-                autoCorrect='off' autoCapitalize='off'
-                value={term} onChange={handle.search}
-                onKeyDown={e => e.key === 'Enter' && handle.go()}/>
-            <span className='submit' onClick={handle.go}>[ <span>go</span> ]</span>
-        </div>
-        <div className='body'>
-            <div className='results'>
+        <InfoAutoSearch {...{
+            searchRef,
+            term,
+            placeholder: 'find a page',
+            search: handle.search,
+            go: handle.go,
+        }}/>
+        <InfoBody>
+            <InfoSection label='results'>
                 <SearchList term={term} results={results} />
-            </div>
-        </div>
+            </InfoSection>
+        </InfoBody>
     </Style>
 }
 
-const Style = styled.div`
-    height: 100%; width: 100%;
-    background: white;
-    color: black;
-    display: flex; flex-direction: column;
-    .search {
-        padding: .3rem .3rem;
-        // padding-top: .1rem;
-        background: black;
-        // background: #a2ddff;
-        display: flex;
-        input {
-            width: 8rem;
-            background: white;
-            border: white;
-            color: black;
-            padding: 0 .3rem;
-            border-radius: .3rem;
-            min-width: 42%;
-            font-size: .8rem;
-        }
-        .submit {
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            color: white;
-            // border: 2px solid white;
-            padding: 0 .3rem;
-            border-radius: .3rem;
-            margin-left: .3rem;
-            white-space: pre;
-            font-size: .9rem;
-            &:hover span { text-decoration: underline; }
-        }
-    }
+const Style = styled(InfoStyles)`
     .body {
-        flex-grow: 1;
-        overflow-y: scroll;
-
-        padding: 1rem;
-        > *::before { display: block; margin-bottom: .25rem }
-        .lil-badge { display: inline-block; }
-        > *::before, .lil-badge {
-            width: fit-content;
-            font-size: .8rem;
-            opacity: .5;
-            background: #00000022;
-            padding: 0 .3rem;
-            border-radius: .3rem;
-        }
-        > * {
-            margin-bottom: .5rem;
-            min-height: 3rem;
-        }
-        .results::before { content: "results" }
-
         .entry {
             cursor: pointer;
             display: flex;
             align-items: center;
             flex-wrap: wrap;
             .title { margin-right: 1rem; color: black; }
-            &:hover .title { text-decoration: underline; }
+            // &:hover .title { text-decoration: underline; }
+            .title:hover { text-decoration: underline; }
         }
         .highlight { background: yellow; }
         .desc {

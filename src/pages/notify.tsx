@@ -1,9 +1,11 @@
 import React, { useState, useRef, Fragment } from 'react';
 import styled from 'styled-components';
-import { Link, useRouteMatch, useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import api from '../lib/api'
-import { useE, useF, useAuth } from '../lib/hooks'
+import { useF, useAuth } from '../lib/hooks'
 import { sub, unsub } from '../lib/notify'
+import { InfoStyles, InfoBody, InfoSection } from '../components/Info'
+
 
 const notifyProjects = 'wordbase'.split(' ')
 
@@ -72,15 +74,15 @@ export default () => {
   }
 
   return <Style>
-    <div className='body'>
+    <InfoBody>
     {!notify ? '' : !auth.user ? 'log in to manage notifications' : <Fragment>
-      <div><div className='label'>user</div>{auth.user}</div>
-      <div className='email'><div className='label inline'>email</div>
-        {!notify.email ? ''
-        : <span className='lil-badge'>{
-          notify.verify
-          ? `unverified – check email for link`
-          : 'verified'}</span>}
+      <InfoSection label='user'>{auth.user}</InfoSection>
+      <InfoSection className='email' labels={[
+        'email',
+        !notify.email ? '' : notify.verify
+        ? `unverified – check email for link`
+        : 'verified'
+      ]}>
         <div className='text'>{emailEdit
           ? <input ref={emailRef} type='email' placeholder=''
           autoCorrect='off' autoCapitalize='off'
@@ -90,60 +92,26 @@ export default () => {
             onClick={handle.email}>
             {emailEdit ? 'save' : 'edit'}</div>
         </div>
-      </div>
-      <div><div className='label'>notifications</div>
+      </InfoSection>
+      <InfoSection label='notifications'>
         {notifyProjects.map(page => {
           let enabled = !(notify.unsub || []).includes(page)
           return <NotifyEntry key={page} page={page}
             enabled={enabled} toggle={() =>
               handle.sub(page, !enabled)}/>})}
-      </div>
-    </Fragment>}</div>
+      </InfoSection>
+    </Fragment>}
+    </InfoBody>
   </Style>
 }
 
-const Style = styled.div`
-  height: 100%; width: 100%;
-  background: white;
-  color: black;
-  .button {
-    cursor: pointer; user-select: none;
-    display: inline-block;
-    width: fit-content;
-    font-size: .8rem;
-    border: 2px solid black;
-    padding: 0 .3rem;
-    border-radius: .3rem;
-    &.follow {
-      margin: 0 .5rem;
-    }
-  }
+const Style = styled(InfoStyles)`
   .body {
-    padding: 1rem;
-    .label { display: block; }
-    .label.inline, .lil-badge { display: inline-block; }
-    .label, .lil-badge {
-      width: fit-content;
-      font-size: .8rem;
-      opacity: .5;
-      background: #00000022;
-      padding: 0 .3rem;
-      border-radius: .3rem;
-    }
-    .lil-badge {
-      margin-left: .5rem;
-    }
-    > * {
-      margin-bottom: .5rem;
-      min-height: 3rem;
-    }
-
     .entry {
-      cursor: pointer;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      .title { margin-right: 1rem; color: black; }
+      .title { margin-right: .5rem; color: black; }
       .title:hover { text-decoration: underline; }
     }
   }
@@ -165,7 +133,8 @@ const Style = styled.div`
         padding: 0;
       }
       input {
-        min-width: 71.5%;
+        // min-width: 71.5%;
+        min-width: 17.6rem;
         padding: 0 .5rem;
         // border-color: black;
         border-color: #00000022;
@@ -177,11 +146,8 @@ const Style = styled.div`
       }
     }
     .button {
-      // height: 1.5rem;
       display: flex; align-items: center; justify-content: center;
       margin-left: 1rem;
-      // float: right;
-      // margin-top: .1rem;
     }
   }
 `
