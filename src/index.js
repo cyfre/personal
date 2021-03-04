@@ -1,15 +1,18 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom'
 import styled from 'styled-components'
 import * as serviceWorker from './serviceWorker'
 import { useNotify } from './lib/notify'
+import { io } from "socket.io-client"
 import './index.css'
 
 import { Base } from './components/base/Base'
 
 import { Header } from './components/Header'
 import { Main } from './components/Main'
+import { useE } from './lib/hooks'
+import { useIo } from './lib/io'
 
 const Style = styled.div`
   // background: #13112522
@@ -55,10 +58,15 @@ const Notify = () => {
   useNotify(useHistory());
   return <Fragment></Fragment>
 }
+const Io = () => {
+  useIo()
+  return <Fragment></Fragment>
+}
 
 const App = () => (
   <Router>
     <Notify />
+    <Io />
     <Switch>
       <Route exact path='/(|projects|about|contact)' component={Base} />
       <Route path='*'>

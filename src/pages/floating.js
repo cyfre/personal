@@ -70,7 +70,6 @@ function init() {
             ...[3*t, 3*t + 1, 3*t + 2].map(e => delaunay.triangles[e]),
             null, new THREE.Color(Math.random(), Math.random(), Math.random())))
     }
-    console.log(...points.map(p => p.position), delaunay.triangles, faces);
     geometry.faces.push(...faces);
 
     mesh = new THREE.Mesh(

@@ -27,9 +27,18 @@ async function auth(req) {
     }
     return false;
 }
+async function authIo(data) {
+    let { user, token } = data
+    if (user && token) {
+        let result = await model.check(user, token);
+        if (result.ok) return user;
+    }
+    return false;
+}
 
 module.exports = {
     routes,
     model,
     auth,
+    authIo,
 }

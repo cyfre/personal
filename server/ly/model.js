@@ -18,6 +18,8 @@ async function _get(hash) {
     return ly
 }
 async function _update(user, hash, props) {
+    if (user !== 'cyrus')
+        throw new Error(`you aren't cyrus, sorry :/`)
     if (props.hash && hash !== props.hash)
         throw new Error(`${props.hash} can't update /ly/${hash}`)
     let ly = (await _get(hash)) || { user, hash }
@@ -35,7 +37,6 @@ async function getUser(user) {
 }
 async function get(user, hash) {
     let ly = await _get(hash)
-    console.log(ly)
     // if (ly && !ly.isPublic && ly.user !== user)
     //     throw new Error(`/ly/${hash} is private`)
     return { ly }

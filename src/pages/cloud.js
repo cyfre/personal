@@ -50,8 +50,8 @@ function onWindowResize() {
 }
 
 function animate() {
-    mesh.rotation.x += 0.005;
-    mesh.rotation.y += 0.01;
+    mesh.rotation.x += 0.0055;
+    mesh.rotation.y += 0.011;
 
     composer.render();
 }

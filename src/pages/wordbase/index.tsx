@@ -2,50 +2,57 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import { WordbaseMenu } from './menu';
-import { Wordbase } from './game';
+import { WordbaseGame } from './game';
 import api from '../../lib/api';
-import { useAuth } from '../../lib/hooks';
+import { useAuth, useF } from '../../lib/hooks';
+import { useNotifyFilter } from '../../lib/notify'
 import { Info, Save } from './save';
 import { fetchGame } from './data';
 import './fonts.css';
 
-let lastId;
 export default () => {
     const auth = useAuth();
-    const [infoList, setList]: [Info[], any] = useState([])
-    const [closed, setClosed] = useState(true)
+    const [infoList, setList]: [Info[], any] = useState(undefined)
+    const [gameClosed, setGameClosed] = useState(true)
     const [info, setInfo] = useState(undefined)
     const [save, setSave] = useState(undefined)
+    const [reload, setReload] = useState(undefined)
 
-    useEffect(() => {
+    const open = (id: string | false) => {
+        window.history.replaceState(null, '/wordbase', '/wordbase' + (id ? `#${id}` : ''))
+        if (id) {
+            fetchGame(id).then(({info, save}) => {
+                if (save) {
+                    setSave(save)
+                    setInfo(info)
+                    setGameClosed(false)
+                }
+            }).catch(console.log)
+        } else setGameClosed(true)
+    }
+
+    useF(() => {
         auth.user && api.post('profile/checkin/wordbase')
-        _open(window.location.hash.slice(1))
-    }, []);
+        open(window.location.hash.slice(1))
+    });
 
-    const open = (id, update?) => {
-        window.history.replaceState(null, 'Wordbase', '/wordbase' + (id ? `#${id}` : ''))
-        if (update) {
-            let toUpdate = infoList.find(info => info.id === update.id)
-            if (toUpdate) Object.assign(toUpdate, update)
-        }
-        _open(id);
-    }
-    const _open = id => {
-        if (id) fetchGame(id).then(({info, save}) => {
-            console.log(info, save)
-            if (info && save) {
-                setSave(save)
-                setInfo(info)
-                setClosed(false)
+    useF(info, () => {
+        // update infoList from current info
+        if (info && infoList) {
+            let toUpdate = infoList.find(i => i.id === info.id)
+            if (toUpdate) {
+                Object.assign(toUpdate, info)
+                setList(infoList.slice())
+            } else {
+                setList([info].concat(infoList))
             }
-        }).catch(err => console.log(err))
-        else setClosed(true)
-    }
+        }
+    })
 
-    return <Style className={closed ? 'closed' : ''}>
-        <WordbaseMenu {...{ open, infoList, setList }} />
+    return <Style className={gameClosed ? 'closed' : ''}>
+        <WordbaseMenu {...{ menuClosed: !gameClosed, open, infoList, setList }} />
         <div className='divider'></div>
-        {info ? <Wordbase {...{ open, info, setInfo, save, setSave }} /> : ''}
+        {info ? <WordbaseGame {...{ open, info, save, setInfo, setSave }} /> : ''}
     </Style>
     // return (
     //     info
@@ -90,3 +97,37 @@ const Style = styled.div`
         left: calc(100% + ${dividerWidth});
     }
 `
+
+    // useF(reload, () => {
+    //     reload && fetchGame(reload).then(({info, save}) => {
+    //         console.log(info, save)
+    //         setReload(undefined)
+    //         if (info && save) {
+    //             let inst = infoList.find(i => i.id === reload)
+    //             console.log(infoList, reload, inst)
+    //             if (inst) {
+    //                 // already in list
+    //                 Object.assign(inst, info)
+    //                 setList(infoList.slice())
+    //             } else {
+    //                 // new game
+    //                 setList(infoList.concat(info).sort((a, b) =>
+    //                     (b.lastUpdate || 0) - (a.lastUpdate || 0)));
+    //             }
+    //             if (info.id === reload) {
+    //                 setSave(save)
+    //                 setInfo(info)
+    //             }
+    //         }
+    //     }).catch(err => console.log(err))
+    // })
+    // useNotifyFilter((app, text) => {
+    //     let match = text.match(/\/wordbase#(\w+)/)
+    //     if (match) {
+    //         let id = match[1]
+    //         console.log('WORDBASE FILTER', id)
+    //         setReload(id)
+    //         // return true
+    //     }
+    //     return false
+    // })

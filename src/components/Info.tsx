@@ -4,16 +4,19 @@ import styled from 'styled-components';
 
 export type InfoLabelType = (string | {text: string, func: () => any})
 export type InfoEntryType = (string | {text: string, data: any})
+export type InfoLineType = (any | {content: any, labels: InfoLabelType[]})
+
+const _InfoBadge = ({label}: {label: InfoLabelType}) =>
+  typeof label === 'string'
+  ? <div className='label inline'>{label}</div>
+  : <div className='button button-badge inline' onClick={label.func}>{label.text}</div>
 
 export const InfoBadges = ({labels}: {
   labels: InfoLabelType[]
 }) => {
   return labels.length ? <Fragment>
     <div className='badges'>
-      {labels.filter(l => l).map((l, i) =>
-        typeof l === 'string'
-        ? <div className='label inline' key={i}>{l}</div>
-        : <div className='button button-badge inline' onClick={l.func}key={i}>{l.text}</div>)}
+      {labels.filter(l => l).map((l, i) => <_InfoBadge key={i} label={l} />)}
     </div>
   </Fragment> : <Fragment></Fragment>
 }
@@ -21,8 +24,9 @@ export const InfoBadges = ({labels}: {
 export const InfoLabel = ({labels}: {
   labels: InfoLabelType[]
 }) => {
+  let l0 = labels[0]
   return <Fragment>
-    <div className='label inline'>{labels[0]}</div>
+    <_InfoBadge label={labels[0]} />
     <InfoBadges {...{ labels: labels.slice(1) }}/>
     <br/>
   </Fragment>
@@ -52,7 +56,7 @@ export const InfoSection = (props: {
 }) => {
   let labels = props.label ? [props.label] : props.labels || []
   return <div {...props}>
-    <InfoLabel {...{ labels }} />
+    {labels ? <InfoLabel {...{ labels }} /> : ''}
     {props.children}
   </div>
 }
@@ -68,30 +72,18 @@ export const InfoLine = (props: {
     : ''}
   </div>
 }
-
-export const InfoItem = ({entry, labels, entryLabels}: {
-  entry: InfoEntryType,
-  labels?: InfoLabelType[],
-  entryLabels?: InfoLabelType[],
-}) => {
-  return <InfoList {...{
-    labels,
-    entries: [entry],
-    entryLabels: [entryLabels],
-  }}/>
-}
-
-const _InfoLines = (props: {
+export const InfoLines = (props: {
   [key: string]: any,
-  labels: InfoLabelType[],
-  lines: any[],
-  entryLabels?: InfoLabelType[][],
+  labels?: InfoLabelType[],
+  lines: InfoLineType[],
 }) => {
-  let {labels, lines, entryLabels} = props
-  return <InfoSection labels={labels}>
-    {lines.map((line, i) => <InfoLine key={i} labels={entryLabels && entryLabels[i]}>
-      {line}
-    </InfoLine>)}
+  let {labels, lines} = props
+  return <InfoSection labels={labels} {...props}>
+    {lines.map((line, i) => (
+      <InfoLine key={i} labels={line.labels}>
+        {line.content || line}
+      </InfoLine>
+    ))}
   </InfoSection>
 }
 
@@ -100,11 +92,15 @@ export const InfoList = ({entries, labels, entryLabels}: {
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
 }) => {
-  return <_InfoLines {...{
-    labels, entryLabels, lines: entries.map((entry, i) =>
+  entryLabels = entryLabels || []
+  return <InfoLines {...{
+    labels, lines: entries.map((entry, i) => ({
+      labels: entryLabels[i],
+      content: (
       <div className='entry'>
         {typeof entry === 'string' ? entry : entry.text}
-      </div>)
+      </div>),
+    }))
   }} />
 }
 export const InfoLinks = ({entries, labels, entryLabels}: {
@@ -112,12 +108,15 @@ export const InfoLinks = ({entries, labels, entryLabels}: {
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
 }) => {
-  return <_InfoLines {...{
-    labels, entryLabels, lines: entries.map((entry, i) =>
-      <Link className='entry link'
-          to={typeof entry === 'string' ? entry : entry.data}>
+  entryLabels = entryLabels || []
+  return <InfoLines {...{
+    labels, lines: entries.map((entry, i) => ({
+      labels: entryLabels[i],
+      content: (
+      <Link className='entry link' to={typeof entry === 'string' ? entry : entry.data}>
         {typeof entry === 'string' ? entry : entry.text}
-      </Link>)
+      </Link>),
+    }))
   }} />
 }
 export const InfoOutLinks = ({entries, labels, entryLabels}: {
@@ -125,12 +124,15 @@ export const InfoOutLinks = ({entries, labels, entryLabels}: {
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
 }) => {
-  return <_InfoLines {...{
-    labels, entryLabels, lines: entries.map((entry, i) =>
-      <a className='entry link'
-          href={typeof entry === 'string' ? entry : entry.data}>
+  entryLabels = entryLabels || []
+  return <InfoLines {...{
+    labels, lines: entries.map((entry, i) => ({
+      labels: entryLabels[i],
+      content: (
+      <a className='entry link' href={typeof entry === 'string' ? entry : entry.data}>
         {typeof entry === 'string' ? entry : entry.text}
-      </a>)
+      </a>),
+    }))
   }} />
 }
 export const InfoFuncs = ({entries, entryFunc, labels, entryLabels}: {
@@ -139,11 +141,15 @@ export const InfoFuncs = ({entries, entryFunc, labels, entryLabels}: {
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
 }) => {
-  return <_InfoLines {...{
-    labels, entryLabels, lines: entries.map((entry, i) =>
+  entryLabels = entryLabels || []
+  return <InfoLines {...{
+    labels, lines: entries.map((entry, i) => ({
+      labels: entryLabels[i],
+      content: (
       <div className='entry link'
-        onClick={() => entryFunc(typeof entry === 'string' ? entry : entry.data)}>
-        {typeof entry === 'string' ? entry : entry.text}</div>)
+      onClick={() => entryFunc(typeof entry === 'string' ? entry : entry.data)}>
+        {typeof entry === 'string' ? entry : entry.text}</div>),
+    }))
   }} />
 }
 
@@ -160,30 +166,41 @@ export const InfoSearch = ({searchRef, placeholder, search}: {
     <span className='submit' onClick={search}>[ <span>go</span> ]</span>
   </div>
 }
-export const InfoAutoSearch = ({searchRef, placeholder, term, search, go}: {
+export const InfoAutoSearch = ({searchRef, placeholder, term, search, go, tab}: {
   searchRef: any, // Ref
   placeholder: string,
   term: string,
   search: () => any,
   go: () => any,
+  tab?: (dir: number) => any,
 }) => {
 
   return <div className='search'>
     <input ref={searchRef} type='text' placeholder={placeholder}
         autoCorrect='off' autoCapitalize='off'
         value={term} onChange={search}
-        onKeyDown={e => e.key === 'Enter' && go()}/>
+        onKeyDown={e => {
+          if (e.key === 'Enter') go()
+          if (tab && e.key === 'Tab') {
+            tab(e.shiftKey ? -1 : 1)
+            e.preventDefault()
+          }
+        }}/>
     <span className='submit' onClick={go}>[ <span>go</span> ]</span>
   </div>
 }
 
 export const InfoBody = (props) => {
-  return <div className='body'>{props.children}</div>
+  return (
+  <div {...props} className={`body ${props.className || ''}`}>
+    {props.children}
+  </div>)
 }
 
+let background = 'white'; //'rgb(251 250 247)'
 export const InfoStyles = styled.div`
 height: 100%; width: 100%;
-background: white;
+background: ${background};
 color: black;
 display: flex; flex-direction: column;
 .body {
@@ -211,25 +228,28 @@ display: flex; flex-direction: column;
     opacity: .5;
     background: #00000022;
     // line up with button 2px border
-    border: 2px solid white;
+    // border: 2px solid ${background};
+    margin-top: 2px; margin-bottom: 2px;
     border-left: none;
     border-right: none;
   }
   .lil-badge {
     margin-left: .5rem;
   }
+
   > * {
     margin-bottom: .5rem;
     min-height: 3rem;
   }
-
   .entry-line {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    min-height: 0; // overrides 3rem above
   }
-  .entry {
+  .entry-line > *:not(.button), .entry {
     margin-right: .25rem;
+    color: black;
     &.link, a {
       cursor: pointer;
       user-select: all;
@@ -240,7 +260,7 @@ display: flex; flex-direction: column;
 
   .button {
     display: inline-block;
-    margin-left: .5rem;
+    // margin-left: .5rem;
   }
 }
 .button {
@@ -253,7 +273,8 @@ display: flex; flex-direction: column;
   border-radius: .3rem;
 }
 .edit-container {
-  width: 66%;
+  // width: 66%;
+  width: 17.6rem;
   input {
     height: 2.0rem;
     line-height: 1rem;
@@ -292,7 +313,6 @@ display: flex; flex-direction: column;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: white;
-    // border: 2px solid white;
     padding: 0 .3rem;
     border-radius: .3rem;
     margin-left: .3rem;

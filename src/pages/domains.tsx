@@ -6,8 +6,8 @@ import { InfoStyles, InfoBody, InfoOutLinks } from '../components/Info'
 export default () => {
     let domains = [
         'freshman.dev',
-        'localhost:3000',
-        'cyfr.dev',
+        // 'localhost:3000',
+        { text: 'cyfr.dev', label: '-> freshman.dev'},
         'cyfre.dev',
         'cyrusfreshman.com',
         'cfreshman.io',
@@ -17,10 +17,11 @@ export default () => {
         <InfoBody>
             <InfoOutLinks {...{
                 labels: ['why do I have so many domains?'],
-                entries: domains.map(d => ({ text: d, data: `https://${d}/domains` })),
-                entryLabels: domains.map(d => window.location.origin.includes(d)
+                entries: domains.map((d: any) =>
+                    ({ text: d.text || d || d, data: `https://${d.text || d}/domains` })),
+                entryLabels: domains.map((d: any) => window.location.origin.includes(d)
                     ? ['here now!']
-                    : []),
+                    : d.label ? [d.label] : []),
             }} />
         </InfoBody>
     </InfoStyles>

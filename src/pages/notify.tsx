@@ -4,19 +4,18 @@ import { Link, useHistory } from 'react-router-dom';
 import api from '../lib/api'
 import { useF, useAuth } from '../lib/hooks'
 import { sub, unsub } from '../lib/notify'
-import { InfoStyles, InfoBody, InfoSection } from '../components/Info'
+import { InfoStyles, InfoBody, InfoSection, InfoLine } from '../components/Info'
 
 
 const notifyProjects = 'wordbase'.split(' ')
 
 const NotifyEntry = ({page, enabled, toggle}) => {
-  let history = useHistory();
-
-  return (<div className='entry'>
-    <Link className='title' to={`/${page}`}>{`/${page}`}</Link>
-    <div className='sub button' onClick={toggle}>
-      {enabled ? 'unsubscribe' : 'subscribe'}</div>
-  </div>)
+  return <InfoLine labels={[{
+    text: enabled ? 'unsubscribe' : 'subscribe',
+    func: toggle,
+  }]}>
+    <Link className='entry title' to={`/${page}`}>{`/${page}`}</Link>
+  </InfoLine>
 }
 
 // eslint-disable-next-line import/no-anonymous-default-export
@@ -30,7 +29,6 @@ export default () => {
   useF(auth.user, () => auth.user && !token && handle.load())
   useF(token, () => {
     if (token) {
-      console.log('token', token)
       window.history.replaceState(null, '/notify', '/notify')
       api.post('notify/verify', { token }).then(data => {
         if (data.notify && !data.notify.verify) {
@@ -57,7 +55,6 @@ export default () => {
       if (emailEdit) {
         let email = (emailRef.current as HTMLInputElement).value
         api.post('notify/email', { email }).then(res => {
-          console.log(res)
           handle.load()
         })
         notify.email = email;
@@ -83,15 +80,16 @@ export default () => {
         ? `unverified – check email for link`
         : 'verified'
       ]}>
-        <div className='text'>{emailEdit
+        <InfoLine className='text' labels={[{
+          text: emailEdit ? 'save' : 'edit',
+          func: handle.email
+          }]}>
+          {emailEdit
           ? <input ref={emailRef} type='email' placeholder=''
           autoCorrect='off' autoCapitalize='off'
           onKeyDown={e => e.key === 'Enter' && handle.email()}/>
           : <span onClick={handle.email}>{notify.email || '(add email for notifications)'}</span>}
-          <div className='edit button'
-            onClick={handle.email}>
-            {emailEdit ? 'save' : 'edit'}</div>
-        </div>
+        </InfoLine>
       </InfoSection>
       <InfoSection label='notifications'>
         {notifyProjects.map(page => {
@@ -106,15 +104,6 @@ export default () => {
 }
 
 const Style = styled(InfoStyles)`
-  .body {
-    .entry {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      .title { margin-right: .5rem; color: black; }
-      .title:hover { text-decoration: underline; }
-    }
-  }
   .email {
     .text {
       display: flex;
@@ -136,18 +125,15 @@ const Style = styled(InfoStyles)`
         // min-width: 71.5%;
         min-width: 17.6rem;
         padding: 0 .5rem;
-        // border-color: black;
         border-color: #00000022;
         border-radius: .2rem;
-        // background: #00000011;
-        // border-radius: 1rem;
         box-shadow: none;
         -webkit-appearance: none;
       }
     }
     .button {
       display: flex; align-items: center; justify-content: center;
-      margin-left: 1rem;
+      margin-left: .75rem;
     }
   }
 `

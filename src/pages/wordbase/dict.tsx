@@ -1,7 +1,7 @@
 import { initArr, randi } from './util';
 
 let dict: Set<string>;
-fetch('/lib/words_alpha.txt').then(resp => resp.text()).then(text => {
+fetch('/lib/dict/words_alpha.txt').then(resp => resp.text()).then(text => {
     let dictList: string[] = text.split('\n').map(s => s.trim());
     dict = new Set(dictList);
     console.log(`loaded ${dict.size} words`);

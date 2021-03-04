@@ -1,22 +1,16 @@
 import React, { useState, useRef, Fragment } from 'react';
 import api from '../lib/api';
+import { randAlphanum } from '../lib/util';
 import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useE, useF, useAuth } from '../lib/hooks';
-import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine } from '../components/Info'
+import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel } from '../components/Info'
 
 
-const alphanum = 'qwertyuiopasdfghjklzxcvbnm1234567890QWERTYUIOPASDFGHJKLZXCVBNM';
-const randi = n => {
-  return Math.floor(Math.random() * n);
-}
-const randAlphanum = n => {
-  let str = '';
-  for (let i = 0; i < n; i++) {
-    str += alphanum[randi(alphanum.length)];
-  }
-  return str;
-}
+const short = (window.location.hostname === 'localhost')
+  ? window.location.origin : 'https://cyfr.dev'
+const long = (window.location.hostname === 'localhost')
+  ? window.location.origin : 'https://freshman.dev'
 
 export default () => {
   let auth = useAuth()
@@ -37,7 +31,7 @@ export default () => {
     handle.loadAll();
   })
   useF(ly, () => {
-    let newEnd = `/ly${ly.hash || ''}${isView ? '#view' : ''}`
+    let newEnd = `/ly/${ly.hash || ''}${ly.hash && isView ? '#view' : ''}`
     window.history.replaceState(null, '/ly', newEnd)
   })
   useF(edit, () => edit && setHash(ly.hash))
@@ -48,7 +42,6 @@ export default () => {
       if (auth.user) {
         api.get('/ly').then(data => {
           setError('')
-          console.log('lys', data)
           setLys(data.list)
         }).catch(e => setError(e.error))
       } else {
@@ -57,16 +50,18 @@ export default () => {
     },
     load: () => {
       ly.hash && api.get(`/ly/${ly.hash}`).then(data => {
-        console.log('ly load', data)
         setError('')
         if (data.ly) {
           if (data.ly.links.length === 1 && !isView) {
             history.replace(`/ly/${ly.hash}#view`)
-            window.location.replace(
-              'https://' + data.ly.links[0].replace('https://', ''))
+            // loc.replace(`https://freshman.dev${loc.pathname}/${ly.hash}#view`)
+            window.location.assign('https://' + data.ly.links[0].replace('https://', ''))
           } else {
             setLy(data.ly);
           }
+          // else if (!['freshman.dev', 'localhost'].includes(loc.hostname)) {
+          //   loc.replace(`https://freshman.dev${loc.pathname}/${ly.hash}`)
+          // }
         } else {
           // setError(`/ly/${ly.hash} does not exist`)
           setEdit(true)
@@ -74,20 +69,19 @@ export default () => {
       }).catch(e => setError(e.error))
     },
     save: () => {
-      console.log(ly.hash)
+      ly.links = ly.links.filter(l => l)
       api.post(`/ly/${ly.hash}`, ly).then(data => {
-        console.log('ly save', data)
         setError('')
         if (data.ly) {
-          // setLy(data.ly);
-          // setEdit(false);
-          history.push(`/ly/${data.ly.hash}#view`)
+          setLy(data.ly);
+          setEdit(false);
+          handle.loadAll();
+          // history.push(`/ly/${data.ly.hash}#view`)
         } else {
           // setError(`${ly.hash} does not exist`)
           setEdit(true)
         }
       }).catch(e => {
-        console.log(e.error)
         setError(e.error)
         setEdit(true)
       })
@@ -97,6 +91,7 @@ export default () => {
       setLy({
         hash: randAlphanum(7),
         links: [],
+        isNew: true,
       })
     },
     delete: () => {
@@ -107,43 +102,69 @@ export default () => {
     },
     cancel: () => {
       setEdit(false)
+      setError('')
+      if (ly.isNew) {
+        handle.menu()
+      } else {
+        setLy(lys.find(l => l.hash === hash))
+      }
+    },
+    menu: () => {
+      setEdit(false)
+      setError('')
       setLy({
-        hash,
+        hash: '',
         links: [],
       })
-      setTimeout(() => handle.load())
-    }
+    },
   };
 
   return (
-    <Style>
-      <InfoBody>
-        {!error ? ''
-        : <div className='error' style={{color: 'red', minHeight: '0'}}>{error}</div>}
-        {edit
-          ? <LinkEdit handle={handle} ly={ly} />
-          : ly.hash
-          ? <LinkView handle={handle} ly={ly} />
-          : <LinkMenu handle={handle} lys={lys} />}
-      </InfoBody>
-    </Style>
-  );
+  <Style>
+    <InfoBody>
+      {!error ? ''
+      : <div className='error' style={{color: 'red', minHeight: '0'}}>{error}</div>}
+      {ly.hash && !edit
+      ? <LinkView handle={handle} ly={ly} />
+      : auth.user !== 'cyrus'
+      ? `you aren't cyrus, sorry :/`
+      : ly.hash
+      ? <LinkEdit handle={handle} ly={ly} />
+      : <LinkMenu handle={handle} lys={lys} />}
+    </InfoBody>
+  </Style>
+  )
 }
 
 const LinkMenu = ({handle, lys}) => {
   let auth = useAuth()
+  let [copied, setCopied] = useState(-1)
+  let [copyOff, setCopyOff] = useState(-1)
 
+  useF(copied, () => {
+    if (copied > -1) {
+      clearTimeout(copyOff)
+      setCopyOff(setTimeout(() => setCopied(-1), 3000))
+    }
+  })
   return auth.user && lys
   ? <Fragment>
-    <InfoSection labels={['your links', { text: 'new', func: handle.new }]} >
+    <InfoLine><InfoLabel labels={[
+      { text: 'new', func: handle.new }
+    ]} /></InfoLine>
+    <InfoSection className='lys'
+    labels={['your links']} >
       {lys.length
-      ? lys.map((l, i) =>
+      ? lys.map((ly, i) =>
         <InfoLine key={i} labels={[
-            l.links[0] + (l.links.length === 1 ? '' : ` + ${l.links.length - 1}`)
+            { text: 'edit', func: () => handle.setLy(ly) },
+            ly.links[0] + (ly.links.length === 1 ? '' : ` + ${ly.links.length - 1}`)
           ]}>
-          <Link className='entry link' to={`/ly/${l.hash}#view`}>
-            {window.location.host}/ly/{l.hash}
-          </Link>
+          <div className={copied === i ? 'entry' : 'entry link'} onClick={() => {
+            navigator.clipboard.writeText(`${short}/ly/${ly.hash}`);
+            setCopied(i)
+            }}>
+            {copied === i ? 'copied!' : `/ly/${ly.hash}`}</div>
         </InfoLine>)
       : <div>no links</div>}
     </InfoSection>
@@ -158,19 +179,22 @@ const LinkEdit = ({handle, ly}) => {
   const hashInput = useRef();
   const linksInput = useRef();
   useE(ly, () => {
-    hashInput.current.value = ly.hash;
-    linksInput.current.value = ly.links.join('\n');
+    // hashInput.current.value = ly.hash;
+    // linksInput.current.value = ly.links.join('\n');
   });
   return <Fragment>
+    <InfoLine><InfoLabel labels={[
+      { text: 'menu', func: () => handle.menu() },
+      { text: 'cancel', func: () => handle.cancel() },
+      ly.links.some(l=>l) ? { text: 'save', func: () => handle.save(ly) } : ''
+    ]} /></InfoLine>
     <InfoSection className='edit-container' labels={[
       'link',
-      { text: 'cancel', func: () => handle.cancel() },
-      { text: 'save', func: () => handle.save(ly) }
     ]} >
       <input ref={hashInput}
           className='input' type='text' spellCheck='false'
-          onKeyDown={e => setTimeout(() =>
-            handle.setLy({...ly, hash: hashInput.current.value}), 0)} />
+          value={ly.hash}
+          onChange={e => handle.setLy({...ly, hash: hashInput.current.value})} />
     </InfoSection>
 
     <InfoSection label='author'>
@@ -181,41 +205,46 @@ const LinkEdit = ({handle, ly}) => {
       <textarea ref={linksInput}
         className='input' spellCheck='false'
         rows={Math.max(5, ly.links.length + 1)}
-        onKeyDown={e => setTimeout(() => {
+        value={ly.links.join('\n')}
+        onChange={e => {
           let newLinks = linksInput.current.value
             .replace(/\n{3,}/g, '\n\n')
             .split('\n')
             .map(l => l.trim())
-          handle.setLy({ ...ly, links: newLinks})
-        }, 0)} />
+          handle.setLy({ ...ly, links: newLinks})}} />
     </InfoSection>
   </Fragment>
 }
 
 const LinkView = ({handle, ly}) => {
   let auth = useAuth()
-  let history = useHistory()
   let [copied, setCopied] = useState(false)
   let [confirm, setConfirm] = useState(false)
 
   let isUser = auth.user === ly.user;
+  let isMe = auth.user === 'cyrus';
   return <Fragment>
-    <InfoSection labels={[
-      'link',
+    {!isMe ? '' : <InfoLine><InfoLabel labels={[
+      { text: 'menu', func: () => handle.menu() },
       isUser ? { text: 'edit', func: () => handle.setEdit(true) } : '',
       (isUser && !confirm) ? { text: 'delete', func: () => setConfirm(true) } : '',
       (isUser && confirm) ? { text: 'cancel', func: () => setConfirm(false) } : '',
       (isUser && confirm) ? { text: 'really delete', func: handle.delete } : '',
+    ]} /></InfoLine>}
+    <InfoSection labels={[
+      'link',
     ]}>
       <div className={copied ? '' : 'entry link'} onClick={() => {
-        navigator.clipboard.writeText(`${window.location.origin}/ly/${ly.hash}`);
+        // navigator.clipboard.writeText(`${window.location.origin}/ly/${ly.hash}`);
+        navigator.clipboard.writeText(`${short}/ly/${ly.hash}`);
         setCopied(true)
         setTimeout(() => setCopied(false), 3000)
         }}>
-        {copied ? 'copied!' : `${window.location.host}/ly/${ly.hash}`}</div>
+        {/* {copied ? 'copied!' : `${window.location.host}/ly/${ly.hash}`}</div> */}
+        {copied ? 'copied!' : `cyfr.dev/ly/${ly.hash}`}</div>
     </InfoSection>
 
-    <InfoUser labels={['author']} user={ly.user || auth.user} />
+    {!isMe ? '' : <InfoUser labels={['author']} user={ly.user || auth.user || ''} />}
 
     <InfoSection label='links'>
       {ly.links.map((link, i) =>
@@ -230,4 +259,9 @@ const LinkView = ({handle, ly}) => {
 
 
 const Style = styled(InfoStyles)`
+  .lys {
+    .entry {
+      min-width: 8rem;
+    }
+  }
 `

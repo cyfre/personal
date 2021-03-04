@@ -1,8 +1,6 @@
-import React, { useRef } from 'react';
-import { useHistory } from 'react-router-dom';
-import api from './api';
-import { getStored, setStored } from './store';
-import { InfoStyles, InfoBody, InfoSearch } from '../components/Info'
+import api from './api.js';
+import { getStored, setStored } from './store.js';
+
 
 export async function sha256(message) {
     const msgUint8 = new TextEncoder().encode(message);
@@ -28,7 +26,7 @@ export function removeAuthTrigger(callback) {
 }
 
 const AUTH_COOKIE = 'loginAuth'
-function setAuth(user, token, dropdown?) {
+function setAuth(user, token, /* opt */ dropdown) {
     Object.assign(auth, { user, token, dropdown });
     // console.log('auth', auth)
     setStored(AUTH_COOKIE, auth);
@@ -87,25 +85,4 @@ export function verify(user, token) {
         user,
         token,
     });
-}
-
-export const RequireMe = (content, alt?) => {
-    let searchRef = useRef()
-    let history = useHistory()
-
-    return (
-    auth.user === 'cyrus'
-    ? content
-    : alt || <InfoStyles>
-        <InfoSearch {...{searchRef, placeholder: 'find a page', search: () => {
-            let current = searchRef.current;
-            if (current) {
-                let search = (current as HTMLInputElement).value
-                search && history.push(`/search#${search}`)
-            }
-        }}}/>
-        <InfoBody className='personal'>
-            you aren't cyrus, sorry :/
-        </InfoBody>
-    </InfoStyles>)
 }

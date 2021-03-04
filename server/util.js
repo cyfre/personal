@@ -39,15 +39,22 @@ function genRemove(name) {
 }
 
 function jsonRes(func) {
-    return (req, res) => func(req)
-        .then(data => {
-            // console.log(data);
-            res.json(data);
-        })
-        .catch(error => {
-            console.log(error);
+    return (req, res) => {
+        try {
+            func(req)
+                .then(data => {
+                    // console.log(data);
+                    res.json(data);
+                })
+                .catch(error => {
+                    console.log('[ERROR]', error);
+                    res.json({ error: error.message })
+                });
+        } catch (error) {
+            console.log('[ERROR]', error);
             res.json({ error: error.message })
-        });
+        }
+    }
 }
 
 function requireUser(rq) {

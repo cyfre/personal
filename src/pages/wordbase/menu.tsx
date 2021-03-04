@@ -1,8 +1,8 @@
 import React, { Fragment, useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import api from '../../lib/api';
-import { useAuth } from '../../lib/hooks';
+import { useAuth, useE, useF } from '../../lib/hooks';
 import { openLogin } from '../../lib/auth';
 import { useTimeout, useInterval } from '../../lib/hooks';
 import { Player } from './board';
@@ -12,10 +12,9 @@ import { localInfo } from './data';
 import { Loader } from '../../components/Contents';
 import { GameProgress } from './progress';
 
-const GameItem = ({info, open, reload, edit}) => {
+const GameItem = ({info, isEdit, outer}) => {
   const auth = useAuth();
   const inviteRef = useRef();
-  // const [optionsOpen, setOptionsOpen] = useState(edit);
   const [copied, setCopied] = useState(false);
 
   let isP1 = info.p1 === auth.user;
@@ -23,118 +22,102 @@ const GameItem = ({info, open, reload, edit}) => {
   let isTurn = info.turn%2 === (isP1 ? 0 : 1);
   let resigned = info.lastWord === '.resign'
 
-  useEffect(() => {
+  useF(copied, () => {
     if (copied) setTimeout(() => setCopied(false), 2000);
-  }, [copied])
+  })
 
   return (
-    <div className='game-entry'>
-      {info.p1
-      ? <div className='main' onClick={() => open(info.id)}>
-        <GameProgress info={info} />
+  <div className='game-entry'>
+    {info.p1
+    ? <div className='main' onClick={() => outer.open(info.id)}>
+      <GameProgress info={info} />
 
-        {<div className={'info' + (isTurn ? ' dark':'')}>
-          <span>
-            {edit || !info.lastWord
-            ? (!info.lastWord ? '' : resigned
-              ? `resigned`
-              : `${info.lastWord.toUpperCase()}`)
-            : resigned
-            ? `${isTurn ? `they resigned` : 'you resigned'}`
-            : `${isTurn ? `they played ` : 'you played '} ${info.lastWord.toUpperCase()}`}
-            {/* {!edit && info.lastWord ? `${isTurn ? `they played ` : 'sent '} ${info.lastWord.toUpperCase()}` : ''} */}
-            {/* {!edit && info.lastWord ? info.lastWord.toUpperCase() : ''} */}
-          </span>
-        </div>}
-        {/* {`vs ${oppo}`}
-        {info.lastWord ? ` – ${isTurn ? `they played ` : ' you played '} ${info.lastWord}` : ''}
-        {` (${info.id})`} */}
-
-        {/* {`${info.p1 || 'invite'} vs ${info.p2} (${info.id})`} */}
-      </div>
-      : <div className='main' onClick={() => {
-          navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
-          setCopied(true);
-        }}>
-
-        <div className='info dark'>
-          <span ref={inviteRef}>
-            {copied ? 'copied!' : `invite  #${info.id}`}
-          </span>
-        </div>
+      {<div className={'info' + (isTurn ? ' dark':'')}>
+        <span>
+          {isEdit || !info.lastWord
+          ? (!info.lastWord ? '' : resigned
+            ? `resigned`
+            : `${info.lastWord.toUpperCase()}`)
+          : resigned
+          ? `${isP1 && info.status === Player.p1 ? `they resigned` : 'you resigned'}`
+          : `${isTurn ? `they played ` : 'you played '} ${info.lastWord.toUpperCase()}`}
+        </span>
       </div>}
-      {(edit || true)
-      ? <div className={'options' + (edit ?' open':' closed')}>
-        {info.status === Player.none
-        ? <span onClick={() => {
-          api.post(`/wordbase/g/${info.id}/resign`).then(() => reload());
-        }}>resign</span>
-        : <span onClick={() => {
-          api.post(`/wordbase/g/${info.id}/rematch`).then(() => reload());
-        }}>rematch</span>}
-        <span onClick={() => {
-          api.post(`/wordbase/g/${info.id}/delete`).then(() => reload());
-        }}>delete</span>
-      </div>
-      : <div className='options closed'></div>}
     </div>
+    : <div className='main' onClick={() => {
+        navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
+        setCopied(true);
+      }}>
+
+      <div className='info dark'>
+        <span ref={inviteRef}>
+          {copied ? 'copied!' : `invite  #${info.id}`}
+        </span>
+      </div>
+    </div>}
+    {<div className={'options' + (isEdit ?' open':' closed')}>
+      {info.status === Player.none
+      ? <span onClick={() => {
+        api.post(`/wordbase/g/${info.id}/resign`).then(() => outer.load());
+      }}>resign</span>
+      : <span onClick={() => {
+        api.post(`/wordbase/g/${info.id}/rematch`).then(() => outer.load());
+      }}>rematch</span>}
+      <span onClick={() => {
+        api.post(`/wordbase/g/${info.id}/delete`).then(() => outer.load());
+      }}>delete</span>
+    </div>}
+  </div>
   )
 }
-const GameSection = ({name, games, open, reload, isEdit, setEdit}:
-  {name: string, games: Info[], open: any, reload: any, isEdit?: boolean, setEdit?: any}) => {
-
-  const history = useHistory();
-  return games.length ? (<Fragment>
+const GameSection = ({name, games, isEdit, outer}: {
+  name: string, games: Info[], isEdit?: boolean, outer
+}) => {
+  return !games.length ?<Fragment></Fragment>:<Fragment>
     <div className='top'>
       <span>{name}</span>
+
       <div className='controls'>
-        <div className='button'
-          onClick={() => history.push('/notify')}>
-            /notify</div>
-        {!setEdit ?'':
-        <span className='button'
-          onClick={() => setEdit(!isEdit)}>{isEdit ? 'close' : 'edit'}</span>}
+        <Link className='button' to='/notify'>/notify</Link>
+        <span className='button' onClick={() => outer.setEdit(!isEdit)}>
+          {isEdit ? 'close' : 'edit'}
+        </span>
       </div>
     </div>
+
     <div className='section'>
       {games.map((info, i) =>
         <GameItem {...{
           key: i,
           info,
-          open,
-          reload,
-          edit: isEdit
+          isEdit,
+          outer,
         }} />)}
     </div>
-  </Fragment>) : <Fragment></Fragment>
+  </Fragment>
 }
 
-export const WordbaseMenu = ({open, infoList, setList}) => {
-  const auth = useAuth();
-  const [loaded, setLoaded] = useState(!!(auth.user && infoList));
-  // const [gameList, setGameList]: [Info[], any] = useState([]);
-  const [isEdit, setEdit] = useState(false);
-  const [isNew, setNew] = useState(false);
+const UpperSection = ({outer, auth}: {
+  outer: {open, load}, auth
+}) => {
   const [friends, setFriends] = useState([]);
+  const [isNew, setNew] = useState(false);
   const [isFriend, setFriend] = useState(false);
 
+  // load friends
+  useF(auth.user, () => handle.loadFriends())
+
+  // close friend selection when new game selection closes
+  useF(isNew, () => { if (!isNew) setFriend(false) })
+
+  // show 'copied!' for 3s
   const [copied, setCopied] = useState(false);
-  useEffect(() => {
+  useE(copied, () => {
     if (copied) setTimeout(() => setCopied(false), 3000);
-  }, [copied])
+  })
 
   const handle = {
-    local: () => open(localInfo.id),
-    load: () => {
-      auth.user && api.get('/wordbase/games').then(data => {
-        // console.log('games', data);
-        setList(data.infoList?.length ? data.infoList.sort((a, b) =>
-          (b.lastUpdate || 0) - (a.lastUpdate || 0)) : []);
-        setLoaded(true);
-      }).catch(err => {
-        console.log('games err', err.error)
-        setList([]);
-      });
+    loadFriends: () => {
       auth.user && api.get(`/profile/${auth.user}`).then(({profile}) => {
         // console.log('profile', profile);
         setFriends(profile.friends);
@@ -148,91 +131,136 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
       setFriend(false);
       return new Promise((resolve, reject) => {
         api.post(path, { state: Save.new().serialize() })
-        .then(data => {
-          console.log('data', data);
-          resolve(data)
-          handle.load();
-        })
-        .catch(err => {
-          console.log('err', err.error)
-          reject(err.error)
-        });
+          .then(data => {
+            console.log('data', data);
+            resolve(data)
+            outer.load();
+          })
+          .catch(err => {
+            console.log('err', err.error)
+            reject(err.error)
+          });
       })
     },
     open: () => handle.invite('/wordbase/i/open'),
     private: () => {
       setCopied(true)
       handle.invite('/wordbase/i/private')
-      .then(data => {
-        navigator.clipboard.writeText(`${window.location.origin}/wordbase#${data.info.id}`);
-      })
+        .then(data => {
+          navigator.clipboard.writeText(
+            `${window.location.origin}/wordbase#${data.info.id}`);
+        })
     },
     friend: user => handle.invite(`/wordbase/i/friend/${user}`)
-      .then(data => open(data.info.id)),
+      .then(data => outer.open(data.info.id)),
     random: () => {
       setNew(false)
       setFriend(false)
       api.post('/wordbase/i/accept')
-        .then(({info}) => open(info.id))
+        .then(({info}) => outer.open(info.id))
         .catch(() => handle.open())
-        .finally(() => handle.load());
+        .finally(() => outer.load());
     },
-    toggleEdit: () => setEdit(!isEdit),
   }
-  useEffect(() => {
-    setTimeout(() => setLoaded(true), 1000);
-  }, []);
-  useEffect(() => handle.load(), [auth.user]);
-  useInterval(() => { auth.user && handle.load() }, 3000);
-  useEffect(() => { if (!isNew) setFriend(false) }, [isNew])
+
+  return (
+    <div className={'upper' + (isNew ? ' new' : '')}>
+
+      <div className='button-row'>
+        <div className='button' onClick={() => outer.open(localInfo.id)}>
+          local game
+        </div>
+      </div>
+
+      {auth.user ?
+      <Fragment>
+        <div className={'button' + (isNew ? ' inverse' : '')}
+          onClick={() => setNew(!isNew)}>
+          {isNew ? 'cancel' : copied ? 'copied!' : 'online game'}
+        </div>
+        {!isNew ? '' :
+        <Fragment>
+          <div className='button indent' onClick={() => handle.private()}>
+            new invite link
+          </div>
+          <div className={'button indent' + (isFriend ? ' inverse' : '')}
+            onClick={() => setFriend(!isFriend)}>
+            {isFriend
+            ? (friends.length ? 'cancel' : 'no friends :\'(')
+            : 'challenge friend'}
+          </div>
+          {!isFriend || !friends.length ? '' :
+          <div className='friend-list indent'>
+            {friends.map(u =>
+              <div className='button indent' key={u} onClick={() => handle.friend(u)}>
+                {u}
+              </div>)}
+          </div>}
+          <div className='button indent' onClick={() => handle.random()}>
+            join random
+          </div>
+        </Fragment>}
+      </Fragment>
+      :
+      <div className='button placeholder' onClick={openLogin}>
+        log in for online games
+      </div>}
+
+    </div>
+  )
+}
+
+export const WordbaseMenu = ({menuClosed, open, infoList, setList}) => {
+  const auth = useAuth();
+  const [isEdit, setEdit] = useState(false);
+
+  const handle = {
+    open,
+    setEdit,
+    load: () => {
+      auth.user && api.get('/wordbase/games').then(({infoList}) => {
+        // console.log('games', data);
+        setList(infoList?.length
+          ? infoList.sort((a, b) => (b.lastUpdate || 0) - (a.lastUpdate || 0))
+          : []);
+      }).catch(err => {
+        console.log('games err', err.error)
+        setList([]);
+      });
+    },
+  }
+
+  // set list to empty after 1s (removes loading spinner)
+  useTimeout(() => infoList || setList([]), 1000)
+
+  // reload list when user changes and every 3s if open
+  useF(auth.user, handle.load);
+  const reloadIfOpen = () => !menuClosed && handle.load()
+  useF(menuClosed, reloadIfOpen);
+  useInterval(reloadIfOpen, 3000);
 
   return (
     <Style className='wordbase-menu'>
-      <div className={'upper' + (isNew ? ' new' : '')}>
-        <div className='button-row'>
-          <div className='button'
-            onClick={() => handle.local()}>
-              local game</div>
-          {/* <div className='button inline'
-            onClick={() => setHowTo(!howTo)}>
-              how to</div> */}
-        </div>
-        {auth.user
-        ? <Fragment>
-          <div className={'button' + (isNew ? ' inverse' : '')}
-            onClick={() => setNew(!isNew)}>
-            {isNew ? 'cancel' : copied ? 'copied!' : 'online game'}</div>
-          {!isNew ? '' :
-          <Fragment>
-            <div className='button indent' onClick={() => handle.private()}>
-              new invite link</div>
-            <div className={'button indent' + (isFriend ? ' inverse' : '')}
-              onClick={() => setFriend(!isFriend)}>
-              {isFriend ? (friends.length ? 'cancel' : 'no friends :\'(') : 'challenge friend'}</div>
-            {!isFriend || !friends.length ? '' :
-            <div className='friend-list indent'>
-              {friends.map(u =>
-                <div className='button indent'
-                  key={u} onClick={() => handle.friend(u)}>{u}</div>)}
-            </div>}
-            <div className='button indent' onClick={() => handle.random()}>
-              join random</div>
-          </Fragment>}
-        </Fragment>
-        : <div className='button placeholder' onClick={openLogin}>log in for online games</div>}
-      </div>
-      {auth.user ?
+      <UpperSection {...{
+        outer: handle,
+        auth,
+      }}/>
+
+      {!auth.user ?'':
       <div className='game-list'>
-        {!loaded ? <Loader/> : <Fragment>
+        {!infoList ?<Loader/>: <Fragment>
+
         <GameSection {...{
-          name: 'Your Turn', games: infoList.filter(i => {
+          name: 'Your Turn',
+          games: infoList.filter(i => {
             let isInvite = !i.p1;
             let canPlay = i.status === Player.none &&
               (!i.p1 || auth.user === (i.turn%2 ? i.p2 : i.p1));
             return !isInvite && canPlay;
           }).reverse(),
-          open, reload: handle.load, isEdit, setEdit,
+          isEdit, outer: handle,
         }}/>
+
         <GameSection {...{
           name: 'Their Turn', games: infoList.filter(i => {
             let isInvite = !i.p1;
@@ -241,17 +269,19 @@ export const WordbaseMenu = ({open, infoList, setList}) => {
               (!i.p1 || auth.user === (i.turn%2 ? i.p2 : i.p1));
             return isInvite || (!isEnded && !canPlay);
           }),
-          open, reload: handle.load, isEdit, setEdit,
+          isEdit, outer: handle,
         }}/>
+
         <GameSection {...{
           name: 'Ended', games: infoList.filter(i => {
             let isEnded = i.status !== Player.none;
             return isEnded;
           }),
-          open, reload: handle.load, isEdit, setEdit,
+          isEdit, outer: handle,
         }}/>
+
         </Fragment>}
-      </div> : ''}
+      </div>}
     </Style>
   )
 }

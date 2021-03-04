@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { remove } from './util'
 import api from './api'
-import { useInterval, useTimeout } from './hooks'
+import { useE, useF, useInterval, useTimeout } from './hooks'
 import { auth } from './auth'
 import { useHistory } from 'react-router-dom'
+import { useUserSocket } from './io'
 
 const Notification = ('Notification' in window) ? window.Notification : undefined
 
@@ -28,12 +29,13 @@ export function subbed(page) {
 
 const notifyFilters = []
 export function useNotify(history) {
-  useInterval(() => {
-    auth.user && api.get('notify/msg').then(
-      ({msg}: {msg: { [key: string]: string[] }}) => {
-      // console.log(msg)
-      Object.entries(msg)
-        .forEach(async entry => {
+  let socket = useUserSocket()
+
+  useF(socket, () => {
+    if (socket) {
+      socket.on('notify:msg', (msg: { [key: string]: string[] }) => {
+        console.log('MSG', msg)
+        Object.entries(msg).forEach(async entry => {
           if ('default' === Notification.permission) {
             await Notification.requestPermission()
           }
@@ -42,7 +44,7 @@ export function useNotify(history) {
           .filter(text => !notifyFilters.some(f => f(app, text)))
           .forEach(text => {
             let [body, link] = text.split(' – ')
-            console.log(body, link, history)
+            console.log(body, link)
             let notif = new Notification(`/${app}`, {
               body,
               tag: link
@@ -52,13 +54,41 @@ export function useNotify(history) {
             }
           })
         })
-    })
-  }, 3000);
+      })
+    }
+  })
 }
-export function useNotifyFilter(
-  filter: (app: string, text: string) => boolean) {
-  useEffect(() => {
+// export function useNotify(history) {
+//   useInterval(() => {
+//     auth.user && api.get('notify/msg').then(
+//       ({msg}: {msg: { [key: string]: string[] }}) => {
+//       // console.log(msg)
+//       Object.entries(msg)
+//         .forEach(async entry => {
+//           if ('default' === Notification.permission) {
+//             await Notification.requestPermission()
+//           }
+//           let [app, list] = entry
+//           list
+//           .filter(text => !notifyFilters.some(f => f(app, text)))
+//           .forEach(text => {
+//             let [body, link] = text.split(' – ')
+//             console.log(body, link, history)
+//             let notif = new Notification(`/${app}`, {
+//               body,
+//               tag: link
+//             })
+//             notif.onclick = () => {
+//               history.push(link.replace('freshman.dev', ''))
+//             }
+//           })
+//         })
+//     })
+//   }, 3000);
+// }
+export function useNotifyFilter(filter: (app: string, text: string) => boolean) {
+  useE(() => {
     notifyFilters.push(filter)
     return () => remove(notifyFilters, filter);
-  }, [filter])
+  })
 }

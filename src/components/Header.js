@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useRouteMatch, useLocation, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 import { embedded } from './Contents';
-import { useAuth } from '../lib/hooks';
+import { useAuth, useInterval } from '../lib/hooks';
 import { login, signup, logout } from '../lib/auth';
 import api from '../lib/api';
 
@@ -61,11 +61,14 @@ const User = () => {
     dropdown || setError('');
   }, [dropdown])
 
+  const isMe = auth.user === 'cyrus'
   const loggedIn = (
     <div className='dropdown'>
       <Link to={`/u/${auth.user}`} className='item' onClick={handle.nav}>profile</Link>
       <Link to='/search' className='item' onClick={handle.nav}>search</Link>
-      <Link to='/notify' className='item' onClick={handle.nav}>notify</Link>
+      {isMe
+      ? <Link to='/admin' className='item' onClick={handle.nav}>admin</Link>
+      : <Link to='/settings' className='item' onClick={handle.nav}>settings</Link>}
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>
   )
@@ -112,7 +115,8 @@ const User = () => {
 }
 
 export const Header = () => {
-  let { url } = useRouteMatch();
+  let match = useRouteMatch();
+  let [url, setUrl] = useState(match.url)
   let location = useLocation();
 
   const isImplicitProject = useMemo(() => {
@@ -129,6 +133,11 @@ export const Header = () => {
     });
     return crumbs;
   }, [url]);
+  useInterval(() => {
+    if (url !== window.location.pathname) {
+      setUrl(window.location.pathname)
+    }
+  }, 50)
 
   const isEmbeddedProject = useMemo(() => {
     let project = url.split('/').filter(p => p && p !== 'projects')[0];

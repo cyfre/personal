@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api';
 import { useF, useAuth } from '../lib/hooks';
-import { InfoStyles, InfoBody, InfoItem, InfoLinks, InfoSearch } from '../components/Info'
+import { InfoStyles, InfoBody, InfoLinks, InfoSearch, InfoSection, InfoLine } from '../components/Info'
 
 const UserList = ({label, users}) => {
   return <InfoLinks {...{
@@ -41,7 +41,6 @@ export default () => {
     follow: () => api.post(`/profile/${user}/follow`, {}).then(handle.parse),
     unfollow: () => api.post(`/profile/${user}/unfollow`, {}).then(handle.parse),
     parse: data => {
-      console.log(data);
       setLoaded(true);
       setProfile(data.profile)
       if (data.profile) {
@@ -77,15 +76,15 @@ export default () => {
     <InfoSearch {...{searchRef, placeholder: 'find a user', search: handle.search}}/>
     {profile ?
     <InfoBody>
-      <InfoItem {...{
-        labels: ['user'],
-        entry: profile.user,
-        entryLabels: [
+      <InfoSection label='user'>
+        <InfoLine labels={[
           info.canFollow ? { text: 'follow', func: handle.follow } : '',
           info.canUnfollow ? { text: 'unfollow', func: handle.unfollow } : '',
           info.isFriend ? 'friend!' : ''
-        ].filter(l => l),
-      }} />
+        ]}>
+          {profile.user}
+        </InfoLine>
+      </InfoSection>
       {profile.recents ? <PathList label='recents' paths={profile.recents} /> : ''}
       {profile.bio ? <div className='bio'>{profile.bio}</div> : ''}
       <UserList label='friends' users={profile.friends} />
@@ -95,7 +94,9 @@ export default () => {
     </InfoBody>
     : loaded
     ? <InfoBody>
-      <InfoItem labels={['user']} entry={`'${user}' does not exist`} />
+      <InfoSection label='user'>
+        <InfoLine>{`'${user}' does not exist`}</InfoLine>
+      </InfoSection>
       <UserList label='similar' users={similar} />
     </InfoBody>
     : ''}

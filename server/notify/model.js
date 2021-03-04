@@ -59,7 +59,7 @@ async function email(user, _email) {
     let email = _email || false
     let verify = (email && !verified.includes(email)) ? randAlphanum(7) : false
     notify = (await update(user, { email, verified, verify, emailThread: undefined })).notify
-    verify && _chain(notify, 'notify', `verify email – freshman.dev/notify/#${verify}`)
+    verify && _chain(notify, 'notify', `click to verify email & allow notifications – freshman.dev/notify/#${verify}`)
     return { notify }
 }
 async function verify(token) {
@@ -71,10 +71,6 @@ async function verify(token) {
         })).notify
     }
     return { notify }
-}
-async function twitter(user, _handle) {
-    let handle = _handle || false
-    return update(user, { handle })
 }
 
 async function sub(user, app, _set) {
@@ -113,11 +109,9 @@ async function send(user, app, text) {
 
     console.log('SEND', user, app, text)
     // will notify if not read & cleared within 10s
-    console.log(notify.email, !notify.verify,
-        !notify.unsub.includes(app))
-    if (notify.email && !notify.verify &&
-        !notify.unsub.includes(app)) {
-
+    let unsub = notify.unsub || []
+    console.log(notify.email, !notify.verify, !unsub.includes(app))
+    if (notify.email && !notify.verify && !unsub.includes(app)) {
         setTimeout(async () => {
             let { notify } = await get(user)
             let { msg } = notify

@@ -22,7 +22,7 @@ export async function fetchGame(gameId: string): Promise<{info: Info, save: Save
         else api.get(`/wordbase/g/${gameId}/board`).then(data => {
             let save = Save.deserialize(data.state);
             resolve({
-                info: Info.play(Info.of(data.info), save),
+                info: Info.of(data.info),
                 save,
             });
         }).catch(err => console.log(err, err.error));
@@ -34,24 +34,24 @@ export function updateGame(info: Info, save: Save) {
         localInfo = info;
         localSave = save;
     } else {
-        api.post(`/wordbase/g/${info.id}`, { info, state: save.serialize() }).then(data => {
-            console.log(data);
-        });
+        api.post(`/wordbase/g/${info.id}`, { info, state: save.serialize() });
     }
 }
 
-export function rematchGame(info: Info, callback: (i:Info, s:Save)=>any) {
-    let newSave = Save.new();
-    if (info.id === localInfo.id) {
-        localInfo = Info.local();
-        localSave = newSave;
-        callback(localInfo, localSave);
-    } else {
-        api.post(`/wordbase/g/${info.id}/rematch`, {
-            state: Save.new().serialize()
-        }).then(data => {
-            console.log(data);
-            callback(data.info, newSave);
-        });
-    }
+export function rematchGame(info: Info): Promise<{info: Info, save: Save}> {
+    return new Promise(resolve => {
+        let newSave = Save.new();
+        if (info.id === localInfo.id) {
+            localInfo = Info.local();
+            localSave = newSave;
+            resolve({ info: localInfo, save: localSave });
+        } else {
+            api.post(`/wordbase/g/${info.id}/rematch`, {
+                state: Save.new().serialize()
+            }).then(data => {
+                console.log(data);
+                resolve({ info: data.info, save: newSave });
+            });
+        }
+    });
 }

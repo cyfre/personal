@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import api from '../../lib/api';
-import { useEventListener, useInterval } from '../../lib/hooks';
+import { useE, useEventListener, useF, useInterval } from '../../lib/hooks';
 import { dist, end } from './util';
 import { isValidWord } from './dict';
 import { IPos, Pos, Player, ITile, Tile, Board } from './board';
@@ -94,9 +94,7 @@ const Row = ({row, word, handle}) => {
 }
 
 Object.assign(window, { wordbaseSettings: globals });
-export const Wordbase = ({open, info, save, setInfo, setSave}) => {
-  // const [info, setInfo]: [Info, any] = useState(startInfo);
-  // const [save, setSave]: [Save, any] = useState(startSave);
+export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
   const [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState(false);
   const [word, setWord]: [ITile[], any] = useState([]);
@@ -108,21 +106,11 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
   const canPlay = info.status === Player.none &&
     (isLocal || !info.p1 || auth.user === (save.p1 ? info.p1 : info.p2));
 
-  useEffect(() => { handle.resize() }, []);
-  useEffect(() => { handle.fetch(); }, [info.id]);
-  useInterval(() => { handle.check() }, 3000);
-  useEffect(() => { Object.assign(window, { save }) }, [save]);
-  useEffect(() => { setError('') }, [word]);
-  // useNotifyFilter((app, text) => {
-  //   let match = text.match(/\/wordbase#(\w+)/)
-  //   return match && match[1] === info.id
-  // })
-
   const handle = {
     check: () => {
       fetchInfo(info.id).then(data => {
         if (info.turn < data.info.turn || info.status !== data.info.status) {
-          console.log('fetch board', data);
+          // console.log('fetch board', data);
           handle.fetch()
         }
       });
@@ -130,8 +118,7 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
     fetch: () => {
       fetchGame(info.id).then(data => {
         setLoaded(true);
-        if (save.turn < data.save.turn || info.status !== data.info.status) {
-          console.log('set', data);
+        if (info.turn < data.info.turn || info.status !== data.info.status) {
           setInfo(data.info);
           setSave(data.save);
         }
@@ -161,17 +148,17 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
       if (word.length === 1) setWord([]);
     },
     hover: (pos: Pos) => {
-      if (!canPlay) return;
-      if (save.board.get(pos) && selected && word.length > 0) {
-        if (Tile.eq(end(word, 2), pos)) {
-          setWord(word.slice(0, word.length - 1));
-        } else {
-          let curr = word.slice(-1)[0];
-          if (Tile.isAdj(curr, pos)) {
-            let tile = save.board.get(pos);
-            if (!Tile.has(word, tile)) {
-              setWord(word.concat(tile));
-            }
+      let canHover = save.board.get(pos) && selected && word.length > 0;
+      if (!canPlay || !canHover) return;
+
+      if (Tile.eq(end(word, 2), pos)) {
+        setWord(word.slice(0, word.length - 1));
+      } else {
+        let curr = word.slice(-1)[0];
+        if (Tile.isAdj(curr, pos)) {
+          let tile = save.board.get(pos);
+          if (!Tile.has(word, tile)) {
+            setWord(word.concat(tile));
           }
         }
       }
@@ -199,47 +186,41 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
 
       let newSave = save.play(word);
       let newInfo = Info.play(info, newSave);
-      // console.log('submit', newInfo, newInfo.turn, newInfo.lastWord,
-      //     newSave.history[0].map(t => t.letter).join(''),
-      //     newSave);
       handle.clear();
       handle.send(newInfo, newSave);
     },
     rematch: () => {
-      rematchGame(info, (newInfo, newSave) => {
-        open(newInfo.id, newInfo)
-        setInfo(newInfo);
-        setSave(newSave);
+      rematchGame(info).then(({info, save}) => {
+        open(info.id)
+        setInfo(info);
+        setSave(save);
       });
-    },
-    menu: () => {
-      open(false, info);
     },
     keypress: (e: React.KeyboardEvent) => {
       switch (e.key) {
-        case 'Esc': handle.clear(); break;
+        case 'Escape': handle.clear(); break;
         case 'Enter': handle.submit(); break;
       }
     },
     resize: () => {
-      let wordbase: HTMLElement = document.querySelector('.wordbase');
-      // wordbase.style.width = '100%';
       let board: HTMLElement = document.querySelector('.board');
       let containerRect = board.parentElement.getBoundingClientRect();
-      console.log(containerRect);
 
       let ratio = Board.ROWS / Board.COLS;
       let width = Math.min(containerRect.width, containerRect.height / ratio);
-      // wordbase.style.width = width + 'px';
       board.style.width = width + 'px';
       board.style.height = width * ratio + 'px';
       tilePx = width / Board.COLS;
-      // setTimeout(() => setLoading(false), 100);
       setLoaded(true)
     },
   }
   useEventListener(window, 'keydown', handle.keypress, false);
   useEventListener(window, 'resize', handle.resize, false);
+
+  useF(handle.resize)
+  useF(info.id, handle.fetch)
+  useInterval(handle.check, 3000)
+  useF(word, () => setError(''))
 
   return (
     <Style className='wordbase-game'>
@@ -247,33 +228,35 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
 
       <div className='ui'>
         <div className='preview-container'>
-          {word.length
-          ? <div className='preview'>{word.map(t => t.letter).join('')}</div>
-          : <div className={`last ${save.p1 ? 'p2' : 'p1'}`}
-              onClick={() => {
-                save.board.do(tile => {
-                  if (tile.swap) {
-                    tile.swap = Object.assign({}, tile.swap)
-                  }
-                })
-                setSave(save.clone())
-              }}>
-            {save.history.length ? save.history[0].map(t => t.letter).join('') : ''}</div>
-          }
+          {word.length ?
+          <div className='preview'>{word.map(t => t.letter).join('')}</div>
+          :
+          <div className={`last ${save.p1 ? 'p2' : 'p1'}`} onClick={() => {
+            save.board.do(tile => {
+              if (tile.swap) {
+                tile.swap = Object.assign({}, tile.swap)
+              }
+            })
+            setSave(save.clone())
+          }}>
+            {save.history.length ? save.history[0].map(t => t.letter).join('') : ''}
+          </div>}
         </div>
         <div className={'control-container'
           + (word.length ? '' : ' spaced')}>
-          {info.turn < 0 ? '' : word.length
-          ? error ? <div className='control button'>{error}</div>
-          : <Fragment>
-            <div className='control button' onClick={handle.clear}>
-              cancel</div>
-            <div className='control button' onClick={handle.submit}>
-              submit</div>
-          </Fragment>
-          : <Fragment>
-            <div className='control button'
-              onClick={handle.menu}>
+          {info.turn < 0 ? '' : word.length ?
+            error ?
+            <div className='control button'>{error}</div>
+            :
+            <Fragment>
+              <div className='control button' onClick={handle.clear}>
+                cancel</div>
+              <div className='control button' onClick={handle.submit}>
+                submit</div>
+            </Fragment>
+          :
+          <Fragment>
+            <div className='control button'onClick={() => open(false)}>
               menu</div>
             {info.status === Player.none ?'':
             <div className='control button' onClick={handle.rematch}>
@@ -287,8 +270,8 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
 
       <div className='board-container'>
         <div className={`overlay ${overlay ? 'on' : 'off'}`}>
-          {info.turn < 2
-          ? <div className='info'>
+          {info.turn < 2 ?
+          <div className='info'>
             <p>How to play</p>
             <ul>
             <li>Play a chain of words from your base to the other end!</li>
@@ -319,7 +302,8 @@ export const Wordbase = ({open, info, save, setInfo, setSave}) => {
             <li>Sent in one email chain, and only if app is closed</li>
             </ul>
           </div>
-          : <div className='history'>
+          :
+          <div className='history'>
             <div className='word-count'>{`${info.turn} words played`}</div>
             {save.history.slice(1).map((item, i) =>
               <div key={i} className={`last ${(info.turn - i)%2 ? 'p2' : 'p1'}`}>

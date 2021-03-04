@@ -20,8 +20,6 @@ class Dot {
     this.l = .5
     this.scale = scale + r(.1) + .05
 
-    // console.log(pos, hue, scale)
-
     this.mesh = new THREE.Mesh(
       new THREE.CircleGeometry(5 * this.scale, 16)
         .translate(...this.pos, 0),
@@ -122,7 +120,7 @@ function animate(timestamp) {
   }
   if (p[0] !== undefined && doDot) {
     dots.push(new Dot(p.slice(), (Date.now() / 10000)%1, .1))
-    dot_timer = 1500
+    dot_timer = 7000
   }
 
   renderer.render(scene, camera);
@@ -177,12 +175,8 @@ export default () => {
     var distance = - camera.position.z / vec.z;
     pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
 
-    console.log(pos)
     p[0] = 1.5 * pos.x
     p[1] = 1.5 * pos.y
-    // let unP = new V3(pX, pY, 0).unproject(camera)
-    // p[0] = .465 * unP.x;
-    // p[1] = -.465 * unP.y;
   }
   const handleClear = () => {
     p[0] = undefined

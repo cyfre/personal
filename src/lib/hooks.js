@@ -5,11 +5,11 @@ import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
 
 const useE = (...props) => {
     let func = props.pop()
-    useEffect(() => func(...props), props)
+    useEffect(() => func(), props)
 }
 const useF = (...props) => {
     let func = props.pop()
-    useEffect(() => { func(...props) }, props)
+    useEffect(() => { func() }, props)
 }
 
 const useInput = (initialValue) => {

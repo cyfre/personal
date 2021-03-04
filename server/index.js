@@ -32,9 +32,16 @@ app.use((req, res, next) => {
     console.log(String(Date.now()), req.method, req.originalUrl, req.user);
     next();
 });
+// socket io
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
 app.use('/api/login', login.routes);
-app.use('/api/profile', require('./profile').routes);
+let profileRoutes = require('./profile').routes
+app.use('/api/u', profileRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/notify', require('./notify').routes);
 app.use('/api/reset', require('./reset').routes);
 app.use('/api/wordbase', require('./wordbase').routes);
@@ -43,25 +50,28 @@ app.use('/api/turt', require('./turt').routes);
 app.use('/api/cityhall', require('./cityhall').routes);
 app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
+app.use('/api/scores', require('./scores').routes);
 
-let n = 0
+app.use('/ly', require('./ly/redirect').routes)
+
+const regLive = require('./io/live')
+const regNotify = require('./notify/io')
 io.on('connection', socket => {
-    console.log('client connect');
-    n += 1
-    socket.on('echo', function (data) {
-        io.emit('message', data);
-    });
-    io.emit('online', n)
-    socket.on('disconnect', () => {
-        console.log('client disconnect')
-        n -= 1
-        io.emit('online', n)
-    });
+    let info = {}
+    socket.on('login', auth => {
+        login.authIo(auth).then(user => {
+            info.user = user;
+            console.log('[IO:LOGIN]', info)
+            socket.emit('login:done')
+        });
+    })
+    regLive(io, socket, info)
+    regNotify(io, socket, info)
+    socket.on('newListener', (data) => {
+        console.log('NL', data, info)
+    })
 });
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
+
 
 // production build
 app.use(express.static(path.join(__dirname, '..', 'build')));

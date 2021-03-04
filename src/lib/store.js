@@ -1,7 +1,3 @@
-export function remove(arr, item) {
-    return arr.filter(x => x !== item);
-}
-
 export function fetchCookie(name) {
     let namedCookie = document.cookie
         .split(';').reverse()
