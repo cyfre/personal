@@ -50,6 +50,7 @@ export function logout() {
 export function openLogin() {
     setAuth(auth.user, auth.token, true);
 }
+window['openLogin'] = openLogin;
 
 export function handleAuth(data) {
     // console.log(data);

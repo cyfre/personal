@@ -203,7 +203,7 @@ function updateVectors(isRow, board) {
         }
     }
 
-    moves = (getMoveTime() > 0) ? moves : [];
+    // moves = (getMoveTime() > 0) ? moves : [];
     // console.log(moves);
 
     return isChanged;
@@ -273,10 +273,17 @@ function constructBoard(board, isFinal=true) {
     let boardVals = convertBoard(board);
     let innerHTML = '<table>';
 
-    let borderAcross = '<tr class="border"><td class="border horizontal"></td><td class="numbers end not border horizontal"></tr>\n';
+    let borderAcross = `<tr class="border">
+        <td class="border horizontal"></td>
+        ${(window.chrome || window.parent?.chrome) ? '<td class="numbers end not border horizontal"></td>' : ''}
+    </tr>\n`;
     let borderDown = '<td class="border vertical"></td>';
 
-    innerHTML += `<tr class="numbers"><td class="numbers down across"><div>${board.rows.length}x${board.cols.length}</div></td><td class="not border vertical"></td>`;
+    innerHTML += `<tr class="numbers">`
+    // innerHTML += `<td class="numbers down across"><div>${board.rows.length}x${board.cols.length}</div></td>`
+    innerHTML += `<td class="not border vertical">
+        <div class="numbers down across"><div>${board.rows.length}x${board.cols.length}</div></div>
+    </td>`;
     for (let c = 0; c < board.cols.length; c++) {
         innerHTML += `<td class="numbers down"><div>${board.down[c].join('</div><div>')}</div></td>`;
     }
@@ -285,11 +292,16 @@ function constructBoard(board, isFinal=true) {
     innerHTML += borderAcross;
 
     for (let r = 0; r < board.rows.length; r++) {
-        innerHTML += `<tr><td class="numbers across"><div>${board.across[r].join('</div><div>')}</div></td>` + `<td class="border vertical r${r}"></td>`;
+        innerHTML += '<tr>'
+        // innerHTML += `<td class="numbers across"><div>${board.across[r].join('</div><div>')}</div></td>`
+        innerHTML += `<td class="border vertical r${r}">
+            <div class="numbers across"><div>${board.across[r].join('</div><div>')}</div></div>
+        </td>`;
         for (let c = 0; c < board.cols.length; c++) {
             innerHTML += `<td class="r${r} c${c} v${boardVals[r][c]}">${valMap[boardVals[r][c]]}</td>`;
         }
-        innerHTML += `<td class="border vertical r${r}"></td>` + '</tr>\n';
+        innerHTML += `<td class="border vertical r${r}"></td>` + '</tr>';
+        innerHTML += '</tr>'
     }
 
     innerHTML += borderAcross;
@@ -304,10 +316,11 @@ function constructBoard(board, isFinal=true) {
     $(`.c${board.cols.length - 1}`).addClass('border-right');
 
     if (isFinal) {
+        $('.highlight').removeClass('highlight down across');
         if (getMoveTime() > 0) {
-            $('.v2').fadeTo(1000, .1, 'easeOutSine');
+            setTimeout(() => $('.v2').addClass('slow done'))
         } else {
-            $('.v2').css('opacity', .1);
+            $('.v2').addClass('done')
         }
     } else {
         $('.v2').show();
@@ -373,7 +386,7 @@ function showSolve(down, across) {
             moves.push(board);
             timeoutId = setTimeout(showNextMove, 0);
         } else {
-            constructBoard(solve(down, across));
+            constructBoard(board);
             timeoutId = false;
         }
 
@@ -386,23 +399,22 @@ function showSolve(down, across) {
 }
 
 var timeoutId;
-function showNextMove() {
-    let moveTime = getMoveTime();
+function showNextMove(moveTime) {
+    moveTime = moveTime ?? getMoveTime();
+    if (timeoutId) {
+        clearTimeout(timeoutId)
+        timeoutId = undefined
+    }
+
     let timeScale;
     while (!timeScale) {
-        // if (moves.length === 1 || moveTime === 0) {
-        //     constructBoard(moves.pop());
-        //     return;
-        // } else {
-        //     timeScale = updateBoard(moves.shift());
-        // }
-        if (moves.length === 1 || moveTime === 0) {
-            if (!timeScale) {
-                constructBoard(moves.pop());
-            } else {
-                updateBoard(moves.shift());
-                $('.v2').fadeTo(1000, .1, 'easeOutSine');
-            }
+        if (moveTime === 0) {
+            constructBoard(moves.pop());
+            return;
+        } else if (moves.length === 1) {
+            updateBoard(moves.shift());
+            $('.highlight').removeClass('highlight down across');
+            setTimeout(() => $('.v2').addClass('slow done'))
             return;
         } else {
             timeScale = updateBoard(moves.shift());
@@ -413,64 +425,27 @@ function showNextMove() {
 }
 
 function getMoveTime(sliderVal) {
-    sliderVal = sliderVal || timeoutId ? $('#slider').slider('value') : 0;
+    sliderVal = sliderVal || (timeoutId ? document.querySelector('#slider input').value : 0);
 
     sliderVal = Math.max(0, Math.min(sliderVal, 100))
 
     return Math.ceil(
-        Math.pow(sliderVal, 3) / 1000
+        Math.pow(sliderVal, 3) / 500
     );
 }
-
-/*var timeoutIds;
-function showSolve(down, across) {
-    try {
-        if (timeoutIds)
-            timeoutIds.map(id => clearTimeout(id));
-
-        let board = solve(down, across);
-
-        let totalTime = ($('#slider').slider('value') * 200);
-        let moveTime = totalTime / moves.length;
-
-        console.log(totalTime, moveTime);
-
-        if (moveTime > 0) {
-            timeoutIds = moves.map((m, i) => setTimeout(updateBoard.bind(this, m), Math.round(moveTime * i)));
-            timeoutIds.push(setTimeout(constructBoard.bind(this, board), totalTime));
-        } else {
-            constructBoard(board);
-        }
-    } catch (e) {}
-}*/
 
 /*
 
 Main Script
 
 */
-$( function() {
-    var handle = $( "#custom-handle" );
-    $( "#slider" ).slider({
-        value: 50,
-        max: 101,
-        min: -1,
-        create: function() {
-            handle.text( getMoveTime(50) + 'ms' );
-        },
-        slide: function(event, ui) {
-            setTimeout(function() {
-                $('#custom-handle').text( getMoveTime(ui.value) + 'ms' );
-            });
-        },
-        stop: function(event, ui) {
-            setTimeout(function() {
-                $('#custom-handle').text( getMoveTime(ui.value) + 'ms' );
-                $('#slider').slider('value', Math.max(0, Math.min(ui.value, 100)));
-            });
-        }
-    });
-});
+let sliderText = document.querySelector('#slider label')
+let slider = document.querySelector('#slider input')
+slider.addEventListener('input', e => {
+    let ms = getMoveTime(e.target.value);
+    console.log(e.target.value, ms)
+    sliderText.textContent = ms ? `${ms}ms/action` : 'instant'
+})
 
 let hello = {
     title: 'Hello',
@@ -480,10 +455,12 @@ let hello = {
 
 let board = solve(parseNums(hello.down), parseNums(hello.across));
 constructBoard(board);
-timeoutId = true;
+// timeoutId = false;
 
 var down, across;
 $('#inputs input').on('input', function() {
+    timeoutId && showNextMove(0)
+
     let formData = new FormData(document.querySelector('form'));
 
     let downInput = formData.get('down');
@@ -548,11 +525,11 @@ let examples = [
     /*{
         down: '1 1',
         across: '1 1'
-    },
+    },*/
     {
         down: '1,1 2,1 1 2',
         across: '2 1 1,2 1,1'
-    },*/
+    },
     {
         title: 'Pine Cone',
         down: '2 5 2,3 1,2,1 6 3,1 5 2',
@@ -618,15 +595,19 @@ $('#examples').append(exampleButtons);
 
 // new board resizing code
 let boardEl = document.querySelector('#board')
+let bodyEl = document.querySelector('body')
 let rI
 function resizeBoard() {
     let tableEl = document.querySelector('#board table')
     if (tableEl) {
         let boardRect = boardEl.getBoundingClientRect()
+        let bodyRect = bodyEl.getBoundingClientRect()
         let tableRect = tableEl.getBoundingClientRect()
         console.log(boardRect, tableRect)
-        let scale = Math.round(Math.min(boardRect.width / tableRect.width, boardRect.height / tableRect.height) * 100)/100;
-        scale = (scale - 1) * .9 + 1;
+        let scale = Math.round(Math.min(
+            bodyRect.width / (tableRect.width + 120),
+            boardRect.height / tableRect.height) * 100)/100;
+        // scale = (scale - 1) * .9 + 1;
         console.log(`scale(${scale});`)
         // rI && clearInterval(rI)
         // rI = setInterval(() => $('#board table').css('transform', `scale(${scale})`), 100)
@@ -638,5 +619,4 @@ function resizeBoard() {
         // tableEl.style.transform = `scale(${scale});`
     }
 }
-resizeBoard()
 window.addEventListener('resize', resizeBoard)

@@ -4,7 +4,7 @@ import { Link, useHistory } from 'react-router-dom';
 import api from '../lib/api'
 import { useF, useAuth } from '../lib/hooks'
 import { sub, unsub } from '../lib/notify'
-import { InfoStyles, InfoBody, InfoSection, InfoLine } from '../components/Info'
+import { InfoStyles, InfoBody, InfoSection, InfoLine, InfoLoginBlock } from '../components/Info'
 
 
 const notifyProjects = 'wordbase'.split(' ')
@@ -40,7 +40,6 @@ export default () => {
       setToken('');
     }
   })
-  useF(notify, console.log)
   useF(emailEdit, () => {
     if (notify && emailRef?.current) {
       (emailRef.current as HTMLInputElement).value = notify.email || ''
@@ -72,7 +71,7 @@ export default () => {
 
   return <Style>
     <InfoBody>
-    {!notify ? '' : !auth.user ? 'log in to manage notifications' : <Fragment>
+    {!auth.user ? <InfoLoginBlock to='manage notifications'/> : !notify ? '' : <Fragment>
       <InfoSection label='user'>{auth.user}</InfoSection>
       <InfoSection className='email' labels={[
         'email',

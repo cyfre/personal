@@ -86,3 +86,24 @@ export function verify(user, token) {
         token,
     });
 }
+
+
+
+window.parent?.openLogin && document.querySelectorAll('.login').forEach(el => {
+    console.log('here')
+
+    function setLoginLink() {
+        el.innerHTML = auth.user
+        ? ``
+        : `(<a href="#">log in</a>)`
+    }
+    setLoginLink()
+    addAuthTrigger(setLoginLink)
+
+    el.addEventListener('click', e => {
+        console.log('click')
+        auth.user
+        ? logout()
+        : window.parent.openLogin()
+    })
+})

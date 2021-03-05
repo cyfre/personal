@@ -190,10 +190,8 @@ export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
       handle.send(newInfo, newSave);
     },
     rematch: () => {
-      rematchGame(info).then(({info, save}) => {
+      rematchGame(info).then(({info}) => {
         open(info.id)
-        setInfo(info);
-        setSave(save);
       });
     },
     keypress: (e: React.KeyboardEvent) => {
@@ -260,7 +258,7 @@ export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
               menu</div>
             {info.status === Player.none ?'':
             <div className='control button' onClick={handle.rematch}>
-            rematch</div>}
+            {info.rematch ? 'rematched' : 'rematch'}</div>}
             <div className='control button'
               onClick={() => setOverlay(!overlay)}>
               {overlay?'close':info.turn < 2?'how to':'history'}</div>

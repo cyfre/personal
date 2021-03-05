@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { InfoStyles, InfoBody, InfoOutLinks } from '../components/Info'
+import { InfoStyles, InfoBody, InfoLinks } from '../components/Info'
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
@@ -15,7 +15,7 @@ export default () => {
     ]
     return <InfoStyles>
         <InfoBody>
-            <InfoOutLinks {...{
+            <InfoLinks {...{
                 labels: ['why do I have so many domains?'],
                 entries: domains.map((d: any) =>
                     ({ text: d.text || d || d, data: `https://${d.text || d}/domains` })),

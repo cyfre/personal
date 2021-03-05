@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { openLogin } from '../lib/auth';
 
 export type InfoLabelType = (string | {text: string, func: () => any})
 export type InfoEntryType = (string | {text: string, data: any})
@@ -87,6 +88,34 @@ export const InfoLines = (props: {
   </InfoSection>
 }
 
+export const InfoEntry = (props: {
+  [key: string]: any,
+}) => {
+  return <div className='entry' {...props}>
+    {props.children}
+  </div>
+}
+export const InfoLink = (props: {
+  [key: string]: any,
+  to?: string,
+  text?: string
+}) => {
+  let { to, text } = props
+  return (!to ?
+  <div className='entry link' {...props}>
+    {props.children || text}
+  </div>
+  : to.match(`^${window.origin}`) ?
+  <Link className='entry link' {...props}>
+    {props.children || text || to}
+  </Link>
+  :
+  <a className='entry link' href={to} {...props}>
+    {props.children || text || to}
+  </a>
+  )
+}
+
 export const InfoList = ({entries, labels, entryLabels}: {
   entries: InfoEntryType[],
   labels?: InfoLabelType[],
@@ -97,9 +126,9 @@ export const InfoList = ({entries, labels, entryLabels}: {
     labels, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
-      <div className='entry'>
+      <InfoEntry>
         {typeof entry === 'string' ? entry : entry.text}
-      </div>),
+      </InfoEntry>),
     }))
   }} />
 }
@@ -113,25 +142,9 @@ export const InfoLinks = ({entries, labels, entryLabels}: {
     labels, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
-      <Link className='entry link' to={typeof entry === 'string' ? entry : entry.data}>
+      <InfoLink to={typeof entry === 'string' ? entry : entry.data}>
         {typeof entry === 'string' ? entry : entry.text}
-      </Link>),
-    }))
-  }} />
-}
-export const InfoOutLinks = ({entries, labels, entryLabels}: {
-  entries: InfoEntryType[],
-  labels?: InfoLabelType[],
-  entryLabels?: InfoLabelType[][],
-}) => {
-  entryLabels = entryLabels || []
-  return <InfoLines {...{
-    labels, lines: entries.map((entry, i) => ({
-      labels: entryLabels[i],
-      content: (
-      <a className='entry link' href={typeof entry === 'string' ? entry : entry.data}>
-        {typeof entry === 'string' ? entry : entry.text}
-      </a>),
+      </InfoLink>),
     }))
   }} />
 }
@@ -146,9 +159,9 @@ export const InfoFuncs = ({entries, entryFunc, labels, entryLabels}: {
     labels, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
-      <div className='entry link'
-      onClick={() => entryFunc(typeof entry === 'string' ? entry : entry.data)}>
-        {typeof entry === 'string' ? entry : entry.text}</div>),
+      <InfoLink onClick={() => entryFunc(typeof entry === 'string' ? entry : entry.data)}>
+        {typeof entry === 'string' ? entry : entry.text}
+      </InfoLink>),
     }))
   }} />
 }
@@ -195,6 +208,14 @@ export const InfoBody = (props) => {
   <div {...props} className={`body ${props.className || ''}`}>
     {props.children}
   </div>)
+}
+
+export const InfoLoginBlock = (props: {
+  to?: string,
+}) => {
+  return <InfoLine onClick={openLogin}>
+    <InfoLink>log in to {props.to || 'view page'}</InfoLink>
+  </InfoLine>
 }
 
 let background = 'white'; //'rgb(251 250 247)'

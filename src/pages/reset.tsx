@@ -4,13 +4,14 @@ import { useRouteMatch } from 'react-router-dom';
 import api from '../lib/api'
 import { useF, useAuth } from '../lib/hooks'
 import { handleAuth, sha256 } from '../lib/auth';
-import { InfoStyles, InfoBody, InfoSection } from '../components/Info'
+import { InfoStyles, InfoBody, InfoSection, InfoLoginBlock } from '../components/Info'
 
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
   let auth = useAuth();
-  let user = auth.user || useRouteMatch('/reset/:user')?.params.user;
+  let match = useRouteMatch('/reset/:user');
+  let user = auth.user || match?.params.user;
   let token = window.location.hash?.slice(1);
   let passRef = useRef();
   let [sent, setSent] = useState(false);
@@ -38,7 +39,7 @@ export default () => {
 
   return <InfoStyles>
     <InfoBody>
-    {!user ? 'log in to change password' : <Fragment>
+    {!user ? <InfoLoginBlock to='change password' /> : <Fragment>
       <InfoSection label='user'>{user}</InfoSection>
       <InfoSection label='new password' className='edit-container'>
         <input ref={passRef} type='password' placeholder='password'

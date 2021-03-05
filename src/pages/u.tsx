@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api';
 import { useF, useAuth } from '../lib/hooks';
-import { InfoStyles, InfoBody, InfoLinks, InfoSearch, InfoSection, InfoLine } from '../components/Info'
+import { InfoStyles, InfoBody, InfoLinks, InfoSearch, InfoSection, InfoLine, InfoLoginBlock } from '../components/Info'
 
 const UserList = ({label, users}) => {
   return <InfoLinks {...{
@@ -24,7 +24,7 @@ export default () => {
   let auth = useAuth();
   let history = useHistory();
   let user = useRouteMatch('/:page/:user')?.params.user || (() => {
-    history.replace(`/u/${auth.user}`);
+    auth.user && history.replace(`/u/${auth.user}`);
     return auth.user;
   })();
   let [loaded, setLoaded] = useState(false);
@@ -34,7 +34,7 @@ export default () => {
   let [similar, setSimilar] = useState([])
 
   useF(user, auth.user, () => {
-    handle.load();
+    user && handle.load();
   })
   const handle = {
     load: () => api.get(`/profile/${user}`).then(handle.parse),
@@ -99,6 +99,6 @@ export default () => {
       </InfoSection>
       <UserList label='similar' users={similar} />
     </InfoBody>
-    : ''}
+    : user ? '' : <InfoBody><InfoLoginBlock to='view your profile' /></InfoBody>}
   </InfoStyles>
 }

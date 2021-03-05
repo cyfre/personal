@@ -4,7 +4,7 @@ import { randAlphanum } from '../lib/util';
 import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useE, useF, useAuth } from '../lib/hooks';
-import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel } from '../components/Info'
+import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel, InfoLoginBlock } from '../components/Info'
 
 const ScoreEntry = ({entry, handle}) => {
   return (
@@ -142,7 +142,7 @@ export default () => {
         </InfoSection>
         :
         <InfoSection label='personal'>
-          sign in to view personal records
+          <InfoLoginBlock to='view personal records' />
         </InfoSection>
         }
       </Fragment>
@@ -161,28 +161,28 @@ const Style = styled(InfoStyles)`
     > * {
       min-height: 42%;
     }
-    *, .entry.link {
+    *, .entry-line .entry.link {
       color: white;
       color: #67e3ff; // blue
       color: #74f77f; // green 67ff74 99ff99
       // text-shadow: 0 0 1px #67ff74, 0 0 1px #67ff74;
       // font-weight: bold;
     }
-    &.app *, &.app .entry.link {
+    &.app .record *, &.app .record .entry.link {
       color: #ffffffe0;
       // color: #67e3ff; // blue 67e3ff 99d9ff
     }
     &.app .record:nth-of-type(3) * {
       color: #ff6767; // red ff6767 ff9999
-      color: #74f77f;
+      color: #74f77f !important;
     }
     &.app .record:nth-of-type(4) * {
-      color: #ffd767; // yellow ffd767 fe9
+      color: #ffd767 !important; // yellow ffd767 fe9
     }
     &.app .record:nth-of-type(5) * {
       color: #67ceff; // blue
       // color: #74f77f; // green
-      color: #ff6767;
+      color: #ff6767 !important;
     }
     // &.app .record:nth-of-type(6) * {
     //   color: #67e3ff; // blue

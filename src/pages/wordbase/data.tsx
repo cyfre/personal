@@ -38,19 +38,19 @@ export function updateGame(info: Info, save: Save) {
     }
 }
 
-export function rematchGame(info: Info): Promise<{info: Info, save: Save}> {
+export function rematchGame(info: Info): Promise<{info: Info}> {
     return new Promise(resolve => {
         let newSave = Save.new();
         if (info.id === localInfo.id) {
             localInfo = Info.local();
             localSave = newSave;
-            resolve({ info: localInfo, save: localSave });
+            resolve({ info: localInfo });
         } else {
             api.post(`/wordbase/g/${info.id}/rematch`, {
-                state: Save.new().serialize()
+                state: newSave.serialize()
             }).then(data => {
                 console.log(data);
-                resolve({ info: data.info, save: newSave });
+                resolve({ info: data.info });
             });
         }
     });
