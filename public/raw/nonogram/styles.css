@@ -1,25 +1,33 @@
 html {
     /*background: black;*/
     height: 100%;
+    width: 100%;
+    margin: 0;
+    font-size: min(1.5vw, 16px) !important;
+    font-family: 'Roboto Slab', serif;
 }
 
 body {
     background: white;
-    max-width: 1200px;
     height: 100%;
+    max-width: 70rem;
+    width: calc(100% - 2rem);
+    padding: 0 1rem;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
 * {
     font-family: 'Roboto Slab', serif;
-    font-size: 16px;
+    font-size: 1rem;
 }
 
 h1 {
     text-align: center;
-    font-size: 2em;
-    margin-top: 0;
-    padding-top: .67em;
+    font-size: 2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0;
 
     display: flex;
     flex-direction: row;
@@ -30,47 +38,52 @@ h1 {
 }
 
 img.logo {
-    height: 3em;
-    width: 3em;
-    padding-left: 2em;
+    height: 3rem;
+    width: 3rem;
+    padding-left: 2rem;
     image-rendering: pixelated;
 }
 
 hr {
+    width: 100%;
     border-top: 1px solid #8c8b8b;
-    max-width: 900px;
 }
 
 
 #inputs {
+    width: calc(100% - 2rem);
+    margin: 1.5rem auto;
     display: flex;
     justify-content: center;
     align-items: stretch;
-    margin: 30px;
 }
-
+#inputs form {
+    flex-grow: 1;
+}
 input {
-    width: 700px;
-    height: 24px;
-    margin: 5px;
-    text-indent: 3px;
+    /* width: 700px; */
+    width: 20rem;
+    flex-grow: 1;
+    height: 1.3rem;
+    margin: .3rem;
+    text-indent: .15rem;
     border: 1px solid rgb(121, 121, 121);
     font-family: sans-serif;
 }
-
 label {
     display: flex;
     justify-content: flex-end;
     align-items: center;
 }
-
 .label {
     padding-right: 5px;
+    min-width: 2.2rem;
+    text-align: right;
 }
 
 button {
-    margin: 5px;
-    border-radius: 3px;
+    margin: .3rem;
+    border-radius: .15rem;
     background-color: black;
     color: white;
     border: none;
@@ -80,30 +93,30 @@ button:focus {
 }
 
 button.lg {
-    font-size: 1.25em;
-    padding: 15px;
+    font-size: 1.25rem;
+    padding: 1rem;
 }
 
 button.sm {
-    font-size: 1em;
-    padding: 7px;
+    font-size: 1rem;
+    padding: .5rem;
 }
 
 
 #slider {
-    max-width: 900px;
-    height: 8px;
-    margin: auto;
+    width: 100%;
+    height: .5rem;
+    margin: 0 auto;
 }
 
 #custom-handle {
-    width: 4em;
-    height: 1.6em;
+    width: 4rem;
+    height: 1.6rem;
     top: 50%;
-    margin-top: -.8em;
-    margin-left: -2.075em;
+    margin-top: -.8rem;
+    margin-left: -2.075rem;
     text-align: center;
-    line-height: 1.6em;
+    line-height: 1.6rem;
 }
 #custom-handle:focus {
     outline: none;
@@ -115,8 +128,12 @@ button.sm {
 
 
 #board {
-    min-height: 200px;
-    margin: 40px auto;
+    /* min-height: 8rem; */
+    height: fit-content;
+    /* margin: 1rem; */
+    margin: 1rem auto;
+    flex-grow: 1;
+    width: calc(100% - 16rem);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -136,9 +153,12 @@ td {
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    width: 24px;
+    /* width: 24px;
     height: 23px;
-    font-size: 24px;
+    font-size: 24px; */
+    width: 1.5rem;
+    height: calc(1.5rem - 1px);
+    font-size: 1.5rem;
 }
 
 td.highlight {
@@ -147,13 +167,13 @@ td.highlight {
 }
 
 td.highlight.down {
-    border-right-width: 3px;
-    border-left-width: 3px;
+    border-right-width: .2rem;
+    border-left-width: .2rem;
 }
 
 td.highlight.across {
-    border-top-width: 3px;
-    border-bottom-width: 3px;
+    border-top-width: .2rem;
+    border-bottom-width: .2rem;
 }
 
 td.selected {
@@ -170,27 +190,29 @@ td.numbers {
     align-content: center;
 }
 td.numbers div {
-    font-size: 11px;
-    height: 1.25em;
+    font-size: .7rem;
+    height: .9rem;
 }
 
 td.numbers.down:not(.across) {
     height: auto;
     flex-direction: column;
     vertical-align: bottom;
-    padding-bottom: 5px;
+    padding: 0;
+    padding-bottom: .3rem;
 }
 
 td.numbers.across {
     width: 0;
     height: 0;
+    padding: 0;
 }
 td.numbers.across div {
-    padding-right: 8px;
+    padding-right: .5rem;
 }
 
 td.numbers.across.down div {
-    font-size: 14px;
+    font-size: .9rem;
 }
 
 
@@ -208,16 +230,19 @@ tr.border {
     display: flex;
 }
 td.border.horizontal {
-    height: 3px;
+    height: .2rem;
     flex: 1 0 auto;
 
 }
 td.not.border.horizontal {
-    flex: 0 0 2px;
+    flex: 0 0 .15rem;
+}
+td.end.not.border.horizontal {
+    flex: 0 0 .05rem;
 }
 
 td.border.vertical {
-    width: 3px;
+    width: .2rem;
 }
 
 
@@ -230,14 +255,14 @@ td.border.vertical {
 }
 .v2 {
     font-family: 'Coiny', 'Roboto Slab', sans-serif;
-    padding-top: 6px;
-    padding-left: 2px;
+    padding-top: .4rem;
+    padding-left: .1rem;
 }
 
 .guess.v1 {
     font-family: 'Coiny', 'Roboto Slab', sans-serif;
-    padding-top: 6px;
-    padding-left: 2px;
+    padding-top: .4rem;
+    padding-left: .1rem;
     color: white;
 }
 
