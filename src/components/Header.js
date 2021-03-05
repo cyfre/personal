@@ -151,7 +151,7 @@ export const Header = () => {
           <img className="profile" src="/profile.jpeg" alt="profile"/>
         </Link>
         {/* {isImplicitProject && <Link to='/projects'>/projects</Link>} */}
-        {crumbs.map(crumb => <Link to={crumb} key={crumb}>/{crumb.split('/').pop()}</Link>)}
+        {crumbs.map(crumb => <Link to={crumb} key={crumb}>/{crumb.split('/').pop().replace(/\+/g, ' ')}</Link>)}
         {isEmbeddedProject && <a className='raw-link' href={`/raw${crumbs[0]}${location.hash}`}>view raw</a>}
       </div>
       {/* <div>

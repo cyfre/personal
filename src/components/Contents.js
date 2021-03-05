@@ -139,10 +139,20 @@ const Embedded = ({ name }) => {
 
     // bring hash & title updates up
     useInterval(() => {
-        document.title = ifr.current.contentWindow.window.document.title;
-        let ifrHash = ifr.current.contentWindow.window.location.hash;
-        if (window.location.hash !== ifrHash) {
-            history.replace(ifrHash);
+        let loc = window.location
+        let ifrLoc = ifr.current.contentWindow.window.location
+        if (ifrLoc.hostname && !ifrLoc.pathname.startsWith('/raw')) {
+            if (ifrLoc.origin === loc.origin) {
+                let newEnd = ifrLoc.href.replace(ifrLoc.origin, '')
+                history.replace(newEnd)
+            } else {
+                window.location.assign(ifrLoc.href)
+            }
+        } else {
+            document.title = ifr.current.contentWindow.window.document.title;
+            if (window.location.hash !== ifrLoc.hash) {
+                history.replace(ifrLoc.hash);
+            }
         }
     }, 500);
 

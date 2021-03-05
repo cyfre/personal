@@ -496,6 +496,8 @@ const Style = styled.div`
     background: black;
     display: flex;
     flex-direction: column;
+    touch-action: none;
+    touch-action: pinch-zoom;
     &.loading {
       display: none;
       .tile::after { animation: none !important; }
@@ -515,6 +517,8 @@ const Style = styled.div`
     flex-grow: 1;
     display: flex;
     flex-direction: row;
+    touch-action: none;
+    touch-action: pinch-zoom;
     &:first-child, &:last-child {
       position: relative;
       &::after {
@@ -549,6 +553,7 @@ const Style = styled.div`
     font-size: 1.4rem;
     user-select: none;
     touch-action: none;
+    touch-action: pinch-zoom;
     background: transparent;
     z-index: 100;
     overflow: visible;

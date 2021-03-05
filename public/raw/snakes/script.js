@@ -1,3 +1,6 @@
+import { addAuthTrigger } from '/lib/modules/site/auth.js'
+import { getScore, addScore } from '/lib/modules/site/scores.js'
+
 setTimeout(() => {
 const CONSTANTS = {
     WIDTH: 25,
@@ -276,6 +279,33 @@ class GameState {
         document.addEventListener('keydown', event => this.keyEvents.push([event.key, true]), false);
         document.addEventListener('keyup', event => this.keyEvents.push([event.key, false]), false);
 
+        this.prevTouch;
+        this.prevTouchKey;
+        let guiContainer = document.querySelector('.gui-container')
+        document.addEventListener('touchstart', e => {
+            this.prevTouch = e.touches[0]
+        }, false);
+        document.addEventListener('touchmove', e => {
+            let { clientX: x1, clientY: y1 } = this.prevTouch
+            let { clientX: x2, clientY: y2 } = e.touches[0]
+            let x = x2 - x1
+            let y = y2 - y1
+            let moveDist = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
+            console.log(x, y, moveDist)
+            if (moveDist > 20) {
+                let key
+                if (Math.abs(x) > Math.abs(y)) {
+                    key = (x > 0) ? 'd' : 'a'
+                } else {
+                    key = (y > 0) ? 's' : 'w'
+                }
+                this.keyEvents.push([key, true])
+                this.keyEvents.push([this.prevTouchKey, false])
+                this.prevTouch = e.touches[0]
+                this.prevTouchKey = key
+            }
+        }, false);
+
         Arc.add(ctx => {
             Arc.drawSprite('board', 0, 0, CONSTANTS.WIDTH, CONSTANTS.HEIGHT);
             // ctx.drawImage(Arc.img.board, 0, 0, WIDTH, HEIGHT);
@@ -358,14 +388,17 @@ class GameState {
                 break;
             case STATE.GAMEOVER:
                 Arc.tickTime = CONSTANTS.TICK_MS/5;
+                let points = this.players.reduce((acc, p) => acc + p.score, 0)
                 if (this.n_players == 1) {
                     this.score = Arc.command(ctx => {
-                        Arc.drawNumber(this.players[0].score, Arc.width/2, 8.5 - Math.sin(this.counter/20)/8, 0.5, 0.5, 0.5, 0.5);
+                        Arc.drawNumber(points, Arc.width/2, 8.5 - Math.sin(this.counter/20)/8, 0.5, 0.5, 0.5, 0.5);
                     }, 1000);
+                    addScore('snakes+1p', points)
                 } else if (this.n_players == 2) {
                     this.score = Arc.command(ctx => {
-                        Arc.drawNumber(this.players[0].score + this.players[1].score, Arc.width/2, 8.5 - Math.sin(this.counter/20)/8, 0.5, 0.5, 0.5, 0.5);
+                        Arc.drawNumber(points, Arc.width/2, 8.5 - Math.sin(this.counter/20)/8, 0.5, 0.5, 0.5, 0.5);
                     }, 1000);
+                    addScore('snakes+2p', points)
                 }/*if (this.n_players === 2) {
                     this.score = Arc.command(ctx => {
                         // Arc.drawNumber(this.players[0].score, Arc.width/2 - 2, Arc.height/2, 0.5, 0.5, 1, 1);
@@ -373,6 +406,7 @@ class GameState {
                     }, 1000);
                 }*/
                 Arc.add(this.score);
+                setTimeout(() => reloadHighScores(), 100)
                 break;
             default:
         }
@@ -388,6 +422,7 @@ class GameState {
         if (this.counter % 2) {
             while (this.keyEvents.length) {
                 let [key, isDown] = this.keyEvents.pop();
+                console.log(key)
                 if (this.state === STATE.PLAY
                     && keyToPlayerDir[key]) {
                     this.handlePlayerInput(key, isDown);
@@ -486,6 +521,7 @@ class GameState {
     }
 }
 
+let game;
 let canvas = document.querySelector('#gameCanvas');
 Arc.init(canvas, CONSTANTS.WIDTH, CONSTANTS.HEIGHT);
 
@@ -510,3 +546,52 @@ Promise.all([
     game = new GameState();
 });
 }, 150);
+
+
+
+let hsPersonal = document.querySelector('#hs-personal')
+let hsGlobal = document.querySelector('#hs-global')
+
+const reloadHighScores = () => {
+    Promise.all([
+        getScore('snakes+1p'),
+        getScore('snakes+2p')
+    ]).then(results => {
+        let outputs = results.map(data => {
+            console.log(data)
+            let { user, global } = data
+            return [
+                user?.scores?.length
+                ? `${user.scores[0].score} (${user.scores[0].user})` //user.scores[0].score
+                : 'NONE',
+                global?.scores?.length
+                ? `${global.scores[0].score} (${global.scores[0].user})`
+                : 'NONE'
+            ]
+        })
+        console.log(outputs)
+        hsPersonal.textContent = `${outputs[0][0]} / ${outputs[1][0]}`
+        hsGlobal.textContent = `${outputs[0][1]} / ${outputs[1][1]}`
+    })
+}
+addAuthTrigger(auth => {
+    reloadHighScores()
+    // getScore('snakes').then(data => {
+    //     console.log(data)
+    //     let { user, global } = data
+    //     if (user?.scores?.length) {
+    //         hsPersonal.textContent = user.scores[0].score
+    //     } else {
+    //         hsPersonal.textContent = 'NONE'
+    //     }
+    //     if (global?.scores?.length) {
+    //         hsGlobal.textContent = `${global.scores[0].score} (${global.scores[0].user})`
+    //     } else {
+    //         hsGlobal.textContent = 'NONE'
+    //     }
+    // })
+})
+
+// document.querySelector('#scoreboard').href = `${window.origin}/records`
+document.querySelector('#single-link').href = `${window.origin}/records/snakes+1p`
+document.querySelector('#coop-link').href = `${window.origin}/records/snakes+2p`

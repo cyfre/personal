@@ -3,6 +3,10 @@ import { Counter } from '/lib/modules/counter.js'
 import { Level } from './level.js'
 import sprites from './sprites.js'
 
+import { addAuthTrigger } from '/lib/modules/site/auth.js'
+import { getScore, addScore } from '/lib/modules/site/scores.js'
+
+
 const CONSTANTS = {
     TICK_MS: 12,
     ROWS: 21,
@@ -64,6 +68,7 @@ class GameState {
 
     tick() {
         this.counter.tick();
+        this.highscore = highscore.personal;
         switch (this.state) {
             case STATE.PLAY:
                 this.level.update();
@@ -80,17 +85,20 @@ class GameState {
     }
 
     fetchHighscore() {
-        let snackmanCookie = document.cookie
-            .split(';')
-            .find(cookie => cookie.startsWith('snackmanHighscore'));
-        if (snackmanCookie) {
-            return Number(snackmanCookie.split('=')[1]);
-        }
-        return 0;
+        return highscore.personal;
+        // let snackmanCookie = document.cookie
+        //     .split(';')
+        //     .find(cookie => cookie.startsWith('snackmanHighscore'));
+        // if (snackmanCookie) {
+        //     return Number(snackmanCookie.split('=')[1]);
+        // }
+        // return 0;
     }
     saveHighscore(score) {
         // save cookie for ten years
-        document.cookie = `snackmanHighscore=${score}; max-age=${60*60*24*365*10}`;
+        // document.cookie = `snackmanHighscore=${score}; max-age=${60*60*24*365*10}`;
+        highscore.personal = score;
+        addScore('snackman', score);
     }
 
     draw(ctx) {
@@ -133,5 +141,20 @@ class GameState {
         }
     }
 }
+
+const highscore = {
+    personal: 0
+}
+const reloadHighScores = () => {
+    getScore('snackman').then(data => {
+        let { user, global } = data
+        if (user?.scores?.length) {
+            highscore.personal = user.scores[0].score
+        }
+    })
+}
+addAuthTrigger(() => {
+    reloadHighScores()
+})
 
 export { CONSTANTS }

@@ -1,6 +1,9 @@
 body {
     background: #f0e6cc;
 }
+body.seamless {
+    background: none;
+}
 
 .container {
     user-select: none;

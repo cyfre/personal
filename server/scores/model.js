@@ -18,6 +18,8 @@ const names = {
 const C = entryMap(names, name => () => db.collection(name));
 
 async function getUser(user) {
+    // C.user().deleteMany({ app: 'befruited' })
+    // C.global().deleteMany({ app: 'befruited' })
     let records = (await C.user().find({ user }).toArray()).sort((a, b) => a.app.localeCompare(b.app))
     return { records }
 }
@@ -98,13 +100,13 @@ async function addScore(user, app, score) {
             .sort((a, b) => (b.score - a.score) || a.t - b.t) // desc by score, then asc by time
             .slice(0, N_SCORES)
     }
-    console.log('[SCORES:ENTRY]', app, scoreEntry)
+    // console.log('[SCORES:ENTRY]', app, scoreEntry)
 
     let userScores = userRecord.scores.filter(s => typeof s.score === 'number')
     if (userScores.length < N_SCORES || Math.min(...userScores.map(s => s.score)) < score) {
         isPersonal = true
         userRecord.scores = appendScore(userScores)
-        console.log('[SCORES:PERSONAL]', userRecord.scores)
+        // console.log('[SCORES:PERSONAL]', userRecord.scores)
         C.user().updateOne({ user, app }, { $set: userRecord }, { upsert: true })
     }
 
@@ -112,11 +114,10 @@ async function addScore(user, app, score) {
     if (globalScores.length < N_SCORES || Math.min(...globalScores.map(s => s.score)) < score) {
         // only keep one global record per user
         let userGlobal = globalScores.find(s => s.user === user)
-        console.log(userGlobal)
         if (!userGlobal || userGlobal.score < score) {
             isGlobal = true
             globalRecord.scores = appendScore(globalScores.filter(s => s.user !== user))
-            console.log('[SCORES:GLOBAL]', globalRecord.scores)
+            // console.log('[SCORES:GLOBAL]', globalRecord.scores)
             C.global().updateOne({ app }, { $set: globalRecord }, { upsert: true })
         }
     }

@@ -2,6 +2,10 @@ import Arc from '/lib/modules/arcm.js'
 import { Counter, Countdown } from '/lib/modules/counter.js'
 import { bounded, randi, matrix } from '/lib/modules/utils.js'
 
+import { addAuthTrigger } from '/lib/modules/site/auth.js'
+import { getScore, addScore } from '/lib/modules/site/scores.js'
+
+
 const CNST = {
     TICK_MS: 12,
     HEIGHT: 80,
@@ -27,6 +31,21 @@ const STATE = {
     MENU: 'menu',
     PLAY: 'play'
 };
+
+const highscore = {
+    personal: 0
+}
+const reloadHighScores = () => {
+    getScore('befruited').then(data => {
+        let { user, global } = data
+        if (user?.scores?.length) {
+            highscore.personal = user.scores[0].score
+        }
+    })
+}
+addAuthTrigger(() => {
+    reloadHighScores()
+})
 
 setTimeout(() => {
     Arc.init(document.querySelector('#befruitedCanvas'), CNST.WIDTH, CNST.HEIGHT);
@@ -478,6 +497,7 @@ class GameState {
     }
 
     tick() {
+        this.highscore = highscore.personal;
         switch (this.state) {
             case STATE.PLAY:
                 this.board.tick();
@@ -493,15 +513,18 @@ class GameState {
     }
 
     fetchHighscore() {
-        let scoreCookie = document.cookie
-            .split(';')
-            .find(cookie => cookie.startsWith('befruitedHighscore'));
-        return (scoreCookie) ? Number(scoreCookie.split('=')[1]) : 0;
+        return highscore.personal
+        // let scoreCookie = document.cookie
+        //     .split(';')
+        //     .find(cookie => cookie.startsWith('befruitedHighscore'));
+        // return (scoreCookie) ? Number(scoreCookie.split('=')[1]) : 0;
     }
     setHighscore(score) {
         // save cookie for ten years
-        document.cookie = `befruitedHighscore=${score}; max-age=${60*60*24*365*10}`;
-        this.highscore = score;
+        // document.cookie = `befruitedHighscore=${score}; max-age=${60*60*24*365*10}`;
+        // this.highscore = score;
+        highscore.personal = score
+        addScore('befruited', score)
     }
 
     draw(ctx) {
