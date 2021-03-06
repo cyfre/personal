@@ -51,12 +51,35 @@ export const useIo = () => {
   useF(auth.user, handle.login)
 }
 
-export const useUserSocket = () => {
+export const useUserSocket = (app?) => {
   const [local, setLocal] = useState(socket);
+
   useE(() => {
       let callback = socket => setLocal(socket)
       addSocketTrigger(callback);
       return () => removeSocketTrigger(callback);
   });
+
+  const [joined, setJoined] = useState(false)
+  useE(local, () => {
+    if (app && local) {
+      local.emit(`${app}:join`)
+      setJoined(true)
+      return () => {
+        local.emit(`${app}:leave`)
+        setJoined(false)
+      }
+    }
+  })
+
+  const auth = useAuth();
+  useE(auth.user, () => {
+    if (app && joined) {
+      local.emit(`${app}:leave`)
+      setTimeout(() => {
+        local.emit(`${app}:join`)
+      })
+    }
+  })
   return local;
 }

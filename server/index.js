@@ -54,8 +54,11 @@ app.use('/api/scores', require('./scores').routes);
 
 app.use('/ly', require('./ly/redirect').routes)
 
-const regLive = require('./io/live')
-const regNotify = require('./notify/io')
+const ios = [
+    require('./io/live'),
+    require('./notify/io'),
+    require('./io/speckle')
+]
 io.on('connection', socket => {
     let info = {}
     socket.on('login', auth => {
@@ -65,11 +68,7 @@ io.on('connection', socket => {
             socket.emit('login:done')
         });
     })
-    regLive(io, socket, info)
-    regNotify(io, socket, info)
-    socket.on('newListener', (data) => {
-        console.log('NL', data, info)
-    })
+    ios.forEach(ioReg => ioReg(io, socket, info))
 });
 
 

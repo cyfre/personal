@@ -1,6 +1,6 @@
 import React, { Fragment, useState } from 'react'
 import ReactDOM from 'react-dom'
-import { BrowserRouter as Router, Route, Switch, useHistory } from 'react-router-dom'
+import { BrowserRouter as Router, Route, Redirect, Switch, useHistory } from 'react-router-dom'
 import styled from 'styled-components'
 import * as serviceWorker from './serviceWorker'
 import { useNotify } from './lib/notify'
@@ -68,7 +68,8 @@ const App = () => (
     <Notify />
     <Io />
     <Switch>
-      <Route exact path='/(|projects|about|contact)' component={Base} />
+      <Redirect exact path='/home' to='/' />
+      <Route exact path='/(|projects|about)' component={Base} />
       <Route path='*'>
         <Style>
           <Header />
