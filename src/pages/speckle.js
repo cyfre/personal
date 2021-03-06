@@ -4,9 +4,12 @@ import { Link } from 'react-router-dom';
 import { useAnimate, useEventListener, useF, useE } from '../lib/hooks';
 import { useUserSocket } from '../lib/io';
 
+// svg version - clean circles, 2nd best perf
+
 const tau = 2 * Math.PI
 const baseRadius = 5
 const UNSCALE = 2;
+const REUNSCALE = 3
 
 class Dot {
   hsl
@@ -24,36 +27,45 @@ class Dot {
 
     return this.scale < .1 || this.l > 1;
   }
-  draw(ctx) {
-    ctx.beginPath();
-    ctx.fillStyle = `hsl(${this.hue * 360}, ${(.9 + .2*this.l) * 100}%, ${this.l * 100}%)`
-    ctx.arc(this.pos[0], this.pos[1], this.scale * baseRadius, 0, tau);
-    ctx.fill();
+  draw(el) {
+    el = el || document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+    el.setAttributeNS(null, 'cx', scale * this.pos[0])
+    el.setAttributeNS(null, 'cy', scale * -this.pos[1])
+    el.setAttributeNS(null, 'r', scale * this.scale * baseRadius)
+    el.setAttributeNS(null, 'style', `fill: hsl(${this.hue * 360}, ${(.9 + .2*this.l) * 100}%, ${this.l * 100}%);`)
+    return el
   }
 }
 
 let canvas, ctx, scale
 function init() {
-  canvas = document.querySelector('canvas')
-  ctx = canvas.getContext('2d')
+  canvas = document.querySelector('#canvas')
+  // ctx = canvas.getContext('2d')
   resize()
 }
 function resize() {
   let bounds = document.querySelector('#canvasContainer').getBoundingClientRect();
   let aspect = bounds.width / bounds.height;
-  let width = 1024;
-  let height = width / aspect
+  let width, height
+  if (aspect < 1) {
+    width = 150;
+    height = width / aspect
+  } else {
+    height = 150;
+    width = height * aspect;
+  }
 
-  canvas.width = width;
-  canvas.height = height;
-  scale = UNSCALE * canvas.width / bounds.width
+  // canvas.width = width;
+  // canvas.height = height;
+  canvas.setAttribute('viewBox', `${-width/2} ${-height/2} ${width} ${height}`)
+  scale = UNSCALE * width / bounds.width
 }
 
 let p = [undefined];
 let t = 0
 let dot_timer = 0
 let dots = []
-let socket
+let socket, doEmit = false
 let dotsToAdd = []
 
 let prev_t
@@ -85,21 +97,25 @@ function animate(timestamp) {
   if (p[0] !== undefined && doDot) {
     let dotArgs = [p.slice(), (Date.now() / 10000)%1, .1]
     dots.push(new Dot(...dotArgs))
-    socket && socket.emit('speckle:dot', dotArgs)
+    doEmit && socket && socket.emit('speckle:dot', dotArgs)
     dot_timer = 7000
     dot_timer = 100
   }
   dotsToAdd.forEach(args => dots.push(new Dot(...args)))
   dotsToAdd = []
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-  ctx.translate(canvas.width/2, canvas.height/2)
-  ctx.scale(scale, -scale)
-  dots.forEach(dot => {
-    dot.draw(ctx)
+  let circles = document.querySelectorAll('#canvas circle')
+  circles.forEach((el, i) => {
+    if (i < dots.length) {
+      dots[i].draw(el)
+    } else {
+      canvas.removeChild(el)
+    }
   })
-  ctx.scale(1/scale, -1/scale)
-  ctx.translate(-canvas.width/2, -canvas.height/2)
+  if (dots.length > circles.length) {
+    dots.slice(circles.length).forEach(dot => canvas.appendChild(dot.draw()))
+  }
+  // canvas.innerHtml = dots.map(dot => dot.draw())
 }
 
 export default () => {
@@ -117,6 +133,7 @@ export default () => {
       })
       socket.on("speckle:online", data => {
         setOnline(data)
+        doEmit = data.length > 1
       })
     }
   })
@@ -134,6 +151,7 @@ export default () => {
     p[1] = -pY / UNSCALE;
   }
   const handleClear = () => {
+    console.log("CLEARED")
     p[0] = undefined
     p[1] = undefined
   }
@@ -144,14 +162,15 @@ export default () => {
       <div>online:</div>
       {online.map((user, i) => <Link key={i} to={`/u/${user}`}>{user}</Link>)}
     </div>}
-    <div id="canvasContainer"
-      style={{ height: '100%', width: '100%', background: 'white' }}>
-      <canvas id="canvas" ref={canvasRef}
+    <div id="canvasContainer" style={{ height: '100%', width: '100%', background: 'white' }}>
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+        id="canvas" ref={canvasRef}
         onPointerMove={e => handleMove(e.clientX, e.clientY)}
         onTouchMove={e => handleMove(
           e.touches[0].clientX, e.touches[0].clientY)}
-        onPointerOut={handleClear}
-        onTouchEnd={handleClear}/>
+        onMouseLeave={handleClear}
+        onPointerLeave={handleClear}>
+      </svg>
     </div>
   </Style>
 }
@@ -169,14 +188,16 @@ const Style = styled.div`
     flex-direction: column;
     color: black;
     pointer-events: none;
+    user-select: none;
     a {
       pointer-events: all;
       color: black;
       &:hover { text-decoration: underline; }
     }
   }
-  canvas {
+  #canvas {
     width: 100%;
     height: 100%;
+    user-select: none;
   }
 `
