@@ -3,16 +3,16 @@ import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
 
 // reference here: https://rangle.io/blog/simplifying-controlled-inputs-with-hooks/
 
-const useE = (...props) => {
+export const useE = (...props) => {
     let func = props.pop()
     useEffect(() => func(), props)
 }
-const useF = (...props) => {
+export const useF = (...props) => {
     let func = props.pop()
     useEffect(() => { func() }, props)
 }
 
-const useInput = (initialValue) => {
+export const useInput = (initialValue) => {
     const [value, setValue] = useState(initialValue);
 
     return {
@@ -26,7 +26,7 @@ const useInput = (initialValue) => {
     };
 };
 
-const useScript = (src) => {
+export const useScript = (src) => {
     useE(src, () => {
         let script = document.createElement('script');
         script.src = src;
@@ -37,7 +37,7 @@ const useScript = (src) => {
     });
 }
 
-const useTitle = (title) => {
+export const useTitle = (title) => {
     useE(title, () => {
         const prevTitle = document.title;
         document.title = title;
@@ -49,7 +49,7 @@ const useTitle = (title) => {
     });
 }
 
-const useLink = (href, rel) => {
+export const useLink = (href, rel) => {
     useE(href, rel, () => {
         let link = document.createElement('link');
         link.href = href;
@@ -61,21 +61,61 @@ const useLink = (href, rel) => {
     });
 }
 
-const cleanupId = (id, callback) => () => callback(id);
+let icon = document.querySelector('head [rel=icon]')
+export const useIcon = (href) => {
+    useE(() => {
+        icon.href = href
+        return () => {
+            icon.href = '/profile.jpeg'
+        }
+    });
+}
 
-const useTimeout = (callback, ms) =>
+let manifest = document.querySelector('head [rel=manifest]')
+const stringManifest = JSON.stringify({
+    name: `freshman.dev`,
+    display: `minimal-ui`,
+    start_url: `${window.origin}`,
+    icons: [{
+        src: `${window.origin}/profile_full.png`,
+        sizes: `595x595`,
+        type: `image/png`
+    }, {
+        src: `${window.origin}/profile.png`,
+        sizes: `256x256`,
+        type: `image/png`
+    }]
+});
+const blob = new Blob([stringManifest], {type: 'application/json'});
+const defaultManifest = URL.createObjectURL(blob)
+manifest.href = defaultManifest
+export const useManifest = (info) => {
+    useE(() => {
+        // from https://medium.com/@alshakero/how-to-setup-your-web-app-manifest-dynamically-using-javascript-f7fbee899a61
+        const stringManifest = JSON.stringify(info);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        manifest.href = URL.createObjectURL(blob)
+        return () => {
+            manifest.href = defaultManifest
+        }
+    });
+}
+
+export const cleanupId = (id, callback) => () => callback(id);
+
+export const useTimeout = (callback, ms) =>
     useE(callback, ms, () => cleanupId(setTimeout(callback, ms), id => clearTimeout(id)));
 
-const useInterval = (callback, ms) =>
+export const useInterval = (callback, ms) =>
     useE(callback, ms, () => cleanupId(setInterval(callback, ms), id => clearInterval(id)));
 
-const useEventListener = (target, type, callback, useCapture) =>
+export const useEventListener = (target, type, callback, useCapture) =>
     useE(target, type, callback, useCapture, () => cleanupId(
         target.addEventListener(type, callback, useCapture),
         () => target.removeEventListener(type, callback, useCapture),
     ));
 
-const useAnimate = (animate) =>
+export const useAnimate = (animate) =>
     useE(animate, () => {
         let id;
         const wrappedAnimate = (timestamp) => {
@@ -86,7 +126,7 @@ const useAnimate = (animate) =>
         return () => cancelAnimationFrame(id);
     });
 
-const useAuth = () => {
+export const useAuth = () => {
     const [localAuth, setLocalAuth] = useState(Object.assign({}, auth));
     useE(() => {
         let callback = auth => setLocalAuth(Object.assign({}, auth))
@@ -95,17 +135,4 @@ const useAuth = () => {
     });
 
     return localAuth;
-}
-
-export {
-    useE, useF,
-    useInput,
-    useScript,
-    useTitle,
-    useLink,
-    useTimeout,
-    useInterval,
-    useEventListener,
-    useAnimate,
-    useAuth
 }

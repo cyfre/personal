@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { WordbaseMenu } from './menu';
 import { WordbaseGame } from './game';
 import api from '../../lib/api';
-import { useAuth, useF } from '../../lib/hooks';
+import { useAuth, useF, useIcon, useManifest } from '../../lib/hooks';
 import { useNotifyFilter } from '../../lib/notify'
 import { Info, Save } from './save';
 import { fetchGame } from './data';
@@ -35,7 +35,21 @@ export default () => {
         auth.user && api.post('profile/checkin/wordbase')
         open(window.location.hash.slice(1))
     });
-
+    useIcon('/raw/wordbase/favicon.png')
+    useManifest({
+        name: `/wordbase`,
+        display: `standalone`,
+        start_url: `${window.origin}/wordbase`,
+        icons: [{
+            src: `${window.origin}/raw/wordbase/favicon.png`,
+            sizes: `32x32`,
+            type: `image/png`
+        },{
+            src: `${window.origin}/raw/wordbase/favicon256.png`,
+            sizes: `256x256`,
+            type: `image/png`
+        }]
+    })
     useF(info, () => {
         // update infoList from current info
         if (info && infoList) {

@@ -2,7 +2,7 @@ import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Route } from 'react-router-dom';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
-import { useTitle, useTimeout, useInterval, useEventListener } from '../lib/hooks';
+import { useTitle, useTimeout, useInterval, useEventListener, useF, useE } from '../lib/hooks';
 
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -129,10 +129,10 @@ const Embedded = ({ name }) => {
     };
 
     // focus & set src to start
-    useEffect(() => {
+    useF(() => {
         ifr.current.focus();
         handle.hash(window.location.hash);
-    }, []);
+    });
 
     // send hash updates down
     useEventListener(window, 'hashchange', () => handle.hash(window.location.hash));
@@ -155,6 +155,15 @@ const Embedded = ({ name }) => {
             }
         }
     }, 500);
+    useE(loaded, () => {
+        let icon = ifr.current.contentWindow.window.document.querySelector('head link[rel=icon]');
+        if (icon) {
+            document.querySelector('head [rel=icon]').href = icon.href
+        }
+        return () => {
+            document.querySelector('head [rel=icon]').href = '/profile.jpeg'
+        }
+    })
 
     return (
         <IFrameDiv className={loaded ? '' : 'loading'}>

@@ -156,7 +156,8 @@ async function rematch(user, id, state) {
 }
 async function accept(user, id) {
     if (!id) {
-        let entry = await C.invite().findOne({});
+        // let me create multiple open invites, but match others with themselves
+        let entry = await C.invite().findOne(user === 'cyrus' ? { user: { $ne: user }} : {});
         if (!entry) throw Error('no open invites');
         id = entry.id;
     }

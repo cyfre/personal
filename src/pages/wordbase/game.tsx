@@ -273,9 +273,15 @@ export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
             <p>How to play</p>
             <ul>
             <li>Play a chain of words from your base to the other end!</li>
-            <li>{` •  select a tile you already own to start spelling`
+            <li>{` •  select & drag from a tile you own to start spelling`
             + `\n •  cut off your opponent's tiles to clear them`
             + `\n •  bomb tiles (black) flip adjacent tiles too`}</li>
+            <div className='img-container'>
+              {/* <img src="/raw/wordbase/example.png" /> */}
+              <img src="/raw/wordbase/ex1.png" />
+              <img src="/raw/wordbase/ex2.png" />
+              <img src="/raw/wordbase/ex3.png" />
+            </div>
             </ul>
 
             <p>Turn order</p>
@@ -444,6 +450,16 @@ const Style = styled.div`
             margin-bottom: .3rem;
             opacity: .7;
           }
+        }
+        .img-container {
+          height: 7rem;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+        }
+        img {
+          object-fit: scale-down;
+          margin: 0 .5rem;
         }
       }
 

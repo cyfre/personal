@@ -111,9 +111,9 @@ const UpperSection = ({outer, auth}: {
   useF(isNew, () => { if (!isNew) setFriend(false) })
 
   // show 'copied!' for 3s
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]: [boolean | string, any] = useState(false);
   useE(copied, () => {
-    if (copied) setTimeout(() => setCopied(false), 3000);
+    if (copied) setTimeout(() => setCopied(false), 5000);
   })
 
   const handle = {
@@ -128,7 +128,6 @@ const UpperSection = ({outer, auth}: {
     },
     invite: (path): Promise<{info: Info}> => {
       setNew(false);
-      setFriend(false);
       return new Promise((resolve, reject) => {
         api.post(path, { state: Save.new().serialize() })
           .then(data => {
@@ -147,6 +146,7 @@ const UpperSection = ({outer, auth}: {
       setCopied(true)
       handle.invite('/wordbase/i/private')
         .then(data => {
+          setCopied(`copied #${data.info.id}, send it!`)
           navigator.clipboard.writeText(
             `${window.location.origin}/wordbase#${data.info.id}`);
         })
@@ -155,10 +155,13 @@ const UpperSection = ({outer, auth}: {
       .then(data => outer.open(data.info.id)),
     random: () => {
       setNew(false)
-      setFriend(false)
       api.post('/wordbase/i/accept')
         .then(({info}) => outer.open(info.id))
-        .catch(() => handle.open())
+        .catch(() => handle.open().then(data => {
+          setCopied(`none open, created #${data.info.id}`)
+          navigator.clipboard.writeText(
+            `${window.location.origin}/wordbase#${data.info.id}`);
+        }))
         .finally(() => outer.load());
     },
   }
@@ -176,7 +179,7 @@ const UpperSection = ({outer, auth}: {
       <Fragment>
         <div className={'button' + (isNew ? ' inverse' : '')}
           onClick={() => setNew(!isNew)}>
-          {isNew ? 'cancel' : copied ? 'copied!' : 'online game'}
+          {isNew ? 'cancel' : typeof copied === 'string' ? copied : 'online game'}
         </div>
         {!isNew ? '' :
         <Fragment>
