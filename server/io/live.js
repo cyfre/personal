@@ -1,31 +1,49 @@
+const { roomed } = require('./')
 
-
-let n = 0
+let typing = new Set()
 module.exports = (io, socket, info) => {
-  let joined = false
-  function join() {
-    if (!joined) {
-      console.log('[IO:LIVE:JOIN]', info)
-      n += 1
-      joined = info.user || 'user'
-      io.emit('live:online', n)
-      io.emit('live:message', `> ${joined} joined`)
-    }
-  }
-  function leave() {
-    if (joined) {
-      console.log('[IO:LIVE:LEAVE]')
-      n -= 1
-      io.emit('live:online', n)
-      io.emit('live:message', `> ${joined} left`)
-      joined = false
-    }
-  }
 
-  socket.on('live:message', data => {
-      io.emit('live:message', `${info.user || 'user'}: ${data}`);
-  });
-  socket.on('live:join', join);
-  socket.on('live:leave', leave);
-  socket.on('disconnect', leave);
+   socket.on('live:message', data => {
+         io.emit('live:message', {
+            text: `${info.user || 'user'}: ${data}`,
+            type: 'message'
+         });
+   });
+   socket.on('live:typing', isTyping => {
+      let isChange
+      if (isTyping) {
+         isChange = !typing.has(info.user)
+         typing.add(info.user)
+      } else {
+         isChange = typing.has(info.user)
+         typing.delete(info.user)
+      }
+      isChange && io.emit('live:typing', Array.from(typing))
+   });
+
+   roomed(io, socket, info, 'live',
+      (joined, users) => {
+         let usersWithoutJoined = users.slice()
+         usersWithoutJoined.splice(users.indexOf(joined), 1)
+         // if (usersWithoutJoined.length > 0) {
+         //    socket.emit('live:message', {
+         //       text: `> ${usersWithoutJoined.join(', ')} online`,
+         //       type: 'online'
+         //    })
+         // }
+         io.to('live').emit('live:message', {
+            text: `> ${joined} joined`,
+            type: 'action'
+         })
+         io.emit('live:typing', Array.from(typing))
+      },
+      (joined, users) => {
+         io.to('live').emit('live:message', {
+            text: `> ${joined} left`,
+            type: 'action'
+         })
+         typing.delete(info.user)
+         io.emit('live:typing', Array.from(typing))
+      })
+
 }

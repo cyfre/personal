@@ -11,6 +11,7 @@ import { theme } from './common';
 import { localInfo } from './data';
 import { Loader } from '../../components/Contents';
 import { GameProgress } from './progress';
+import { copy } from '../../lib/copy';
 
 const GameItem = ({info, isEdit, outer}) => {
   const auth = useAuth();
@@ -44,14 +45,14 @@ const GameItem = ({info, isEdit, outer}) => {
         </span>
       </div>}
     </div>
-    : <div className='main' onClick={() => {
-        navigator.clipboard.writeText(`${window.location.origin}/wordbase#${info.id}`);
-        setCopied(true);
-      }}>
+    : <div className='main' onPointerDown={() => {
+      copy(`${window.location.origin}/wordbase#${info.id}`)
+      setCopied(true)
+    }}>
 
       <div className='info dark'>
         <span ref={inviteRef}>
-          {copied ? 'copied!' : `invite  #${info.id}`}
+          {copied ? 'copied!' : `invite  ${window.location.host}/wordbase#${info.id}`}
         </span>
       </div>
     </div>}
@@ -146,9 +147,8 @@ const UpperSection = ({outer, auth}: {
       setCopied(true)
       handle.invite('/wordbase/i/private')
         .then(data => {
+          copy(`${window.location.origin}/wordbase#${data.info.id}`)
           setCopied(`copied #${data.info.id}, send it!`)
-          navigator.clipboard.writeText(
-            `${window.location.origin}/wordbase#${data.info.id}`);
         })
     },
     friend: user => handle.invite(`/wordbase/i/friend/${user}`)
@@ -158,9 +158,8 @@ const UpperSection = ({outer, auth}: {
       api.post('/wordbase/i/accept')
         .then(({info}) => outer.open(info.id))
         .catch(() => handle.open().then(data => {
+          copy(`${window.location.origin}/wordbase#${data.info.id}`)
           setCopied(`none open, created #${data.info.id}`)
-          navigator.clipboard.writeText(
-            `${window.location.origin}/wordbase#${data.info.id}`);
         }))
         .finally(() => outer.load());
     },
@@ -168,6 +167,10 @@ const UpperSection = ({outer, auth}: {
 
   return (
     <div className={'upper' + (isNew ? ' new' : '')}>
+
+      {/* <div className='img-container'>
+        <img src="/raw/wordbase/favicon.png" />
+      </div> */}
 
       <div className='button-row'>
         <div className='button' onClick={() => outer.open(localInfo.id)}>
@@ -213,7 +216,7 @@ const UpperSection = ({outer, auth}: {
   )
 }
 
-export const WordbaseMenu = ({menuClosed, open, infoList, setList}) => {
+export const WordbaseMenu = ({menuClosed, open, infoList, reload, setList}) => {
   const auth = useAuth();
   const [isEdit, setEdit] = useState(false);
 
@@ -237,10 +240,10 @@ export const WordbaseMenu = ({menuClosed, open, infoList, setList}) => {
   useTimeout(() => infoList || setList([]), 1000)
 
   // reload list when user changes and every 3s if open
-  useF(auth.user, handle.load);
+  useF(auth.user, reload, handle.load);
   const reloadIfOpen = () => !menuClosed && handle.load()
   useF(menuClosed, reloadIfOpen);
-  useInterval(reloadIfOpen, 3000);
+  // useInterval(reloadIfOpen, 3000);
 
   return (
     <Style className='wordbase-menu'>
@@ -444,6 +447,22 @@ const Style = styled.div`
       overflow: hidden;
       &.closed { max-width: 0; padding: 0; }
       &.open { max-width: 100%; }
+    }
+  }
+  .img-container {
+    position: absolute;
+    top: .9rem;
+    right: .7rem;
+    border-radius: .5rem;
+    background: #00000011;
+    padding: .1rem .3rem .3rem .1rem;
+    height: 5.6rem;
+    width: 5.6rem;
+    img {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      z-index: 1;
     }
   }
 `

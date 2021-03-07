@@ -29,33 +29,29 @@ export function subbed(page) {
 
 const notifyFilters = []
 export function useNotify(history) {
-  let socket = useUserSocket()
-
-  useF(socket, () => {
-    if (socket) {
-      socket.on('notify:msg', (msg: { [key: string]: string[] }) => {
-        console.log('MSG', msg)
-        Object.entries(msg).forEach(async entry => {
-          if ('default' === Notification.permission) {
-            await Notification.requestPermission()
-          }
-          let [app, list] = entry
-          list
-          .filter(text => !notifyFilters.some(f => f(app, text)))
-          .forEach(text => {
-            let [body, link] = text.split(' – ')
-            console.log(body, link)
-            let notif = new Notification(`/${app}`, {
-              body,
-              tag: link
-            })
-            notif.onclick = () => {
-              history.push(link.replace('freshman.dev', ''))
-            }
+  useUserSocket('', socket => {
+    socket.on('notify:msg', (msg: { [key: string]: string[] }) => {
+      console.log('MSG', msg)
+      Object.entries(msg).forEach(async entry => {
+        if ('default' === Notification?.permission) {
+          await Notification.requestPermission()
+        }
+        let [app, list] = entry
+        list
+        .filter(text => !notifyFilters.some(f => f(app, text)))
+        .forEach(text => {
+          let [body, link] = text.split(' – ')
+          console.log(body, link)
+          let notif = new Notification(`/${app}`, {
+            body,
+            tag: link || app
           })
+          notif.onclick = () => {
+            history.push(link?.match('^freshman.dev') ? link.replace('freshman.dev', '') : `/${app}`)
+          }
         })
       })
-    }
+    })
   })
 }
 // export function useNotify(history) {
@@ -89,6 +85,10 @@ export function useNotify(history) {
 export function useNotifyFilter(filter: (app: string, text: string) => boolean) {
   useE(() => {
     notifyFilters.push(filter)
-    return () => remove(notifyFilters, filter);
+    console.log('ADD FILTER', notifyFilters)
+    return () => {
+      notifyFilters.splice(notifyFilters.indexOf(filter), 1)
+      console.log('REMOVE FILTER', notifyFilters)
+    };
   })
 }

@@ -2,6 +2,7 @@ const db = require('../db');
 const { pick, entryMap } = require('../util');
 const { randAlphanum } = require('../rand');
 const notify = require('../notify').model
+const ioM = require('../io')
 
 const names = {
     user: 'wordbase-user',
@@ -105,11 +106,12 @@ async function play(user, id, newInfo, state) {
     );
 
     let other = info.p1 === user ? info.p2 : info.p1;
+    ioM.send([user], 'wordbase:update', info)
     notify.send(other, 'wordbase',
-        [info.status === -1
+        info.status === -1
         ? `${user} played ${info.lastWord.toUpperCase()}`
         : `${user} won with ${info.lastWord.toUpperCase()}`,
-        `freshman.dev/wordbase#${info.id}`].join(' – '))
+        `freshman.dev/wordbase#${info.id}`)
 
     return { info }
 }
@@ -123,8 +125,9 @@ async function resign(user, id) {
         _setInfo(info);
 
         let other = info.p1 === user ? info.p2 : info.p1;
+        ioM.send(user, 'wordbase:update', info)
         notify.send(other, 'wordbase',
-            `${user} resigned, you win! – freshman.dev/wordbase#${info.id}`)
+            `${user} resigned, you win!`, `freshman.dev/wordbase#${info.id}`)
     }
     return { info }
 }
@@ -149,8 +152,9 @@ async function rematch(user, id, state) {
         _setInfo(info)
 
         let other = info.p1 === user ? info.p2 : info.p1;
+        ioM.send(user, 'wordbase:update', info)
         notify.send(other, 'wordbase',
-            `${user} requested a rematch! – freshman.dev/wordbase#${info.rematch}`)
+            `${user} requested a rematch!`, `freshman.dev/wordbase#${info.rematch}`)
     }
     return rematch
 }
@@ -201,6 +205,7 @@ async function create(user, other, state) {
         id: info.id,
         state,
     });
+    ioM.send([user, other], 'wordbase:update', info)
     return { info }
 }
 async function open(user, state) {

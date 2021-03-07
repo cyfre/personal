@@ -233,6 +233,7 @@ display: flex; flex-direction: column;
     display: inline-flex;
     align-items: center;
     justify-content: flex-start;
+    flex-wrap: wrap;
     > * {
       margin-left: .5rem;
     }
@@ -260,9 +261,10 @@ display: flex; flex-direction: column;
 
   > * {
     margin-bottom: .5rem;
-    min-height: 3rem;
+    // min-height: 3rem;
   }
   .entry-line {
+    min-height: 3rem;
     display: flex;
     align-items: center;
     flex-wrap: wrap;

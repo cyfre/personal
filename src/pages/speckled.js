@@ -161,16 +161,13 @@ export default () => {
   useEventListener(window, 'resize', onWindowResize, false);
   const [online, setOnline] = useState([])
 
-  socket = useUserSocket('speckle');
-  useE(socket, () => {
-    if (socket) {
-      socket.on("speckle:dot", data => {
-        dotsToAdd.push(data)
-      })
-      socket.on("speckle:online", data => {
-        setOnline(data)
-      })
-    }
+  socket = useUserSocket('speckle', socket => {
+    socket.on("speckle:dot", data => {
+      dotsToAdd.push(data)
+    })
+    socket.on("speckle:online", data => {
+      setOnline(data)
+    })
   })
 
   const handleMove = (x, y) => {

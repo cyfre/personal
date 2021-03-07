@@ -54,19 +54,27 @@ app.use('/api/scores', require('./scores').routes);
 
 app.use('/ly', require('./ly/redirect').routes)
 
+require('./io').set(io)
+const ioM = require('./io')
+ioM.set(io)
 const ios = [
     require('./io/live'),
-    require('./notify/io'),
-    require('./io/speckle')
+    // require('./notify/io'),
+    require('./io/speckle'),
 ]
 io.on('connection', socket => {
     let info = {}
     socket.on('login', auth => {
         login.authIo(auth).then(user => {
             info.user = user;
-            console.log('[IO:LOGIN]', info)
+            ioM.model.addIo(user, socket.id)
+            console.log('[IO:login]', info)
             socket.emit('login:done')
         });
+    })
+    socket.on('disconnect', auth => {
+        console.log('[IO:logout]', info)
+        info.user && ioM.model.removeIo(info.user, socket.id)
     })
     ios.forEach(ioReg => ioReg(io, socket, info))
 });
@@ -83,6 +91,7 @@ db.connect('mongodb://localhost/site', (err) => {
     if (err) {
         console.log(err)
     } else {
+        ioM.model.clearIo()
         server.listen(port, () => `App started on port ${port}`)
         // let appServer = app.listen(port, () => console.log(`App started on port ${port}`));
     }

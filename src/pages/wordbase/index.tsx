@@ -4,11 +4,12 @@ import { useHistory } from 'react-router-dom';
 import { WordbaseMenu } from './menu';
 import { WordbaseGame } from './game';
 import api from '../../lib/api';
-import { useAuth, useF, useIcon, useManifest } from '../../lib/hooks';
+import { useAuth, useEventListener, useF, useIcon, useManifest } from '../../lib/hooks';
 import { useNotifyFilter } from '../../lib/notify'
 import { Info, Save } from './save';
 import { fetchGame } from './data';
 import './fonts.css';
+import { useUserSocket } from '../../lib/io';
 
 export default () => {
     const auth = useAuth();
@@ -63,10 +64,31 @@ export default () => {
         }
     })
 
+    // reload on wordbase:update, focus, and notify:msg
+    useUserSocket('', socket => {
+        socket.on('wordbase:update', newInfo => {
+            console.log(newInfo)
+            setReload(newInfo)
+        })
+    })
+    useEventListener(window, 'focus', () => {
+        setReload(Object.assign({}, info))
+    })
+    useNotifyFilter((app, text) => {
+        let match = text.match(/\/wordbase#(\w+)/)
+        if (match) {
+            let id = match[1]
+            console.log('WORDBASE FILTER', id)
+            setReload({ id })
+            return true
+        }
+        return false
+    })
+
     return <Style className={gameClosed ? 'closed' : ''}>
-        <WordbaseMenu {...{ menuClosed: !gameClosed, open, infoList, setList }} />
+        <WordbaseMenu {...{ menuClosed: !gameClosed, open, infoList, reload, setList }} />
         <div className='divider'></div>
-        {info ? <WordbaseGame {...{ open, info, save, setInfo, setSave }} /> : ''}
+        {info ? <WordbaseGame {...{ open, info, save, reload, setInfo, setSave }} /> : ''}
     </Style>
     // return (
     //     info
@@ -134,14 +156,4 @@ const Style = styled.div`
     //             }
     //         }
     //     }).catch(err => console.log(err))
-    // })
-    // useNotifyFilter((app, text) => {
-    //     let match = text.match(/\/wordbase#(\w+)/)
-    //     if (match) {
-    //         let id = match[1]
-    //         console.log('WORDBASE FILTER', id)
-    //         setReload(id)
-    //         // return true
-    //     }
-    //     return false
     // })

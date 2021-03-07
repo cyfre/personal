@@ -57,8 +57,7 @@ async function follow(user, other) {
         viewer = (await update(user, userUpdate)).profile
         profile = (await update(other, otherUpdate)).profile
         if (!(profile.unfollowers || []).includes(user)) {
-            notify.send(other, 'profile',
-                `@${user} followed you – freshman.dev/u/${user}`)
+            notify.send(other, 'profile', `@${user} followed you`, `freshman.dev/u/${user}`)
         }
     }
     return {

@@ -3,10 +3,10 @@ const { entryMap, remove } = require('../util');
 const login = require('../login').model;
 const mail = require('../mail');
 const { randAlphanum } = require('../rand');
+const ioM = require('../io')
 
 const names = {
     notify: 'notify',
-        // user: string
         // email: string
         // verify: string
         // verified: string[]
@@ -101,31 +101,50 @@ async function read(user, _app) {
     return { msg }
 }
 
-async function send(user, app, text) {
-    let { notify } = await get(user)
-    let { msg } = notify
-    msg[app] = (msg[app] || []).concat(text)
-    update(user, { msg })
+async function send(users, app, text, link='') {
+    text = `${text} – ${link || `freshman.dev/${app}`}`
+    let isSingle = typeof users === 'string'
+    let results = await Promise.all((isSingle ? [users] : users).map(async user => {
+        let { notify } = await get(user)
+        let { msg } = notify
 
-    console.log('SEND', user, app, text)
-    // will notify if not read & cleared within 10s
-    let unsub = notify.unsub || []
-    console.log(notify.email, !notify.verify, !unsub.includes(app))
-    if (notify.email && !notify.verify && !unsub.includes(app)) {
-        setTimeout(async () => {
-            let { notify } = await get(user)
-            let { msg } = notify
+        msg[app] = (msg[app] || []).concat(text)
 
-            let appMsg = msg[app] || []
-            if (appMsg.includes(text)) {
-                msg[app] = remove(appMsg, text)
-                update(user, { msg })
-                _chain(notify, app, text)
+        let ioSuccess = await ioM.send([user], "notify:msg", msg)
+        if (!ioSuccess[0]) {
+            update(user, { msg })
+
+            console.log('[NOTIFY:send]', user, app, text)
+            // will notify if not read & cleared within 10s
+            let unsub = notify.unsub || []
+            console.log(notify.email, !notify.verify, !unsub.includes(app))
+            if (notify.email && !notify.verify && !unsub.includes(app)) {
+                setTimeout(async () => {
+                    let { notify } = await get(user)
+                    let { msg } = notify
+
+                    let appMsg = msg[app] || []
+                    if (appMsg.includes(text)) {
+                        msg[app] = remove(appMsg, text)
+                        update(user, { msg })
+                        _chain(notify, app, text)
+                    }
+                }, 10000)
             }
-        }, 10000)
-    }
+        }
+        return { msg }
+    }))
 
-    return { msg }
+    return isSingle ? results[0] : results;
+}
+async function soft(users, app, text, link='') {
+    text = `${text} – ${link || `freshman.dev/${app}`}`
+    let msg = {
+        [app]: [text]
+    }
+    let results = await ioM.send(isSingle ? [users] : users, "notify:msg", msg)
+
+    return isSingle ? results[0] : results;
 }
 
 
@@ -138,4 +157,5 @@ module.exports = {
     sub,
     read,
     send,
+    soft,
 }

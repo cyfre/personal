@@ -5,6 +5,7 @@ import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useE, useF, useAuth } from '../lib/hooks';
 import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel } from '../components/Info'
+import { copy } from '../lib/copy'
 
 
 const short = (window.location.hostname === 'localhost')
@@ -153,7 +154,7 @@ const LinkMenu = ({handle, lys}) => {
       { text: 'new', func: handle.new }
     ]} /></InfoLine>
     <InfoSection className='lys'
-    labels={['your links']} >
+    labels={['your links']}>
       {lys.length
       ? lys.map((ly, i) =>
         <InfoLine key={i} labels={[
@@ -161,7 +162,7 @@ const LinkMenu = ({handle, lys}) => {
             ly.links[0] + (ly.links.length === 1 ? '' : ` + ${ly.links.length - 1}`)
           ]}>
           <div className={copied === i ? 'entry' : 'entry link'} onClick={() => {
-            navigator.clipboard.writeText(`${short}/ly/${ly.hash}`);
+            copy(`${short}/ly/${ly.hash}`)
             setCopied(i)
             }}>
             {copied === i ? 'copied!' : `/ly/${ly.hash}`}</div>
@@ -235,8 +236,8 @@ const LinkView = ({handle, ly}) => {
       'link',
     ]}>
       <div className={copied ? '' : 'entry link'} onClick={() => {
-        // navigator.clipboard.writeText(`${window.location.origin}/ly/${ly.hash}`);
-        navigator.clipboard.writeText(`${short}/ly/${ly.hash}`);
+        // copy(`${window.location.origin}/ly/${ly.hash}`);
+        copy(`${short}/ly/${ly.hash}`)
         setCopied(true)
         setTimeout(() => setCopied(false), 3000)
         }}>

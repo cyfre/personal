@@ -4,56 +4,67 @@ import { io } from "socket.io-client"
 import api from "../lib/api"
 import { useE, useF, useAuth } from "../lib/hooks"
 import { useUserSocket } from "../lib/io"
-import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel } from '../components/Info'
-
+import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel, InfoEntry } from '../components/Info'
 
 export default () => {
   const auth = useAuth()
-  const socket = useUserSocket()
-  const [online, setOnline] = useState("")
+  const [online, setOnline] = useState([])
   const [response, setResponse] = useState([])
-  const [joined, setJoined] = useState(false)
+  const [typing, setTyping] = useState([])
 
-  useE(socket, () => {
-    if (socket) {
-      let res = []
-      socket.on("live:message", data => {
-        res = res.concat(data)
+  const handle = {
+    typing: e => {
+      socket.emit('live:typing', e.target.value)
+    }
+  }
+
+  const socket = useUserSocket('live', socket => {
+    let res = []
+    socket.on("live:message", ({text, type}) => {
+      if (type !== 'online' || res.length === 0) {
+        res = res.concat(text)
         setResponse(res)
-      })
-      socket.on("live:online", data => {
-        setOnline(data)
-      })
-      socket.emit("live:join")
-      setJoined(true)
-      return () => {
-        setJoined(false)
-        socket.emit("live:leave")
       }
-    }
-  })
-  useE(auth.user, () => {
-    if (joined) {
-      socket.emit("live:leave")
-      setTimeout(() => {
-        socket.emit("live:join")
-      })
-    }
+    })
+    socket.on("live:online", data => {
+      setOnline(data)
+    })
+    socket.on("live:typing", data => {
+      setTyping(data)
+    })
   })
 
+  let oNotT = online.slice()
+  typing.forEach(u => oNotT.splice(oNotT.indexOf(u), 1))
   return <InfoStyles><InfoBody>
-    <InfoSection className='edit-container' labels={[
-      `${online} online ${online === 1 ? `(it's just you)` : ''}`,
+    <InfoSection labels={[
+      `${online.length} online${online.length === 1 ? ` (it's just you)` : ':'}`,
+      ...(online.length > 1 ? online : []),
       ]}>
-      <input type="text" onKeyDown={e => {
-        if (e.key === 'Enter') {
-          socket.emit('live:message', e.target.value)
-          e.target.value = ''
-        }
-      }}></input>
+      {/* {typing.length ?
+      <InfoLabel labels={[
+        `${typing.length} typing`,
+        ...typing,
+        ]}/>
+      : ''} */}
+      <InfoLine className='edit-container'>
+      <input type="text"
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            socket.emit('live:message', e.target.value)
+            e.target.value = ''
+            handle.typing(e)
+          }
+        }}
+        onChange={handle.typing}></input>
+      </InfoLine>
     </InfoSection>
     <InfoSection labels={[
       'chat',
+      // typing.length ? `... ${typing.join(', ')}` : '',
+      // typing.length ? `${typing.length} typing:` : 'chat',
+      typing.length ? `...` : '',
+      ...typing,
       ]}>
       {response.slice().reverse().map((line, i) =>
         <div key={i}>{line}</div>

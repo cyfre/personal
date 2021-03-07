@@ -94,7 +94,7 @@ const Row = ({row, word, handle}) => {
 }
 
 Object.assign(window, { wordbaseSettings: globals });
-export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
+export const WordbaseGame = ({open, info, save, reload, setInfo, setSave}) => {
   const [loaded, setLoaded] = useState(false);
   const [selected, setSelected] = useState(false);
   const [word, setWord]: [ITile[], any] = useState([]);
@@ -216,8 +216,8 @@ export const WordbaseGame = ({open, info, save, setInfo, setSave}) => {
   useEventListener(window, 'resize', handle.resize, false);
 
   useF(handle.resize)
-  useF(info.id, handle.fetch)
-  useInterval(handle.check, 3000)
+  useF(info.id, reload, handle.fetch)
+  // useInterval(handle.check, 3000)
   useF(word, () => setError(''))
 
   return (

@@ -27,8 +27,7 @@ async function _update(user, props) {
 async function request(user) {
     let token = randAlphanum(7)
     _update(user, { token })
-    notify.send(user, 'reset',
-        `password reset – freshman.dev/reset/${user}#${token}`)
+    notify.send(user, 'reset', `password reset`, `freshman.dev/reset/${user}#${token}`)
 }
 
 async function user(user, pass) {
