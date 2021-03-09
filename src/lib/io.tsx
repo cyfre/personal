@@ -44,6 +44,7 @@ export const useIo = () => {
       handle.login(local)
     })
     local.on('login:done', () => {
+      local.emit('init')
       joinedRooms.forEach(room => local.emit(`${room}:join`))
       setSocket(local)
     })
@@ -54,18 +55,27 @@ export const useIo = () => {
   useF(auth.user, handle.login)
 }
 
-export const useUserSocket = (roomToJoin='', func: (socket)=>any) => {
+export const useUserSocket = (roomToJoin='', ons?: { [key: string]: (...args)=>any }, emits?: (socket)=>any) => {
   const [local, setLocal] = useState(socket);
 
-  useE(() => {
+  useF(() => {
     let callback = socket => setLocal(socket)
     addSocketTrigger(callback);
     return () => removeSocketTrigger(callback);
   });
 
+  useE(local, () => {
+    if (local) {
+      ons && Object.keys(ons).forEach(evt => local.on(evt, ons[evt]))
+      emits && emits(local)
+      if (ons) return () => {
+        Object.keys(ons).forEach(evt => local.off(evt, ons[evt]))
+      }
+    }
+  })
+
   const [joined, setJoined] = useState(false)
   useE(local, () => {
-    local && func(local)
     if (roomToJoin && local) {
       local.emit(`${roomToJoin}:join`)
       setJoined(true)
@@ -79,7 +89,7 @@ export const useUserSocket = (roomToJoin='', func: (socket)=>any) => {
   })
 
   const auth = useAuth();
-  useE(auth.user, () => {
+  useF(auth.user, () => {
     if (roomToJoin && joined) {
       local.emit(`${roomToJoin}:leave`)
       setTimeout(() => {

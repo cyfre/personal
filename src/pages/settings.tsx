@@ -87,7 +87,7 @@ const Style = styled(InfoStyles)`
   .personal {
     .entry-line {
       a {
-        min-width: 6rem;
+        min-width: 4.5rem;
       }
     }
   }

@@ -9,8 +9,9 @@ import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel, InfoE
 export default () => {
   const auth = useAuth()
   const [online, setOnline] = useState([])
-  const [response, setResponse] = useState([])
+  const [lines, setLines] = useState([])
   const [typing, setTyping] = useState([])
+  const [update, setUpdate] = useState()
 
   const handle = {
     typing: e => {
@@ -18,20 +19,25 @@ export default () => {
     }
   }
 
-  const socket = useUserSocket('live', socket => {
-    let res = []
-    socket.on("live:message", ({text, type}) => {
-      if (type !== 'online' || res.length === 0) {
-        res = res.concat(text)
-        setResponse(res)
-      }
-    })
-    socket.on("live:online", data => {
+  const socket = useUserSocket('live', {
+    "live:message": ({text, type}) => {
+      setUpdate({text, type})
+    },
+    "live:online": data => {
       setOnline(data)
-    })
-    socket.on("live:typing", data => {
+    },
+    "live:typing": data => {
       setTyping(data)
-    })
+    }
+  })
+  useF(update, () => {
+    if (update) {
+      let { text, type } = update
+      if (type !== 'online' || lines.length === 0) {
+        // res = res.concat(text)
+        setLines(lines.concat(text))
+      }
+    }
   })
 
   let oNotT = online.slice()
@@ -66,7 +72,7 @@ export default () => {
       typing.length ? `...` : '',
       ...typing,
       ]}>
-      {response.slice().reverse().map((line, i) =>
+      {lines.slice().reverse().map((line, i) =>
         <div key={i}>{line}</div>
       )}
     </InfoSection>

@@ -12,6 +12,7 @@ import { auth, openLogin } from '../../lib/auth';
 import { useNotifyFilter } from '../../lib/notify';
 import { GameProgress } from './progress';
 import { theme, globals } from './common';
+import { Chat } from '../../components/Chat'
 
 let tilePx = 50;
 const playerClass = ['p1', 'p2'];
@@ -169,6 +170,7 @@ export const WordbaseGame = ({open, info, save, reload, setInfo, setSave}) => {
     },
     submit: () => {
       let letters = word.map(tile => tile.letter).join('');
+      if (!letters) return;
       if (!isValidWord(letters) && globals.wordCheck) {
         console.log(`${letters} not in dict`);
         setError('not a word');
@@ -309,9 +311,13 @@ export const WordbaseGame = ({open, info, save, reload, setInfo, setSave}) => {
           :
           <div className='history'>
             <div className='word-count'>{`${info.turn} words played`}</div>
-            {save.history.slice(1).map((item, i) =>
+            {info.chat ?
+            <Chat hash={info.chat} flipped={info.p2 === auth.user}/>
+            :
+            save.history.slice(1).map((item, i) =>
               <div key={i} className={`last ${(info.turn - i)%2 ? 'p2' : 'p1'}`}>
-              {item.map(t => t.letter).join('')}</div>
+                {item.map(t => t.letter).join('')}
+              </div>
             )}
             {/* <div className='hello'>
               hi {auth.user || ', you'}  :-)</div> */}
@@ -396,15 +402,15 @@ const Style = styled.div`
   }
   .preview, .last {
     background: white;
-    color: black;
+    color: black !important;;
     font-size: 2rem;
     line-height: 2.2rem;
   }
   .last {
     cursor: pointer;
     width: fit-content;
-    &.p1 { background: ${theme.blue}; margin-left: auto; }
-    &.p2 { background: ${theme.orange}; margin-right: auto; }
+    &.p1 { background: ${theme.blue} !important; margin-left: auto; }
+    &.p2 { background: ${theme.orange} !important; margin-right: auto; }
   }
   .board-container {
     height: 0;
@@ -424,7 +430,7 @@ const Style = styled.div`
       width: 100%; height: 100%;
       left: 0; top: 0;
       z-index: 999;
-      background: #fffffff0;
+      background: #fffffff8;
       color: black;
       user-select: none;
       padding: 0;

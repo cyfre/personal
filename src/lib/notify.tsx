@@ -29,8 +29,8 @@ export function subbed(page) {
 
 const notifyFilters = []
 export function useNotify(history) {
-  useUserSocket('', socket => {
-    socket.on('notify:msg', (msg: { [key: string]: string[] }) => {
+  useUserSocket('', {
+    'notify:msg': (msg: { [key: string]: string[] }) => {
       console.log('MSG', msg)
       Object.entries(msg).forEach(async entry => {
         if ('default' === Notification?.permission) {
@@ -51,7 +51,7 @@ export function useNotify(history) {
           }
         })
       })
-    })
+    }
   })
 }
 // export function useNotify(history) {

@@ -26,7 +26,7 @@ R.get(P.invites, J(rq => M.getInvites()));
 R.post(`${P.invites}/accept`, J(rq => M.accept(rq.user)));
 R.post(`${P.invites}/open`, J(rq => M.open(rq.user, rq.body.state)));
 R.post(`${P.invites}/private`, J(rq => M.create(rq.user, undefined, rq.body.state)));
-R.post(`${P.invites}/friend/:user`, J(rq => M.create(rq.user, rq.params.user, rq.body.state)));
+R.post(`${P.invites}/friend/:user`, J(rq => M.challenge(rq.user, rq.params.user, rq.body.state)));
 
 module.exports = {
     routes: R,

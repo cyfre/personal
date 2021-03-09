@@ -51,6 +51,7 @@ app.use('/api/cityhall', require('./cityhall').routes);
 app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
 app.use('/api/scores', require('./scores').routes);
+app.use('/api/chat', require('./chat').routes);
 
 app.use('/ly', require('./ly/redirect').routes)
 
@@ -61,6 +62,7 @@ const ios = [
     require('./io/live'),
     // require('./notify/io'),
     require('./io/speckle'),
+    require('./chat/io'),
 ]
 io.on('connection', socket => {
     let info = {}

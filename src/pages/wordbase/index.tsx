@@ -65,11 +65,11 @@ export default () => {
     })
 
     // reload on wordbase:update, focus, and notify:msg
-    useUserSocket('', socket => {
-        socket.on('wordbase:update', newInfo => {
+    useUserSocket('', {
+        'wordbase:update': newInfo => {
             console.log(newInfo)
             setReload(newInfo)
-        })
+        }
     })
     useEventListener(window, 'focus', () => {
         setReload(Object.assign({}, info))

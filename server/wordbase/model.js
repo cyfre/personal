@@ -3,6 +3,7 @@ const { pick, entryMap } = require('../util');
 const { randAlphanum } = require('../rand');
 const notify = require('../notify').model
 const ioM = require('../io')
+const chat = require('../chat').model
 
 const names = {
     user: 'wordbase-user',
@@ -18,6 +19,7 @@ const names = {
         // lastWord: string
         // lastUpdate: number
         // rematch: string
+        // chat: string
     save: 'wordbase-save',
         // id: string
         // state: string
@@ -112,6 +114,13 @@ async function play(user, id, newInfo, state) {
         ? `${user} played ${info.lastWord.toUpperCase()}`
         : `${user} won with ${info.lastWord.toUpperCase()}`,
         `freshman.dev/wordbase#${info.id}`)
+    console.log('[WORDBASE:play]', user, id, info.chat)
+    info.chat && chat.sendChat(user, info.chat, [{
+        text: info.lastWord,
+        meta: {
+            classes: `last ${info.turn%2 ? 'p1' : 'p2'}`
+        }
+    }])
 
     return { info }
 }
@@ -144,7 +153,6 @@ async function rematch(user, id, state) {
         console.log(info.rematch)
         rematch = { info: await _getInfo(user, info.rematch) }
     } else {
-        console.log('new')
         let players = [info.p1, info.p2];
         if (info.status === 0) players.reverse(); // if p1 won, swap
         rematch = await create(...players, state);
@@ -152,11 +160,23 @@ async function rematch(user, id, state) {
         _setInfo(info)
 
         let other = info.p1 === user ? info.p2 : info.p1;
-        ioM.send(user, 'wordbase:update', info)
         notify.send(other, 'wordbase',
             `${user} requested a rematch!`, `freshman.dev/wordbase#${info.rematch}`)
     }
     return rematch
+}
+async function challenge(user, other, state) {
+    let { info } = await create(user, other, state);
+    notify.send(other, 'wordbase',
+        `${user} challenged you!`, `freshman.dev/wordbase#${info.id}`)
+    chat.sendUserChat(user, other, [{
+        meta: {
+            page: `/wordbase#${info.id}`,
+            pageDesc: `new /wordbase challenge!`,
+            pageImg: `/raw/wordbase/favicon.png`
+        }
+    }])
+    return { info }
 }
 async function accept(user, id) {
     if (!id) {
@@ -187,8 +207,9 @@ async function getInvites() {
 }
 async function create(user, other, state) {
     if (!user) throw Error('sign in to create game');
+    let id = randAlphanum(7)
     let info = {
-        id: randAlphanum(7),
+        id: id,
         p1: other ? user : undefined,
         p2: other ? other : user,
         turn: 0,
@@ -196,16 +217,16 @@ async function create(user, other, state) {
         progress: [0, 100],
         lastWord: undefined,
         lastUpdate: Date.now(),
+        chat: `wordbase+${id}`
     }
     console.log(info);
-    _addGame(user, info.id);
-    other && _addGame(other, info.id);
+    _addGame(user, id);
+    other && _addGame(other, id);
     C.info().insertOne(info);
-    C.save().insertOne({
-        id: info.id,
-        state,
-    });
+    C.save().insertOne({ id, state });
     ioM.send([user, other], 'wordbase:update', info)
+    console.log('[WORDBASE:create]', info)
+    await chat.newChat([user, other], info.chat)
     return { info }
 }
 async function open(user, state) {
@@ -228,6 +249,7 @@ module.exports = {
     resign,
     remove,
     rematch,
+    challenge,
     accept,
 
     getInvites,

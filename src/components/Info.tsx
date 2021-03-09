@@ -3,14 +3,18 @@ import { useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { openLogin } from '../lib/auth';
 
-export type InfoLabelType = (string | {text: string, func: () => any})
+export type InfoLabelType = (string | {text?: string, func?: () => any, dot?: string | true})
 export type InfoEntryType = (string | {text: string, data: any})
 export type InfoLineType = (any | {content: any, labels: InfoLabelType[]})
 
 const _InfoBadge = ({label}: {label: InfoLabelType}) =>
-  typeof label === 'string'
-  ? <div className='label inline'>{label}</div>
+  typeof label === 'object'
+  ? label.dot
+  ? <div className='label dot inline'
+      style={{backgroundColor: (label.dot || 'black') as string}}
+      onClick={label.func}></div>
   : <div className='button button-badge inline' onClick={label.func}>{label.text}</div>
+  : <div className='label inline'>{label}</div>
 
 export const InfoBadges = ({labels}: {
   labels: InfoLabelType[]
@@ -27,7 +31,7 @@ export const InfoLabel = ({labels}: {
 }) => {
   let l0 = labels[0]
   return <Fragment>
-    <_InfoBadge label={labels[0]} />
+    {l0 ? <_InfoBadge label={l0} /> : ''}
     <InfoBadges {...{ labels: labels.slice(1) }}/>
     <br/>
   </Fragment>
@@ -57,7 +61,7 @@ export const InfoSection = (props: {
 }) => {
   let labels = props.label ? [props.label] : props.labels || []
   return <div {...props}>
-    {labels ? <InfoLabel {...{ labels }} /> : ''}
+    {labels.length ? <InfoLabel {...{ labels }} /> : ''}
     {props.children}
   </div>
 }
@@ -127,7 +131,7 @@ export const InfoList = ({entries, labels, entryLabels}: {
       labels: entryLabels[i],
       content: (
       <InfoEntry>
-        {typeof entry === 'string' ? entry : entry.text}
+        {typeof entry === 'object' ? entry.text : entry}
       </InfoEntry>),
     }))
   }} />
@@ -142,8 +146,8 @@ export const InfoLinks = ({entries, labels, entryLabels}: {
     labels, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
-      <InfoLink to={typeof entry === 'string' ? entry : entry.data}>
-        {typeof entry === 'string' ? entry : entry.text}
+      <InfoLink to={typeof entry === 'object' ? entry.data : entry}>
+        {typeof entry === 'object' ? entry.text : entry}
       </InfoLink>),
     }))
   }} />
@@ -159,8 +163,8 @@ export const InfoFuncs = ({entries, entryFunc, labels, entryLabels}: {
     labels, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
-      <InfoLink onClick={() => entryFunc(typeof entry === 'string' ? entry : entry.data)}>
-        {typeof entry === 'string' ? entry : entry.text}
+      <InfoLink onClick={() => entryFunc(typeof entry === 'object' ? entry.data : entry)}>
+        {typeof entry === 'object' ? entry.text : entry}
       </InfoLink>),
     }))
   }} />
@@ -258,6 +262,14 @@ display: flex; flex-direction: column;
   .lil-badge {
     margin-left: .5rem;
   }
+  .label.dot {
+    opacity: 1;
+    padding: 0;
+    height: .35rem;
+    width: .35rem;
+    border-radius: 50%;
+    background-color: black;
+  }
 
   > * {
     margin-bottom: .5rem;
@@ -291,7 +303,7 @@ display: flex; flex-direction: column;
   display: inline-block;
   width: fit-content;
   font-size: .8rem;
-  border: 2px solid black;
+  border: .15rem solid black;
   padding: 0 .3rem;
   border-radius: .3rem;
 }
@@ -305,7 +317,7 @@ display: flex; flex-direction: column;
   input, textarea {
     width: 100%;
     color: black;
-    border: 2px solid transparent;
+    border: .15rem solid transparent;
     padding: 0 .5rem;
     border-color: #00000022;
     border-radius: .2rem;

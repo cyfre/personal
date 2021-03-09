@@ -2,9 +2,10 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useRouteMatch, useLocation, useHistory } from 'react-router-dom';
 import styled from 'styled-components';
 import { embedded } from './Contents';
-import { useAuth, useInterval } from '../lib/hooks';
+import { useAuth, useE, useF, useInterval } from '../lib/hooks';
 import { login, signup, logout } from '../lib/auth';
 import api from '../lib/api';
+import { useUserSocket } from '../lib/io';
 
 const User = () => {
   let auth = useAuth();
@@ -15,6 +16,13 @@ const User = () => {
   let history = useHistory();
   let [verify, setVerify] = useState(false);
   let verifyRef = useRef();
+
+  let [unread, setUnread] = useState({})
+  let socket = useUserSocket('', {
+    'chat:unread': unread => {
+      setUnread(unread)
+    }
+  })
 
   const handle = {
     signin: (func) => {
@@ -54,21 +62,18 @@ const User = () => {
       })
     },
   }
-  useEffect(() => {
-    setDropdown(auth.dropdown);
-  }, [auth]);
-  useEffect(() => {
-    dropdown || setError('');
-  }, [dropdown])
+  useF(auth, () => setDropdown(auth.dropdown))
+  useF(dropdown, () => dropdown || setError(''))
+  useF(unread, () => console.log(unread))
 
   const isMe = auth.user === 'cyrus'
   const loggedIn = (
     <div className='dropdown'>
-      <Link to={`/u/${auth.user}`} className='item' onClick={handle.nav}>profile</Link>
-      <Link to='/search' className='item' onClick={handle.nav}>search</Link>
+      <Link to={`/u/${auth.user}`} className='item' onClick={() => handle.nav()}>profile</Link>
+      <Link to='/search' className='item' onClick={() => handle.nav()}>search</Link>
       {isMe
-      ? <Link to='/admin' className='item' onClick={handle.nav}>admin</Link>
-      : <Link to='/settings' className='item' onClick={handle.nav}>settings</Link>}
+      ? <Link to='/admin' className='item' onClick={() => handle.nav()}>admin</Link>
+      : <Link to='/settings' className='item' onClick={() => handle.nav()}>settings</Link>}
       <div className='item' onClick={() => { handle.logout() }}>logout</div>
     </div>
   )
@@ -104,12 +109,14 @@ const User = () => {
     </div>
   )
 
+  let unreadCount = unread && Object.values(unread).length
   return (
     <div className={dropdown ? 'user active' : 'user'}>
+      {unreadCount ? <Link className='unread' to='/chat'>{unreadCount} unread</Link> : ''}
       <div className='display' onClick={() => setDropdown(!dropdown)}>
         [ <span>{auth.user ? auth.user : 'log in'}</span> ]
+        {!dropdown ? '' : ( auth.user ? loggedIn : loggedOut )}
       </div>
-      {!dropdown ? '' : ( auth.user ? loggedIn : loggedOut )}
     </div>
   )
 }
@@ -228,9 +235,19 @@ const Style = styled.div`
     align-items: center;
     justify-content: center;
 
+    .unread {
+      color: inherit;
+      opacity: .5;
+      margin-right: .75rem;
+      background: #ffffff44;
+      padding: 0 .25rem;
+      border-radius: .15rem;
+      font-size: .7rem;
+    }
     .display {
       opacity: .8;
       &:hover span { text-decoration: underline; }
+      position: relative;
     }
     &.active .display {
       opacity: 1;

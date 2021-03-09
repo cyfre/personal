@@ -3,19 +3,13 @@ import styled from 'styled-components';
 import { useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api';
 import { useF, useAuth } from '../lib/hooks';
+import { useUserSocket } from '../lib/io';
 import { InfoStyles, InfoBody, InfoLinks, InfoSearch, InfoSection, InfoLine, InfoLoginBlock } from '../components/Info'
 
-const UserList = ({label, users}) => {
+const UserList = ({labels, users}) => {
   return <InfoLinks {...{
     entries: users.map(u => ({ text: u, data: `/u/${u}` })),
-    labels: [label],
-  }}/>
-}
-
-const PathList = ({label, paths}) => {
-  return <InfoLinks {...{
-    entries: paths,
-    labels: [label],
+    labels,
   }}/>
 }
 
@@ -33,11 +27,20 @@ export default () => {
   let searchRef = useRef();
   let [similar, setSimilar] = useState([])
 
+  let [unread, setUnread] = useState({})
+  let socket = useUserSocket('', {
+    'chat:unread': unread => {
+      setUnread(unread)
+    }
+  })
+
   useF(user, auth.user, () => {
     user && handle.load();
   })
   const handle = {
-    load: () => api.get(`/profile/${user}`).then(handle.parse),
+    load: () => {
+      api.get(`/profile/${user}`).then(handle.parse)
+    },
     follow: () => api.post(`/profile/${user}/follow`, {}).then(handle.parse),
     unfollow: () => api.post(`/profile/${user}/unfollow`, {}).then(handle.parse),
     parse: data => {
@@ -72,6 +75,8 @@ export default () => {
     },
   }
 
+  const showChat = !!profile?.friends.length
+  const unreadCount = showChat && unread && Object.keys(unread).length
   return <InfoStyles>
     <InfoSearch {...{searchRef, placeholder: 'find a user', search: handle.search}}/>
     {profile ?
@@ -85,11 +90,16 @@ export default () => {
           {profile.user}
         </InfoLine>
       </InfoSection>
-      {profile.recents ? <PathList label='recents' paths={profile.recents} /> : ''}
+      {profile.recents ? <InfoLinks labels={['recents']} entries={profile.recents} /> : ''}
       {profile.bio ? <div className='bio'>{profile.bio}</div> : ''}
-      <UserList label='friends' users={profile.friends} />
+      <UserList labels={[
+        'friends',
+        showChat ? { text: 'chat', func: () => history.push('/chat') } : '',
+        unreadCount ? { text: unreadCount, func: () => history.push('/chat') } : '',
+        // showChat && unread ? `${unread}` : ''
+        ]} users={profile.friends} />
       {info.isUser
-      ? <UserList label='requests' users={info.requests} />
+      ? <UserList labels={['requests']} users={info.requests} />
       : ''}
     </InfoBody>
     : loaded
@@ -97,7 +107,7 @@ export default () => {
       <InfoSection label='user'>
         <InfoLine>{`'${user}' does not exist`}</InfoLine>
       </InfoSection>
-      <UserList label='similar' users={similar} />
+      <UserList labels={['similar']} users={similar} />
     </InfoBody>
     : user ? '' : <InfoBody><InfoLoginBlock to='view your profile' /></InfoBody>}
   </InfoStyles>
