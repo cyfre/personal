@@ -118,7 +118,7 @@ async function play(user, id, newInfo, state) {
     info.chat && chat.sendChat(user, info.chat, [{
         text: info.lastWord,
         meta: {
-            classes: `last ${info.turn%2 ? 'p1' : 'p2'}`
+            classes: `last ${info.turn%2 ? 'p1' : 'p2'}`,
         }
     }])
 
@@ -171,9 +171,10 @@ async function challenge(user, other, state) {
         `${user} challenged you!`, `freshman.dev/wordbase#${info.id}`)
     chat.sendUserChat(user, other, [{
         meta: {
+            read: true,
             page: `/wordbase#${info.id}`,
             pageDesc: `new /wordbase challenge!`,
-            pageImg: `/raw/wordbase/favicon.png`
+            pageImg: `/raw/wordbase/favicon.png`,
         }
     }])
     return { info }

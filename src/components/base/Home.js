@@ -14,7 +14,8 @@ export const Home = () => (
   </Title>
 
   <Link to="/wordbase">wordbase (word game)</Link>
-  <Link to="/graffiti">graffiti wall</Link>
+  {/* <Link to="/graffiti">graffiti wall</Link> */}
   <Link to="/terrain">terrain generation</Link>
+  <Link to="/nonogram">nonogram solver</Link>
   </Fragment>
 )

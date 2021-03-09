@@ -58,7 +58,7 @@ export const useIo = () => {
 export const useUserSocket = (roomToJoin='', ons?: { [key: string]: (...args)=>any }, emits?: (socket)=>any) => {
   const [local, setLocal] = useState(socket);
 
-  useF(() => {
+  useE(() => {
     let callback = socket => setLocal(socket)
     addSocketTrigger(callback);
     return () => removeSocketTrigger(callback);

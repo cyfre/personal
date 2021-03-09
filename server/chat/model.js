@@ -85,14 +85,17 @@ async function sendUserChat(user, other, messages) {
     chat.messages = chat.messages.concat(messages)
     C.chat().updateOne({ hash: chat.hash }, { $set: chat }, { upsert: true });
     ioM.send([user, other], "chat:update", chat.hash, messages)
-    let chatOther = await _getUser(other)
-    if (!chatOther.unread[chat.hash]) {
-        chatOther.unread[chat.hash] = 1
-        ioM.send(other, 'chat:unread', chatOther.unread)
-    } else {
-        chatOther.unread[chat.hash] += 1
+    let unread = messages.reduce((acc, msg) => acc + (msg.meta.read ? 0 : 1), 0)
+    if (unread) {
+        let chatOther = await _getUser(other)
+        if (!chatOther.unread[chat.hash]) {
+            chatOther.unread[chat.hash] = unread
+            ioM.send(other, 'chat:unread', chatOther.unread)
+        } else {
+            chatOther.unread[chat.hash] += unread
+        }
+        _putUser(chatOther)
     }
-    _putUser(chatOther)
     return { chat, chatUser }
 }
 

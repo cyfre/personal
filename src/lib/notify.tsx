@@ -85,10 +85,8 @@ export function useNotify(history) {
 export function useNotifyFilter(filter: (app: string, text: string) => boolean) {
   useE(() => {
     notifyFilters.push(filter)
-    console.log('ADD FILTER', notifyFilters)
     return () => {
       notifyFilters.splice(notifyFilters.indexOf(filter), 1)
-      console.log('REMOVE FILTER', notifyFilters)
     };
   })
 }

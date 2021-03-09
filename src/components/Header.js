@@ -64,7 +64,6 @@ const User = () => {
   }
   useF(auth, () => setDropdown(auth.dropdown))
   useF(dropdown, () => dropdown || setError(''))
-  useF(unread, () => console.log(unread))
 
   const isMe = auth.user === 'cyrus'
   const loggedIn = (
