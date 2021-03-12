@@ -1,6 +1,7 @@
-import React from 'react';
-import { Route, Switch, Redirect } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Route, Switch, Redirect, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { useEventListener, useF, useTimeout } from '../lib/hooks';
 
 import { embedded, EmbeddedRoute, Page, Missing  } from './Contents';
 
@@ -41,8 +42,9 @@ const redirects = [
     }/>
 ));
 
-export const Main = () => (
-    <Style id='main'>
+export const Main = () => {
+    return (
+    <Style id='main' >
         <Switch>
             <Route path='/raw' render={() => window.location.reload()} />
             {redirects}
@@ -57,4 +59,5 @@ export const Main = () => (
             <Route path='*' component={Missing} />
         </Switch>
     </Style>
-)
+    )
+}

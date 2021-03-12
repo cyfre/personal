@@ -176,7 +176,7 @@ const Embedded = ({ name }) => {
     )
 }
 
-const embedded = 'terrain nonogram snakes snackman befruited insult aoc scores'.split(' ')
+const embedded = 'terrain nonogram snakes snackman befruited insult aoc scores submerse'.split(' ')
 const EmbeddedRoute = ({name, implicit}) => (
     <Route
         key={name + implicit}

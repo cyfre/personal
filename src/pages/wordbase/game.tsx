@@ -464,6 +464,7 @@ const Style = styled.div`
           justify-content: center;
         }
         img {
+          height: 100%;
           object-fit: scale-down;
           margin: 0 .5rem;
         }

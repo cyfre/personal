@@ -603,12 +603,12 @@ function resizeBoard() {
         let boardRect = boardEl.getBoundingClientRect()
         let bodyRect = bodyEl.getBoundingClientRect()
         let tableRect = tableEl.getBoundingClientRect()
-        console.log(boardRect, tableRect)
+        // console.log(boardRect, tableRect)
         let scale = Math.round(Math.min(
             bodyRect.width / (tableRect.width + 120),
             boardRect.height / tableRect.height) * 100)/100;
         // scale = (scale - 1) * .9 + 1;
-        console.log(`scale(${scale});`)
+        // console.log(`scale(${scale});`)
         // rI && clearInterval(rI)
         // rI = setInterval(() => $('#board table').css('transform', `scale(${scale})`), 100)
         setTimeout(() => {

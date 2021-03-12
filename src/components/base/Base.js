@@ -235,7 +235,7 @@ export const Base = () => {
           <Link to="/projects">/projects</Link>
         </Links>
         <Links className={"right " + (isBase ? "base" : "")}>
-          <a href="https://github.com/cyfre">github</a>
+          <a href="https://github.com/cfreshman">github</a>
           <a href="https://twitter.com/freshman_dev">twitter</a>
           <a href="https://www.linkedin.com/in/cfreshman/">linkedin</a>
         </Links>

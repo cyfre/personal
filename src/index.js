@@ -1,8 +1,9 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter as Router, Route, Redirect, Switch, useHistory } from 'react-router-dom'
 import styled from 'styled-components'
 import * as serviceWorker from './serviceWorker'
+import { useF, useInterval, useEventListener } from './lib/hooks'
 import { useNotify } from './lib/notify'
 import { io } from "socket.io-client"
 import './index.css'
@@ -47,6 +48,15 @@ const Style = styled.div`
     z-index: -2;
   }
 
+  &.shrink {
+    transition: .5s;
+    margin-left: auto;
+    margin-right: auto;
+    &::after {
+      border-radius: .2rem;
+    }
+  }
+
   @media (max-width: 30.01rem) {
     width: calc(100% - 0.6rem);
     height: calc(100% - 0.6rem);
@@ -63,7 +73,8 @@ const Io = () => {
   return <Fragment></Fragment>
 }
 
-const App = () => (
+const App = () => {
+  return (
   <Router>
     <Notify />
     <Io />
@@ -71,14 +82,15 @@ const App = () => (
       <Redirect exact path='/home' to='/' />
       <Route exact path='/(|projects|about)' component={Base} />
       <Route path='*'>
-        <Style>
+        <Style id='index'>
           <Header />
           <Main />
         </Style>
       </Route>
     </Switch>
   </Router>
-)
+  )
+}
 
 ReactDOM.render(<App />, document.getElementById('root'))
 

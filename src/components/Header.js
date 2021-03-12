@@ -112,8 +112,10 @@ const User = () => {
   return (
     <div className={dropdown ? 'user active' : 'user'}>
       {unreadCount ? <Link className='unread' to='/chat'>{unreadCount} unread</Link> : ''}
-      <div className='display' onClick={() => setDropdown(!dropdown)}>
-        [ <span>{auth.user ? auth.user : 'log in'}</span> ]
+      <div className='display'>
+        <span onClick={() => setDropdown(!dropdown)}>
+          [ <span className='name'>{auth.user ? auth.user : 'log in'}</span> ]
+        </span>
         {!dropdown ? '' : ( auth.user ? loggedIn : loggedOut )}
       </div>
     </div>
@@ -245,7 +247,7 @@ const Style = styled.div`
     }
     .display {
       opacity: .8;
-      &:hover span { text-decoration: underline; }
+      &:hover .name { text-decoration: underline; }
       position: relative;
     }
     &.active .display {

@@ -4,11 +4,14 @@ import { useRouteMatch, useHistory } from 'react-router-dom';
 import api from '../lib/api';
 import { useF, useAuth } from '../lib/hooks';
 import { useUserSocket } from '../lib/io';
-import { InfoStyles, InfoBody, InfoLinks, InfoSearch, InfoSection, InfoLine, InfoLoginBlock } from '../components/Info'
+import { InfoStyles, InfoBody, InfoLinks, InfoFuncs, InfoSearch, InfoSection, InfoLine, InfoLoginBlock } from '../components/Info'
 
 const UserList = ({labels, users}) => {
-  return <InfoLinks {...{
-    entries: users.map(u => ({ text: u, data: `/u/${u}` })),
+  let history = useHistory()
+  return <InfoFuncs {...{
+    // entries: users.map(u => ({ text: u, data: `/u/${u}` })),
+    entries: users,
+    entryFunc: user => history.replace(`/u/${user}`),
     labels,
   }}/>
 }

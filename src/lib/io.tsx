@@ -5,7 +5,6 @@ import api from "../lib/api"
 import { useE, useF, useAuth } from "../lib/hooks"
 
 const ENDPOINT = window.origin.replace(':3000', ':5000')
-console.log('ENDPOINT', ENDPOINT)
 
 let socket
 let socketTriggers = []

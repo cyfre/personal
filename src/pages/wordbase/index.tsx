@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import { WordbaseMenu } from './menu';
@@ -10,14 +10,18 @@ import { Info, Save } from './save';
 import { fetchGame } from './data';
 import './fonts.css';
 import { useUserSocket } from '../../lib/io';
+import { useShrink } from '../../lib/shrink';
 
 export default () => {
+    const gameRef = useRef()
     const auth = useAuth();
     const [infoList, setList]: [Info[], any] = useState(undefined)
     const [gameClosed, setGameClosed] = useState(true)
     const [info, setInfo] = useState(undefined)
     const [save, setSave] = useState(undefined)
     const [reload, setReload] = useState(undefined)
+
+    // useShrink(gameRef.current)
 
     const open = (id: string | false) => {
         window.history.replaceState(null, '/wordbase', '/wordbase' + (id ? `#${id}` : ''))
@@ -85,7 +89,7 @@ export default () => {
         return false
     })
 
-    return <Style className={gameClosed ? 'closed' : ''}>
+    return <Style ref={gameRef} className={gameClosed ? 'closed' : ''}>
         <WordbaseMenu {...{ menuClosed: !gameClosed, open, infoList, reload, setList }} />
         <div className='divider'></div>
         {info ? <WordbaseGame {...{ open, info, save, reload, setInfo, setSave }} /> : ''}
