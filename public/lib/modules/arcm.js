@@ -5,6 +5,9 @@ Arc.V = class V {
         this.x = x;
         this.y = y;
     }
+    static polar(mag, angle) {
+        return new V(mag * Math.cos(angle), mag * Math.sin(angle))
+    }
 
     // Manhattan distance
     manhat(other) {
@@ -23,7 +26,11 @@ Arc.V = class V {
         return new V(this.x - other.x, this.y - other.y);
     }
     scale(c) {
-        return new V(c * this.x, c * this.y);
+        if (typeof c === 'number') return new V(c * this.x, c * this.y);
+        else return new V(c.x * this.x, c.y * this.y);
+    }
+    do(func) {
+        return new Arc.V(func(this.x), func(this.y));
     }
     angle(other) {
         let diff = (other) ? other.sub(this) : this;
@@ -33,7 +40,7 @@ Arc.V = class V {
         return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
     }
     norm() {
-        let mag = this.mag();
+        let mag = this.mag() || 1;
         return new V(this.x / mag, this.y / mag);
     }
     apply(func) {
@@ -61,7 +68,7 @@ Arc.Painted = class Painted {
         this.parent = false;
         this.zIndex = zIndex || 0;
     }
-    
+
     paint(ctx) {}
     _paint(ctx) {
         ctx.save();
@@ -276,11 +283,27 @@ Arc.drawScaledSprite = function(sprite, x, y, scale, xLerp=0, yLerp=0) {
     if (typeof(sprite) === 'string') {
         sprite = Arc.sprites[sprite];
     }
-    let width = scale * sprite.width;
-    let height = scale * sprite.height;
+    let xScale, yScale
+    if (typeof scale === 'number') {
+        xScale = yScale = scale
+    } else {
+        [xScale, yScale] = scale
+    }
+    // let width = xScale * sprite.width;
+    // let height = yScale * sprite.height;
+    // Arc.ctx.drawImage(...sprite.parts,
+    //     x - xLerp*width, y - yLerp*height, width, height);
 
-    Arc.ctx.drawImage(...sprite.parts,
-        x - xLerp*width, y - yLerp*height, width, height);
+    let prevTransform = Arc.ctx.getTransform()
+    {
+        let width = sprite.width;
+        let height = sprite.height;
+        Arc.ctx.translate(x, y)
+        Arc.ctx.scale(xScale, yScale)
+        Arc.ctx.drawImage(...sprite.parts,
+            -xLerp*width, -yLerp*height, width, height);
+    }
+    Arc.ctx.setTransform(prevTransform)
 }
 
 Arc.drawNumber = function(num, x, y, xScale, yScale, xLerp=0, yLerp=0) {

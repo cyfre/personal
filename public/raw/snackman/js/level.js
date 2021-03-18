@@ -47,7 +47,7 @@ export class Level {
             this.blueTime,
             this.finishTime,
         ]
-        
+
         this.fruitTime = new Countdown(840); // fruit lifetime
         this.scoreTime = new Countdown(300); // fruit score lifetime
         this.blueCount = new Countdown(500); // period for blue ghosts
