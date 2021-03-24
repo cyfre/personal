@@ -88,6 +88,8 @@ async function sendUserChat(user, other, messages) {
     let unread = messages.reduce((acc, msg) => acc + (msg.meta.read ? 0 : 1), 0)
     if (unread) {
         let chatOther = await _getUser(other)
+        console.log(chatOther)
+        if (!chatOther.unread) chatOther.unread = {}
         if (!chatOther.unread[chat.hash]) {
             chatOther.unread[chat.hash] = unread
             ioM.send(other, 'chat:unread', chatOther.unread)

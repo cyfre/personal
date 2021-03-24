@@ -69,9 +69,9 @@ export default () => {
       <InfoLines {...{
         labels: ['personal'],
         lines: [
-          ['profile', 'view friends & accept requests'],
-          ['notify', 'email & notification settings'],
-          ['reset', 'change password'],
+          ['/profile', 'view friends & accept requests'],
+          ['/notify', 'email & notification settings'],
+          ['/reset', 'change password'],
         ].map(e => ({
           labels: [e[1]],
           content: <Link to={e[0]}>{e[0]}</Link>,
@@ -87,7 +87,7 @@ const Style = styled(InfoStyles)`
   .personal {
     .entry-line {
       a {
-        min-width: 4.5rem;
+        min-width: 5rem;
       }
     }
   }

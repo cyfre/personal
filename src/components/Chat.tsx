@@ -34,7 +34,8 @@ export const Chat = ({hash, flipped}: {hash, flipped?}) => {
         //   block: "end",
         //   inline: "nearest"
         // })
-        api.post(`/chat/${chat.hash}`, { messages: [{ text }] }).then(({chat: newChat}) => setChat(newChat))
+        // api.post(`/chat/${chat.hash}`, { messages: [{ text }] }).then(({chat: newChat}) => setChat(newChat))
+        api.post(`/chat/${chat.hash}`, { messages: [{ text }] })
       }
       handle.resize()
     },

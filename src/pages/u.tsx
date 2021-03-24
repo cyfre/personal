@@ -11,7 +11,7 @@ const UserList = ({labels, users}) => {
   return <InfoFuncs {...{
     // entries: users.map(u => ({ text: u, data: `/u/${u}` })),
     entries: users,
-    entryFunc: user => history.replace(`/u/${user}`),
+    entryFunc: user => history.push(`/u/${user}`),
     labels,
   }}/>
 }
@@ -35,10 +35,12 @@ export default () => {
     'chat:unread': unread => {
       setUnread(unread)
     }
-  })
+  }, socket => socket.emit('chat:unread'))
 
   useF(user, auth.user, () => {
-    user && handle.load();
+    if (user && auth.user) {
+      handle.load()
+    }
   })
   const handle = {
     load: () => {
@@ -65,8 +67,10 @@ export default () => {
           }
         }
         setInfo(info);
+        setSimilar(undefined)
       } else if (data.similar) {
         setSimilar(data.similar)
+        setInfo(undefined);
       }
     },
     search: () => {
@@ -78,7 +82,7 @@ export default () => {
     },
   }
 
-  const showChat = !!profile?.friends.length
+  const showChat = user === auth.user && !!profile?.friends?.length
   const unreadCount = showChat && unread && Object.keys(unread).length
   return <InfoStyles>
     <InfoSearch {...{searchRef, placeholder: 'find a user', search: handle.search}}/>
@@ -93,14 +97,17 @@ export default () => {
           {profile.user}
         </InfoLine>
       </InfoSection>
-      {profile.recents ? <InfoLinks labels={['recents']} entries={profile.recents} /> : ''}
+      {/* {profile.recents ? <InfoLinks labels={['recents']} entries={profile.recents} /> : ''} */}
+      {profile.recents ? <InfoFuncs labels={['recents']} entries={profile.recents} entryFunc={history.push} /> : ''}
       {profile.bio ? <div className='bio'>{profile.bio}</div> : ''}
+      {profile.friends ?
       <UserList labels={[
         'friends',
         showChat ? { text: 'chat', func: () => history.push('/chat') } : '',
-        unreadCount ? { text: unreadCount, func: () => history.push('/chat') } : '',
+        showChat && unreadCount ? { text: unreadCount, func: () => history.push('/chat') } : '',
         // showChat && unread ? `${unread}` : ''
         ]} users={profile.friends} />
+      : ''}
       {info.isUser
       ? <UserList labels={['requests']} users={info.requests} />
       : ''}

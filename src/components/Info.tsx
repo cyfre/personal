@@ -322,7 +322,7 @@ display: flex; flex-direction: column;
     border-color: #00000022;
     border-radius: .2rem;
     box-shadow: none;
-    margin: .5rem 0;
+    margin: .25rem 0;
     -webkit-appearance: none;
   }
   .button {

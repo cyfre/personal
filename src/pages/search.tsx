@@ -30,6 +30,7 @@ const _projects = {
     cloud: `phasing color cube reminiscent of '<a href="https://www.youtube.com/watch?v=10Jg_25ytU0">Lusine - Just A Cloud</a>' music video`,
     live: 'live chat',
     records: 'personal & global game scoreboards',
+    tally: 'simple habit tracker',
 }
 // ''.split(' ').forEach(p => {
 //     if (!_projects[p]) _projects[p] = '' });

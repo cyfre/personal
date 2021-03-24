@@ -52,6 +52,7 @@ app.use('/api/msg', require('./msg').routes);
 app.use('/api/ly', require('./ly').routes);
 app.use('/api/scores', require('./scores').routes);
 app.use('/api/chat', require('./chat').routes);
+app.use('/api/tally', require('./tally').routes);
 
 app.use('/ly', require('./ly/redirect').routes)
 

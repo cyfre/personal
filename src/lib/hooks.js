@@ -88,7 +88,7 @@ const stringManifest = JSON.stringify({
 });
 const blob = new Blob([stringManifest], {type: 'application/json'});
 const defaultManifest = URL.createObjectURL(blob)
-manifest.href = defaultManifest
+manifest.href = '' //defaultManifest
 export const useManifest = (info) => {
     useE(() => {
         // from https://medium.com/@alshakero/how-to-setup-your-web-app-manifest-dynamically-using-javascript-f7fbee899a61
@@ -96,7 +96,7 @@ export const useManifest = (info) => {
         const blob = new Blob([stringManifest], {type: 'application/json'});
         manifest.href = URL.createObjectURL(blob)
         return () => {
-            manifest.href = defaultManifest
+            manifest.href = '' //defaultManifest
         }
     });
 }

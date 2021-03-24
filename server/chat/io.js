@@ -28,8 +28,10 @@ module.exports = (io, socket, info) => {
       }
    });
 
-   socket.on('init', async () => {
+   const emitUnread = async () => {
       let { chatUser } = await M.getUser(info.user)
       socket.emit('chat:unread', chatUser.unread)
-   })
+   }
+   socket.on('init', emitUnread)
+   socket.on('chat:unread', emitUnread)
 }

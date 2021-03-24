@@ -41,7 +41,7 @@ export default () => {
     },
     loadChat: other => {
       auth.user && other && api.get(`/chat/u/${other}`).then(({chat: newChat}) => {
-        console.log(newChat)
+        // console.log(newChat)
         handle.updateChat(other, newChat)
         if (newChat?.messages?.length !== chat?.messages?.length) {
           setTyping({ ...typing, [other]: false })
@@ -247,7 +247,7 @@ const Style = styled(InfoStyles)`
       .chat-input-container {
         // display: flex;
         padding: .25rem 0;
-        margin-bottom: .75rem;
+        margin-bottom: .25rem;
 
         position: relative;
       }
@@ -289,8 +289,8 @@ const Style = styled(InfoStyles)`
         justify-content: center;
 
         position: absolute;
-        right: .25rem;
-        bottom: .9rem;
+        right: .3rem;
+        bottom: calc(.5rem + 2px + .3rem);
         width: 2.5rem;
         height: 1.4rem;
       }

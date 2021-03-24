@@ -73,27 +73,7 @@ class GameState {
         Arc.add(this.draw.bind(this));
 
         this.animals = []
-        for (let i = 0; i < 20; i++) {
-            this.animals.push(new Angler({
-                pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
-            }))
-        }
-        for (let i = 0; i < 4; i++) {
-            this.animals.push(new Manta({
-                pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
-            }))
-        }
-        // for (let i = 0; i < 1; i++) {
-        //     this.animals.push(new Sunfish({
-        //         pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
-        //     }))
-        // }
-
         this.players = []
-        this.players.push(new Player({
-            pos: new Arc.V(CONSTANTS.WIDTH/2, CONSTANTS.HEIGHT/2),
-        }))
-
         this.particles = []
 
         this.keys = {}
@@ -109,6 +89,26 @@ class GameState {
         this.counter.reset();
         switch (state) {
             case STATE.PLAY:
+                this.players = [new Player({
+                    pos: new Arc.V(CONSTANTS.WIDTH/2, CONSTANTS.HEIGHT/2),
+                })]
+                this.particles = []
+                this.animals = []
+                for (let i = 0; i < 20; i++) {
+                    this.animals.push(new Angler({
+                        pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
+                    }))
+                }
+                for (let i = 0; i < 4; i++) {
+                    this.animals.push(new Manta({
+                        pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
+                    }))
+                }
+                // for (let i = 0; i < 1; i++) {
+                //     this.animals.push(new Sunfish({
+                //         pos: new Arc.V(Math.random() * CONSTANTS.WIDTH, Math.random() * CONSTANTS.HEIGHT),
+                //     }))
+                // }
                 break;
             default:
         }

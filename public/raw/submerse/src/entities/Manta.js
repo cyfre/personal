@@ -25,6 +25,13 @@ export class Manta extends Creature {
   }
 
   update(dt, gameState) {
+    // let player = gameState.players[0]
+    // if (player.pos.dist(this.pos) < 20) {
+    //   this.state = Creature.State.flee
+    // } else {
+    //   this.state = Creature.State.roam
+    // }
+
     switch(this.state) {
       case Creature.State.roam:
         if (this.vel.mag() < this.targetSpeed && this.acc.mag() < .1) {
@@ -36,7 +43,8 @@ export class Manta extends Creature {
           this.acc = Arc.V.polar(.01, this.vel.angle() + Math.random()*Math.PI/3-Math.PI/6)
         }
         break;
-      case Creature.State.chase:
+      case Creature.State.flee:
+        this.acc = Arc.V.polar(this.force*1.5/this.mass, player.pos.angle(this.pos));
         // a.setVector(force/m, getDirectionTo(player));
         break;
       case Creature.State.attack:

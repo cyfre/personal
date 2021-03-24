@@ -22,7 +22,7 @@ const User = () => {
     'chat:unread': unread => {
       setUnread(unread)
     }
-  })
+  }, socket => socket.emit('chat:unread'))
 
   const handle = {
     signin: (func) => {

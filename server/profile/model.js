@@ -14,30 +14,41 @@ const names = {
 }
 const C = entryMap(names, name => () => db.collection(name));
 
-async function _getUser(user) {
-    if (!user) throw Error('user not signed in');
-    return (await get(user)).profile;
-}
-async function get(user) {
+async function _get(user) {
     let profile = await C.profile().findOne({ user });
     if (!profile) {
         if (await login.get(user)) {
             profile = { user, bio: '', friends: [], follows: [], followers: [] };
             C.profile().insertOne(profile);
-        } else {
-            let similar = (await C.profile().find({
-                user: {
-                    $regex: `${user}`,
-                    $options: 'i',
-                }
-            }).toArray()).map(entry => entry.user).sort()
-            return { similar }
         }
     }
-    return { profile }
+    return profile
+}
+async function _getUser(user) {
+    if (!user) throw Error('user not signed in');
+    return await _get(user);
+}
+async function get(viewer, user) {
+    let profile = await _get(user);
+    if (profile) {
+        if (![user, 'cyrus', ...profile.follows].includes(viewer)) {
+            delete profile.friends
+            delete profile.follows
+            delete profile.followers
+        }
+        return { profile }
+    } else {
+        let similar = (await C.profile().find({
+            user: {
+                $regex: `${user}`,
+                $options: 'i',
+            }
+        }).toArray()).map(entry => entry.user).sort()
+        return { similar }
+    }
 }
 async function update(user, props) {
-    let { profile } = await get(user);
+    let profile = await _get(user);
     Object.assign(profile, props);
     C.profile().updateOne({ user }, { $set: profile });
     return { profile };
@@ -45,7 +56,7 @@ async function update(user, props) {
 
 async function follow(user, other) {
     let viewer = await _getUser(user);
-    let { profile } = await get(other);
+    let profile = await _get(other);
     if (!viewer.follows.includes(other)) {
         let userUpdate = { follows: [other].concat(viewer.follows) }
         let otherUpdate = { followers: [user].concat(profile.followers) }
@@ -67,7 +78,7 @@ async function follow(user, other) {
 }
 async function unfollow(user, other) {
     let viewer = await _getUser(user);
-    let { profile } = await get(other);
+    let profile = await _get(other);
     if (viewer.follows.includes(other)) {
         let userUpdate = { follows: remove(viewer.follows, other) }
         let otherUpdate = {

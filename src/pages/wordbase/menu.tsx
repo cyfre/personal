@@ -71,10 +71,10 @@ const GameItem = ({info, isEdit, outer}) => {
   </div>
   )
 }
-const GameSection = ({name, games, isEdit, outer}: {
-  name: string, games: Info[], isEdit?: boolean, outer
+const GameSection = ({name, force, games, isEdit, outer}: {
+  name: string, force?: boolean, games: Info[], isEdit?: boolean, outer
 }) => {
-  return !games.length ?<Fragment></Fragment>:<Fragment>
+  return !games.length && !force ? <Fragment></Fragment> : <Fragment>
     <div className='top'>
       <span>{name}</span>
 
@@ -87,7 +87,16 @@ const GameSection = ({name, games, isEdit, outer}: {
     </div>
 
     <div className='section'>
-      {games.map((info, i) =>
+      {!games.length ?
+      <div className='none'>{
+        `you don't have any games  :/\n\n` +
+        `send someone an invite link!\n` +
+        `'online game' → 'new invite link'\n\n` +
+        `or match someone random! (probably me, cyrus)\n` +
+        `'online game' → 'join random'`
+      }</div>
+      :
+      games.map((info, i) =>
         <GameItem {...{
           key: i,
           info,
@@ -166,7 +175,7 @@ const UpperSection = ({outer, auth}: {
   }
 
   return (
-    <div className={'upper' + (isNew ? ' new' : '')}>
+    <div className={'upper' + (isNew ? ' new' : '') + (isFriend ? ' friend' : '')}>
 
       {/* <div className='img-container'>
         <img src="/raw/wordbase/favicon.png" />
@@ -252,7 +261,16 @@ export const WordbaseMenu = ({menuClosed, open, infoList, reload, setList}) => {
         auth,
       }}/>
 
-      {!auth.user ?'':
+      {!auth.user ?
+      <div className='game-list'>
+        <GameSection {...{
+          name: 'Your Turn',
+          games: [],
+          isEdit, outer: handle,
+          force: infoList.length === 0,
+        }}/>
+      </div>
+      :
       <div className='game-list'>
         {!infoList ?<Loader/>: <Fragment>
 
@@ -265,6 +283,7 @@ export const WordbaseMenu = ({menuClosed, open, infoList, reload, setList}) => {
             return !isInvite && canPlay;
           }).reverse(),
           isEdit, outer: handle,
+          force: infoList.length === 0,
         }}/>
 
         <GameSection {...{
@@ -328,6 +347,9 @@ const Style = styled.div`
     align-items: start;
     padding: 1rem;
     .button {
+      height: 2.25rem;
+      display: flex;
+      align-items: center;
       width: fit-content;
       white-space: pre;
       margin-bottom: .75rem;
@@ -340,8 +362,9 @@ const Style = styled.div`
     > .button:last-child { margin-bottom: 0; }
     transition: .5s;
     overflow: hidden;
-    min-height: 4rem; max-height: 8rem;
-    &.new { min-height: 12rem; max-height: 100%; }
+    min-height: 7rem; max-height: 8rem;
+    &.new { min-height: 16rem; max-height: 17rem; }
+    &.friend { min-height: 16rem; max-height: 100%; }
     .indent {
       margin-left: 1rem;
       margin-bottom: .75rem;
@@ -382,6 +405,11 @@ const Style = styled.div`
       }
     }
     .top:first-child .controls { display: flex; }
+    .none {
+      opacity: .5;
+      text-align: center;
+      white-space: pre;
+    }
   }
   .game-entry {
     height: 2.5rem;
