@@ -45,9 +45,45 @@ const GameItem = ({info, isEdit, outer}) => {
         </span>
       </div>}
     </div>
-    : <div className='main' onPointerDown={() => {
-      copy(`${window.location.origin}/wordbase#${info.id}`)
-      setCopied(true)
+    // : <div className='main' onPointerDown={e => {
+    //   if (copy(`${window.location.origin}/wordbase#${info.id}`)) {
+    //     setCopied(true)
+    //   }
+    // }} onClick={e => {
+    //   if (!copied) {
+    //     let el = (inviteRef.current as HTMLElement)
+
+    //     let endNode, startNode = endNode = el.firstChild
+    //     startNode.nodeValue = startNode.nodeValue.trim()
+
+    //     let range = document.createRange()
+    //     range.setStart(startNode, 8)
+    //     range.setEnd(endNode, el.textContent.length)
+
+    //     let sel = window.getSelection()
+    //     sel.removeAllRanges()
+    //     sel.addRange(range)
+    //     e.preventDefault()
+    //   }
+    // }}>
+    : <div className='main' onClick={async e => {
+      if (await copy(`${window.location.origin}/wordbase#${info.id}`)) {
+        setCopied(true)
+      } else {
+        let el = (inviteRef.current as HTMLElement)
+
+        let endNode, startNode = endNode = el.firstChild
+        startNode.nodeValue = startNode.nodeValue.trim()
+
+        let range = document.createRange()
+        range.setStart(startNode, 8)
+        range.setEnd(endNode, el.textContent.length)
+
+        let sel = window.getSelection()
+        sel.removeAllRanges()
+        sel.addRange(range)
+        e.preventDefault()
+      }
     }}>
 
       <div className='info dark'>
@@ -88,13 +124,16 @@ const GameSection = ({name, force, games, isEdit, outer}: {
 
     <div className='section'>
       {!games.length ?
-      <div className='none'>{
-        `you don't have any games  :/\n\n` +
-        `send someone an invite link!\n` +
-        `'online game' → 'new invite link'\n\n` +
-        `or match someone random! (probably me, cyrus)\n` +
+      <div className='none'>{[
+        '',
+        `you don't have any games  :/`,
+        '',
+        `send someone an invite link!`,
+        `'online game' → 'new invite link'`,
+        '',
+        `or match someone random! (probably me, cyrus)`,
         `'online game' → 'join random'`
-      }</div>
+      ].join('\n')}</div>
       :
       games.map((info, i) =>
         <GameItem {...{
@@ -155,9 +194,13 @@ const UpperSection = ({outer, auth}: {
     private: () => {
       setCopied(true)
       handle.invite('/wordbase/i/private')
-        .then(data => {
-          copy(`${window.location.origin}/wordbase#${data.info.id}`)
-          setCopied(`copied #${data.info.id}, send it!`)
+        .then(async data => {
+          let success = await copy(`${window.location.origin}/wordbase#${data.info.id}`)
+          if (success) {
+            setCopied(`copied #${data.info.id}, send it!`)
+          } else {
+            setCopied(`click invite to copy link`)
+          }
         })
     },
     friend: user => handle.invite(`/wordbase/i/friend/${user}`)
@@ -184,6 +227,7 @@ const UpperSection = ({outer, auth}: {
       <div className='button-row'>
         <div className='button' onClick={() => outer.open(localInfo.id)}>
           local game
+          {/* {navigator.clipboard ? 'test' : window.Clipboard ? 'y' : 'nope'} local game */}
         </div>
       </div>
 
@@ -267,7 +311,7 @@ export const WordbaseMenu = ({menuClosed, open, infoList, reload, setList}) => {
           name: 'Your Turn',
           games: [],
           isEdit, outer: handle,
-          force: infoList.length === 0,
+          force: true,
         }}/>
       </div>
       :
@@ -442,7 +486,7 @@ const Style = styled.div`
           // background: #ffffff22;
           padding: 0 .3rem;
           border-radius: .2rem;
-          user-select: none;
+          // user-select: none;
         }
         &.dark span {
           background: #00000088;
