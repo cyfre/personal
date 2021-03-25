@@ -27,6 +27,7 @@ export default () => {
   let [tallyMonth, setTallyMonth] = useState({})
   let [error, setError] = useState('')
   let newTermRef = useRef()
+  let [create, setCreate] = useState(false)
   let [edit, setEdit] = useState(false)
   let [confirm, setConfirm] = useState(false)
   let renameRef = useRef()
@@ -64,13 +65,19 @@ export default () => {
     },
     rename: () => {
       let name = renameRef.current.value
-      name && term && auth.user && api.post(`/tally/${term}/rename/${name}`).then(data => {
-        // console.log(data)
-        setError('')
-        setTally(data.tally)
-        setTerm(name)
-        setEdit(false)
-      }).catch(e => setError(e.error))
+      if (name && auth.user) {
+        if (term) {
+          api.post(`/tally/${term}/rename/${name}`).then(data => {
+            // console.log(data)
+            setError('')
+            setTally(data.tally)
+            setTerm(name)
+            setEdit(false)
+          }).catch(e => setError(e.error))
+        } else {
+          setTerm(newTermRef.current.value)
+        }
+      }
     },
     generateTallyCalendar: () => {
       tallyCalendar = {}
@@ -117,40 +124,10 @@ export default () => {
     <InfoBody>
       {!error ? ''
       : <div className='error' style={{color: 'red', minHeight: '0'}}>{error}</div>}
-      {term && tally ?
+      {tally ?
       <Fragment>
-        {/* <InfoSection>
-          <div className='terms'>
-            {Object.keys(tally.terms).map(t =>
-              <div className='term' onClick={() => setTerm(t)}>{t}</div>)}
-          </div>
-        </InfoSection> */}
-        <InfoLine><InfoLabel labels={[
-          { text: 'menu', func: () => setTerm('') },
-          { text: edit ? 'cancel' : 'edit', func: () => { setEdit(!edit); setConfirm(false) } },
-          (edit && !confirm) ? { text: 'delete', func: () => setConfirm(true) } : '',
-          (confirm) ? { text: 'cancel', func: () => setConfirm(false) } : '',
-          (confirm) ? { text: 'really delete', func: handle.delete } : '',
-        ]} /></InfoLine>
-        <InfoSection>
-          {edit ?
-          <div className='edit-container'>
-            <input ref={renameRef} type='text' placeholder='rename'
-            onKeyDown={e => e.key === 'Enter' && handle.rename()}/>
-            <span className='button' onClick={handle.rename}>rename</span>
-          </div>
-          :
-          <div className='terms'>
-            {Object.keys(tally.terms).concat(tally.terms[term] ? [] : term).map(t =>
-              <div key={t} className={t === term ? 'selected term' : 'term'} onClick={() => setTerm(t)}>
-                {t}
-              </div>)}
-            {/* <div className='selected term'>{term}</div>
-            {Object.keys(tally.terms).filter(t => t !== term).map(t =>
-              <div className='term' onClick={() => setTerm(t)}>{t}</div>)} */}
-          </div>
-          }
-          <div className='calendar'>
+        <InfoSection className='content'>
+          <div className='calendar'><div className='scroller'>
             {Array.from({ length: 6 - calendar[0].getDay() }).map((_, i) =>
               <div className='date spacer' key={i}></div>)}
             {calendar.map((date, i) => {
@@ -166,31 +143,41 @@ export default () => {
                   : ''}
               </div>
             })}
+          </div></div>
+        </InfoSection>
+        <InfoLine>
+          <InfoLabel labels={[
+            { text: create ? 'cancel' : 'new', func: () => { setCreate(!create) } },
+            create || !term ? '' : { text: edit ? 'cancel' : 'edit', func: () => { setEdit(!edit); setConfirm(false) } },
+            (edit && !confirm) ? { text: 'delete', func: () => setConfirm(true) } : '',
+            (confirm) ? { text: 'cancel', func: () => setConfirm(false) } : '',
+            (confirm) ? { text: 'really delete', func: handle.delete } : '',
+          ]} />
+        </InfoLine>
+        <InfoSection>
+          {edit ?
+          <div className='edit-container'>
+            <input ref={renameRef} type='text' placeholder='rename'
+            onKeyDown={e => e.key === 'Enter' && handle.rename()}/>
+            <span className='button' onClick={handle.rename}>rename</span>
           </div>
-          {/* {tally?.terms[term]?.map((obj, i) =>
-              <InfoLine key={i}>
-                {obj}
-              </InfoLine>)} */}
+          : create ?
+          <div className='edit-container'>
+            <input ref={newTermRef} type='text' placeholder='enter name'
+              onKeyDown={e => e.key === 'Enter' && handle.new()}/>
+            <span className='button' onClick={handle.new}>create</span>
+          </div>
+          :
+          <div className='terms'>
+            {Object.keys(tally.terms).concat(!term || tally.terms[term] ? [] : term).map(t =>
+              <div key={t} className={t === term ? 'selected term' : 'term'} onClick={() => setTerm(t)}>
+                {t}
+              </div>)}
+          </div>
+          }
         </InfoSection>
       </Fragment>
-      :
-      <Fragment>
-        <InfoSection label='tallies'>
-        {!tally?.terms ? '' : Object.keys(tally.terms).map((term, i) =>
-          <InfoLink key={i} onClick={() => setTerm(term)}>
-            {term}
-          </InfoLink>)}
-      </InfoSection>
-      {tally ?
-      <InfoSection label='new'>
-        <div className='edit-container'>
-          <input ref={newTermRef} type='text' placeholder='enter name'
-            onKeyDown={e => e.key === 'Enter' && handle.new()}/>
-          <span className='button' onClick={handle.new}>create</span>
-        </div>
-      </InfoSection>
       : ''}
-      </Fragment>}
     </InfoBody>
     :
     <InfoBody>
@@ -202,6 +189,39 @@ export default () => {
 
 
 const Style = styled(InfoStyles)`
+  .body {
+    display: flex;
+    flex-direction: column;
+    .content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      .calendar {
+        height: 0;
+        flex-grow: 1;
+        margin-bottom: 1rem;
+        margin-top: 0;
+        overflow: scroll;
+        min-width: 24rem;
+        padding-right: 3rem;
+        flex-direction: column-reverse;
+        .scroller {
+          display: flex;
+          flex-wrap: wrap-reverse;
+          flex-direction: row-reverse;
+        }
+      }
+    }
+    .terms {
+      margin-top: .5rem;
+      margin-bottom: .5rem;
+      min-height: 3rem;
+      align-items: flex-start;
+    }
+    .entry-line {
+      margin-bottom: 0;
+    }
+  }
   .terms {
     display: flex;
     flex-wrap: wrap;
@@ -236,9 +256,11 @@ const Style = styled(InfoStyles)`
       }
       &:not(.spacer) {
         // border: 2px solid #00000022;
-        border: .12rem solid #00000022;
+        // border: .12rem solid #00000022;
         // box-shadow: 1px 1px 2px 1px #00000022;
         // box-shadow: 0px 2px 4px 1px #00000022;
+        border: .12rem solid transparent;
+        background: #0000000d;
       }
 
       cursor: pointer;
