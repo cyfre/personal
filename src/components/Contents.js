@@ -106,7 +106,7 @@ const Missing = () =>
 const Page = () => {
     let { id } = useParams();
     let location = useLocation();
-    useTitle(location.pathname);
+    useTitle('/' + location.pathname.split('/')[1]);
     let Page = React.lazy(() => import('../pages/' + id));
     return (
         <Suspense fallback={<Loading />}>

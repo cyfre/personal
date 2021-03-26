@@ -40,19 +40,19 @@ searchProjects.forEach(key => {
         _projects[key] = ['', _projects[key]] }})
 export const projects = _projects;
 
-const SearchEntry = ({page, term, tabbed}) => {
+const SearchEntry = ({page, regex, tabbed}) => {
     let entryRef = useRef()
     let p = projects[page];
-    let reg = RegExp(`(${term})`, 'gi')
+    // let reg = RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
 
-    let highlight = html => !term ? html : html.split('<a')
+    let highlight = html => html.split('<a')
         .map((text, i) => {
             if (i > 0) {
                 let split = text.split('>')
-                split[1] = split[1].replace(reg, `<span class="highlight">$1</span>`)
+                split[1] = split[1].replace(regex, `<span class="highlight">$1</span>`)
                 return split.join('>')
             } else {
-                return text.replace(reg, `<span class="highlight">$1</span>`)
+                return text.replace(regex, `<span class="highlight">$1</span>`)
             }
         }).join('<a')
 
@@ -74,9 +74,9 @@ const SearchEntry = ({page, term, tabbed}) => {
     </div>
     )
 }
-const SearchList = ({results, term, tab}) => <Fragment>
+const SearchList = ({results, regex, tab}) => <Fragment>
     {results.map((p, i) =>
-        <SearchEntry page={p} term={term} key={i} tabbed={i === tab ? true : false}/>)}
+        <SearchEntry page={p} regex={regex} key={i} tabbed={i === tab ? true : false}/>)}
 </Fragment>
 
 // eslint-disable-next-line import/no-anonymous-default-export
@@ -84,14 +84,20 @@ export default () => {
     let searchRef = useRef();
     let history = useHistory();
     let [term, setTerm] = useState(window.location.hash?.slice(1) || '');
+    let regex
+    try {
+        regex = new RegExp(`(${term})`, 'gi')
+    } catch (_) {
+        regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    }
     let calcResults = term => {
         return searchProjects
-            .filter(p => [p].concat(projects[p]).some(field => field.toLowerCase().includes(term)))
+            .filter(p => [p].concat(projects[p]).some(field => field.match(regex)))
             .sort((a, b) => {
                 if (a === term) return -1;
                 if (b === term) return 1;
-                let aHas = [a, projects[a][0]].some(field => field.toLowerCase().includes(term));
-                let bHas = [b, projects[b][0]].some(field => field.toLowerCase().includes(term));
+                let aHas = [a, projects[a][0]].some(field => field.match(regex));
+                let bHas = [b, projects[b][0]].some(field => field.match(regex));
                 if (aHas && bHas) return a.localeCompare(b);
                 else if (aHas) return -1;
                 else if (bHas) return 1;
@@ -132,7 +138,7 @@ export default () => {
         }}/>
         <InfoBody>
             <InfoSection label='results'>
-                <SearchList {...{ term, results, tab }} />
+                <SearchList {...{ regex, results, tab }} />
             </InfoSection>
         </InfoBody>
     </Style>

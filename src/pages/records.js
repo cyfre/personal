@@ -3,7 +3,7 @@ import api from '../lib/api';
 import { randAlphanum } from '../lib/util';
 import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { useE, useF, useAuth } from '../lib/hooks';
+import { useE, useF, useAuth, useTitle } from '../lib/hooks';
 import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLabel, InfoLoginBlock } from '../components/Info'
 
 const ScoreEntry = ({entry, handle}) => {
@@ -116,7 +116,7 @@ export default () => {
 
   useF(auth.user, handle.load)
   useF(app, () => {
-    window.history.replaceState(null, '/records', `/records/${app || ''}`)
+    window.history.replaceState(null, '/records', `/records${app ?`/${app}` :''}`)
   })
 
   const appBadges = [
@@ -222,5 +222,8 @@ const Style = styled(InfoStyles)`
     // .app, .user {
     //   min-width: 9rem;
     // }
+    &.entry:hover * {
+      text-decoration: underline;
+    }
   }
 `

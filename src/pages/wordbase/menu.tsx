@@ -262,7 +262,8 @@ const UpperSection = ({outer, auth}: {
       </Fragment>
       :
       <div className='button placeholder' onClick={openLogin}>
-        log in for online games
+        {/* log in for online games */}
+        online game
       </div>}
 
     </div>

@@ -63,7 +63,12 @@ const User = () => {
     },
   }
   useF(auth, () => setDropdown(auth.dropdown))
-  useF(dropdown, () => dropdown || setError(''))
+  useF(dropdown, () => {
+    if (!dropdown) {
+      setError('')
+      setVerify(false)
+    }
+  })
 
   const isMe = auth.user === 'cyrus'
   const loggedIn = (
@@ -78,7 +83,7 @@ const User = () => {
   )
 
   const loggedOut = (
-    <div className={'dropdown' + (error ? ' error' : '')} title={error}>
+    <div className={'dropdown' + (error ? ' error' : '')} title={error || ''}>
       <div className='item'>
         <input ref={userRef} type='text' maxLength='8' placeholder='username'
           autoCorrect='off' autoCapitalize='off'
@@ -90,7 +95,7 @@ const User = () => {
           onKeyDown={e => e.key === 'Enter' && handle.signin(login)}/>
       </div>
       {verify ? <div className='item info'>
-        <input ref={verifyRef} type='password' placeholder='verify password'
+        <input ref={verifyRef} type='password' placeholder='confirm password'
           onKeyDown={e => e.key === 'Enter' && handle.signup()}/>
       </div> : ''}
       {!error?'': <div className='item info' style={{
