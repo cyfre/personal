@@ -199,7 +199,7 @@ const Style = styled(InfoStyles)`
       .calendar {
         height: 0;
         flex-grow: 1;
-        margin-bottom: 1rem;
+        margin-bottom: .75rem;
         margin-top: 0;
         overflow: scroll;
         min-width: 24rem;
@@ -219,7 +219,7 @@ const Style = styled(InfoStyles)`
       align-items: flex-start;
     }
     .entry-line {
-      margin-bottom: 0;
+      // margin-bottom: 0;
     }
   }
   .terms {
@@ -250,7 +250,8 @@ const Style = styled(InfoStyles)`
       height: calc(3rem - .4rem);
       border-radius: .2rem;
       padding: 0 .3rem;
-      margin: .2rem;
+      // margin: .2rem;
+      margin: .3rem .2rem .1rem .2rem;
       &.spacer {
         // border-color: transparent;
       }
