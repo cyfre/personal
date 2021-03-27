@@ -70,7 +70,7 @@ export const InfoLine = (props: {
   labels?: InfoLabelType[],
 }) => {
   let labels = props.label ? [props.label] : props.labels || []
-  return <div className='entry-line' {...props}>
+  return <div {...props} className={`entry-line ${props.className}`}>
     {props.children}
     {labels
     ? <InfoBadges {...{ labels }} />
@@ -81,11 +81,12 @@ export const InfoLines = (props: {
   [key: string]: any,
   labels?: InfoLabelType[],
   lines: InfoLineType[],
+  classes?: string[],
 }) => {
-  let {labels, lines} = props
+  let {labels, lines, classes=[]} = props
   return <InfoSection labels={labels} {...props}>
     {lines.map((line, i) => (
-      <InfoLine key={i} labels={line.labels}>
+      <InfoLine key={i} labels={line.labels} className={classes[i]}>
         {line.content || line}
       </InfoLine>
     ))}
@@ -120,14 +121,15 @@ export const InfoLink = (props: {
   )
 }
 
-export const InfoList = ({entries, labels, entryLabels}: {
+export const InfoList = (props: {
   entries: InfoEntryType[],
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
+  classes?: string[],
 }) => {
-  entryLabels = entryLabels || []
-  return <InfoLines {...{
-    labels, lines: entries.map((entry, i) => ({
+  let {entries, labels, entryLabels=[], classes} = props
+  return <InfoLines {...props} {...{
+    labels, classes, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
       <InfoEntry>
@@ -136,14 +138,15 @@ export const InfoList = ({entries, labels, entryLabels}: {
     }))
   }} />
 }
-export const InfoLinks = ({entries, labels, entryLabels}: {
+export const InfoLinks = (props: {
   entries: InfoEntryType[],
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
+  classes?: string[],
 }) => {
-  entryLabels = entryLabels || []
-  return <InfoLines {...{
-    labels, lines: entries.map((entry, i) => ({
+  let {entries, labels, entryLabels=[], classes} = props
+  return <InfoLines {...props} {...{
+    labels, classes, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
       <InfoLink to={typeof entry === 'object' ? entry.data : entry}>
@@ -152,15 +155,16 @@ export const InfoLinks = ({entries, labels, entryLabels}: {
     }))
   }} />
 }
-export const InfoFuncs = ({entries, entryFunc, labels, entryLabels}: {
+export const InfoFuncs = (props: {
   entries: InfoEntryType[],
   entryFunc: (entry: InfoEntryType) => any,
   labels?: InfoLabelType[],
   entryLabels?: InfoLabelType[][],
+  classes?: string[],
 }) => {
-  entryLabels = entryLabels || []
-  return <InfoLines {...{
-    labels, lines: entries.map((entry, i) => ({
+  let {entries, entryFunc, labels, entryLabels=[], classes} = props
+  return <InfoLines {...props} {...{
+    labels, classes, lines: entries.map((entry, i) => ({
       labels: entryLabels[i],
       content: (
       <InfoLink onClick={() => entryFunc(typeof entry === 'object' ? entry.data : entry)}>

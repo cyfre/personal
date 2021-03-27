@@ -45,7 +45,7 @@ const SearchEntry = ({page, regex, tabbed}) => {
     let p = projects[page];
     // let reg = RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
 
-    let highlight = html => html.split('<a')
+    let highlight = html => !regex ? html : html.split('<a')
         .map((text, i) => {
             if (i > 0) {
                 let split = text.split('>')
@@ -60,7 +60,7 @@ const SearchEntry = ({page, regex, tabbed}) => {
         if (tabbed) {
             (entryRef.current as HTMLElement).scrollIntoView({
                 behavior: "smooth",
-                block: "end",
+                block: "center",
                 inline: "nearest"
             })
         }
@@ -86,7 +86,7 @@ export default () => {
     let [term, setTerm] = useState(window.location.hash?.slice(1) || '');
     let regex
     try {
-        regex = new RegExp(`(${term})`, 'gi')
+        regex = term ? new RegExp(`(${term})`, 'gi') : ''
     } catch (_) {
         regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     }
@@ -137,7 +137,7 @@ export default () => {
             tab: (dir) => setTab((tab + dir + results.length) % results.length),
         }}/>
         <InfoBody>
-            <InfoSection label='results'>
+            <InfoSection label='results' className='results'>
                 <SearchList {...{ regex, results, tab }} />
             </InfoSection>
         </InfoBody>
@@ -150,16 +150,20 @@ const Style = styled(InfoStyles)`
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            .title { margin-right: 1rem; color: black; }
-            &.tabbed .title, .title:hover { text-decoration: underline; }
+            width: fit-content;
+            .title { color: black; }
         }
         .highlight { background: yellow; }
         .desc {
             font-size: .8rem;
             opacity: .8;
             display: none;
+            margin-left: 1rem;
             a { text-decoration: underline; }
         }
-        .entry:hover .desc, .entry:first-child .desc, .tabbed .desc { display: inline-block; }
+        .results {
+            &:not(:focus-within) .tabbed .title, .title:hover, .title:focus-visible { text-decoration: underline; }
+            &:not(:focus-within) .tabbed .desc, .entry:hover .desc, .entry:focus-within .desc, .entry:first-child .desc { display: inline-block; }
+        }
     }
 `

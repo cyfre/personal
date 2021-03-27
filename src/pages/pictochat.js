@@ -23,13 +23,7 @@ export default () => {
 
   const handle = {
     updateChat: (other, newChat) => {
-      if (other) {
-        setChats(Object.assign({}, chats, { [other]: newChat }))
-        console.log(chats[other], newChat)
-        if (chats[other]?.messages.slice(-1)[0]?.meta.t !== newChat?.messages.slice(-1)[0]?.meta.t) {
-          setTimeout(handle.scrollToLatest, 50)
-        }
-      }
+      other && setChats(Object.assign({}, chats, { [other]: newChat }))
     },
     loadProfile: () => {
       if (auth.user) {
@@ -65,7 +59,12 @@ export default () => {
       let text = inputRef.current.value
       if (text) {
         inputRef.current.value = ''
-        handle.scrollToLatest()
+        let firstMessage = document.querySelector('.chat .messages :first-child')
+        firstMessage?.scrollIntoView({
+          behavior: "smooth",
+          block: "end",
+          inline: "nearest"
+        })
         api.post(`/chat/u/${other}`, { messages: [{ text }] }).then(({chat: newChat}) => handle.updateChat(other, newChat))
       }
       handle.resize()
@@ -79,14 +78,6 @@ export default () => {
       inputRef.current.style.height = 'auto';
       inputRef.current.style.height = `calc(${inputRef.current.scrollHeight}px + .25rem)`;
     },
-    scrollToLatest: () => {
-      let latestMessage = document.querySelector('.chat .messages :first-child')
-      latestMessage?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-        inline: "nearest"
-      })
-    }
   }
   useEventListener(window, 'resize', handle.resize)
 
@@ -141,7 +132,7 @@ export default () => {
   return <Style>
     {auth.user ? <Fragment>
     <InfoBody className='friends'>
-      <InfoFuncs className='friends-list' {...{
+      <InfoFuncs {...{
         labels: [
           'chat',
           // unreadCount || ''
@@ -152,13 +143,27 @@ export default () => {
           let hash = chatUser.dms[other]
           let unread = (chatUser.unread || {})[hash]
           return unread ? [{ dot: 'black' }] : []
-        }),
-        classes: (profile?.friends || []).map(u => u === other ? 'selected' : ''),
+        })
       }}/>
     </InfoBody>
     <InfoBody className='chat'>
       {other ? <Fragment>
-      <InfoSection label={other} className='other-label' />
+      <InfoSection labels={[
+        other,
+        ]} className='edit-container'>
+        <div className='chat-input-container'>
+          <textarea className='chat-input' ref={inputRef} rows="1" spellCheck='false'
+            onKeyDown={e => {
+              if (!e.shiftKey && e.key === 'Enter') {
+                e.preventDefault()
+                // socket.emit('live:message', e.target.value)
+                handle.sendChat()
+              }
+            }}
+            onChange={handle.typing}></textarea>
+          <span className='button chat-send' onClick={e => handle.sendChat()}>send</span>
+        </div>
+      </InfoSection>
       <InfoSection className='messages'>
         {chat?.messages.length === 0 ? <div className='info'>no messages</div> : ''}
         {typing[other] ? <div className='left typing'>...</div> : ''}
@@ -188,22 +193,6 @@ export default () => {
             : ''}
           </Fragment>
         })}
-      </InfoSection>
-      <InfoSection labels={[
-        // other,
-        ]} className='edit-container'>
-        <div className='chat-input-container'>
-          <textarea className='chat-input' ref={inputRef} rows="1" spellCheck='false'
-            onKeyDown={e => {
-              if (!e.shiftKey && e.key === 'Enter') {
-                e.preventDefault()
-                // socket.emit('live:message', e.target.value)
-                handle.sendChat()
-              }
-            }}
-            onChange={handle.typing}></textarea>
-          <span className='button chat-send' onClick={e => handle.sendChat()}>send</span>
-        </div>
       </InfoSection>
       </Fragment>
       :
@@ -241,9 +230,6 @@ const Style = styled(InfoStyles)`
     .entry {
       user-select: none !important;
     }
-    .friends-list:not(:hover) .selected {
-      text-decoration: underline;
-    }
   }
   .body.chat {
     width: calc(100% - 7rem);
@@ -260,8 +246,8 @@ const Style = styled(InfoStyles)`
       margin-bottom: 0;
       .chat-input-container {
         // display: flex;
-        // padding: .25rem 0;
-        // margin-bottom: .25rem;
+        padding: .25rem 0;
+        margin-bottom: .25rem;
 
         position: relative;
       }
@@ -304,7 +290,7 @@ const Style = styled(InfoStyles)`
 
         position: absolute;
         right: .3rem;
-        bottom: calc(.5rem + 2px + .05rem);
+        bottom: calc(.5rem + 2px + .3rem);
         width: 2.5rem;
         height: 1.4rem;
       }
@@ -314,17 +300,7 @@ const Style = styled(InfoStyles)`
       flex-grow: 1;
       overflow-y: scroll;
       display: flex;
-      flex-direction: column-reverse;
-      padding-bottom: 1rem;
-      &::before {
-        content: "";
-        height: 0;
-        flex-grow: 1;
-      }
-      &::after {
-        content: "";
-        min-height: 1rem;
-      }
+      flex-direction: column;
       > * {
         max-width: 90%;
         font-size: .8rem;
@@ -379,13 +355,6 @@ const Style = styled(InfoStyles)`
           }
         }
       }
-    }
-    .other-label {
-      margin-left: -1rem;
-      padding-left: 1rem;
-      padding-bottom: 1rem;
-      margin-bottom: 0;
-      border-bottom: 1px solid #00000022;
     }
   }
 `

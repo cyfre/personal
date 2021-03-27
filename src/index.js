@@ -60,7 +60,7 @@ const Style = styled.div`
   @media (max-width: 30.01rem) {
     width: calc(100% - 0.6rem);
     height: calc(100% - 0.6rem);
-    margin: 0.3rem;
+    margin-top: 0.3rem;
   }
 `
 
