@@ -45,8 +45,7 @@ async function get(user) {
     return { notify }
 }
 async function update(user, props) {
-    if (props.user && user !== props.user)
-        throw new Error(`${props.user} can't update ${user}`)
+    if (props.user && user !== props.user) throw `${props.user} can't update ${user}`
     let { notify } = await get(user);
     Object.assign(notify, props);
     C.notify().updateOne({ user }, { $set: props });

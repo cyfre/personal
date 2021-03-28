@@ -104,7 +104,7 @@ async function sendUserChat(user, other, messages) {
 
 async function newChat(users, hash) {
     if (hash) {
-        if (await _get(hash)) throw Error(`/chat/${hash} already exists`)
+        if (await _get(hash)) throw `/chat/${hash} already exists`
     } else do {
         hash = randAlphanum(7)
     } while (await _get(hash))
@@ -120,7 +120,7 @@ async function newChat(users, hash) {
 }
 async function getChat(user, hash) {
     let chat = await _get(hash)
-    if (chat && !chat.users.includes(user)) throw Error(`${user} can't view /chat/${hash}`)
+    if (chat && !chat.users.includes(user)) throw `${user} can't view /chat/${hash}`
     return { chat }
 }
 async function readChat(user, hash) {

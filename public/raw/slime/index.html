@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>Terrain Generation</title>
+    <link rel="stylesheet" type="text/css" href="/styles.css">
+    <style>
+      body {
+          background-color: rgb(244, 241, 232);
+      }
+
+      #canvas {
+          image-rendering: pixelated;
+      }
+
+      #controls {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 0;
+        right: 0;
+        /* background: white; */
+        padding: .3rem;
+        border-radius: .3rem;
+      }
+      #controls:not(.closed) {
+        background: #ffffffee;
+      }
+      #controls * {
+        font-family: monospace;
+      }
+      #controls label {
+        display: inline-block;
+        min-width: 7rem;
+      }
+      #controls button {
+        -webkit-appearance: none;
+        background: black;
+        border: 2px solid black;
+        color: white;
+        border-radius: .3rem;
+        padding: .2rem;
+      }
+      #controls.closed #inputs {
+        display: none;
+      }
+      #controls > *:not(:last-child) {
+        margin-bottom: .3rem;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <div id="controls" class="closed">
+      <button id="toggle">show inputs</button>
+      <div id="inputs">
+        <div><label>speed</label><input id="speed" type="number"/></div>
+        <div><label>sensor angle</label><input id="SA" type="number"/></div>
+        <div><label>sensor offset</label><input id="SO" type="number"/></div>
+        <div><label>turn angle</label><input id="RA" type="number"/></div>
+        <div><label>decay</label><input id="fade" type="number"/></div>
+        <div><label>spread</label><input id="diffuse" type="number"/></div>
+        <div><label>wrap</label><input id="wrap" type="checkbox"/></div>
+        <div><label>count</label><input id="n" type="number"/></div>
+      </div>
+      <button id="generate">regenerate</button>
+    </div>
+
+    <script src="/lib/utils.js"></script>
+    <script src="script.js"></script>
+    <script>
+      let inputs = document.querySelectorAll('#controls input')
+      inputs.forEach(input => {
+        if (input.type === 'number') {
+          input.value = D[input.id]
+          input.addEventListener('change', e => {
+            console.log(input.value)
+            D[input.id] = Number(input.value)
+          })
+        } else if (input.type === 'checkbox') {
+          input.checked = D[input.id]
+          input.addEventListener('change', e => {
+            D[input.id] = input.checked
+          })
+        }
+      })
+      document.querySelector('#generate').addEventListener('click', e => generate())
+      document.querySelector('#toggle').addEventListener('click', ({target: toggle}) => {
+        let controls = document.querySelector('#controls')
+        if (toggle.textContent === 'show inputs') {
+          controls.classList.remove('closed')
+          toggle.textContent = 'hide inputs'
+        } else {
+          controls.classList.add('closed')
+          toggle.textContent = 'show inputs'
+        }
+      })
+    </script>
+  </body>
+</html>

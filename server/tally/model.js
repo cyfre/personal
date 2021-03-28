@@ -43,7 +43,7 @@ async function create(user, term) {
     return { tally }
 }
 async function update(user, params) {
-    if (params.user && params.user !== user) throw Error(`users mismatch`)
+    if (params.user && params.user !== user) throw `users mismatch`
     params.user = user
     return {
         tally: await _update(params)

@@ -58,7 +58,7 @@ function jsonRes(func) {
 }
 
 function requireUser(rq) {
-    if (!rq.user) throw Error('user not signed in');
+    if (!rq.user) throw 'user not signed in';
     return rq.user
 }
 

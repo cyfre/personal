@@ -15,7 +15,7 @@ reset: string
 */
 
 async function get(user) {
-    if (!user.match(/^\w+$/)) throw new Error(`name can't use special characters`)
+    if (!user.match(/^\w+$/)) throw `name can't use special characters`
     return db.collection(name).findOne({ user });
 }
 
@@ -36,12 +36,12 @@ async function login(user, passHash) {
         await _update(entry);
         return userAndToken(entry);
     }
-    throw new Error(entry ? 'incorrect password' : "user doesn't exist")
+    throw (entry ? 'incorrect password' : "user doesn't exist")
 }
 
 async function signup(user, passHash) {
     let entry = await get(user);
-    if (await get(user)) throw new Error('user already exists');
+    if (await get(user)) throw 'user already exists';
 
     entry = {
         user,
@@ -75,7 +75,7 @@ async function changePass(user, currPass, newPass) {
     if (entry && entry.pass === currPass) {
         return setPass(user, newPass)
     }
-    throw new Error(entry ? 'incorrect password' : "user doesn't exist")
+    throw (entry ? 'incorrect password' : "user doesn't exist")
 }
 
 module.exports = {

@@ -30,7 +30,7 @@ const names = {
 const C = entryMap(names, name => () => db.collection(name));
 
 async function _getGames(user) {
-    if (!user) throw Error('user not signed in');
+    if (!user) throw 'user not signed in';
     let entry = await C.user().findOne({ user });
     if (!entry) {
         entry = { user, games: [] };
@@ -40,9 +40,9 @@ async function _getGames(user) {
 }
 async function _getInfo(user, id) {
     let entry = await C.info().findOne({ id });
-    if (!entry) throw Error(`game ${id} does not exist`);
+    if (!entry) throw `game ${id} does not exist`;
     if (entry.p1 && ![entry.p1, entry.p2].includes(user)) {
-        throw Error(`${user} isn't in game ${id}`);
+        throw `${user} isn't in game ${id}`;
     }
     return entry;
 }
@@ -146,7 +146,7 @@ async function remove(user, id) {
 }
 async function rematch(user, id, state) {
     let info = await _getInfo(user, id);
-    if (info.status === -1) throw Error('game still in progress');
+    if (info.status === -1) throw 'game still in progress';
 
     let rematch
     if (info.rematch) {
@@ -183,7 +183,7 @@ async function accept(user, id) {
     if (!id) {
         // let me create multiple open invites, but match others with themselves
         let entry = await C.invite().findOne(user === 'cyrus' ? { user: { $ne: user }} : {});
-        if (!entry) throw Error('no open invites');
+        if (!entry) throw 'no open invites';
         id = entry.id;
     }
     console.log('accept', user, id);
@@ -191,7 +191,7 @@ async function accept(user, id) {
     console.log(info);
     if (info.p1) {
         C.invite().deleteOne({ id });
-        throw Error('game already accepted');
+        throw 'game already accepted';
     }
     info.p1 = user;
     console.log(info);
@@ -207,7 +207,7 @@ async function getInvites() {
     return { idList }
 }
 async function create(user, other, state) {
-    if (!user) throw Error('sign in to create game');
+    if (!user) throw 'sign in to create game';
     let id = randAlphanum(7)
     let info = {
         id: id,

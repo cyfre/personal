@@ -25,7 +25,7 @@ async function _get(user) {
     return profile
 }
 async function _getUser(user) {
-    if (!user) throw Error('user not signed in');
+    if (!user) throw 'user not signed in';
     return await _get(user);
 }
 async function get(viewer, user) {

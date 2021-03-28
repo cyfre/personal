@@ -16,8 +16,7 @@ async function _get(user) {
     return { reset }
 }
 async function _update(user, props) {
-    if (props.user && user !== props.user)
-        throw new Error(`${props.user} can't update ${user}`)
+    if (props.user && user !== props.user) throw `${props.user} can't update ${user}`
     let { reset } = await _get(user);
     Object.assign(reset, props);
     C.reset().updateOne({ user }, { $set: props }, { upsert: true });

@@ -18,13 +18,12 @@ async function _get(hash) {
     return ly
 }
 async function _update(user, hash, props) {
-    if (user !== 'cyrus')
-        throw new Error(`you aren't cyrus, sorry :/`)
-    if (props.hash && hash !== props.hash)
-        throw new Error(`${props.hash} can't update /ly/${hash}`)
+    if (user !== 'cyrus') throw `you aren't cyrus, sorry :/`
+    if (props.hash && hash !== props.hash) throw `${props.hash} can't update /ly/${hash}`
+
     let ly = (await _get(hash)) || { user, hash }
-    if (ly.user && ly.user !== user)
-        throw new Error(`/ly/${hash} already exists`)
+    if (ly.user && ly.user !== user) throw `/ly/${hash} already exists`
+
     ly.user = user
     Object.assign(ly, props)
     C.ly().updateOne({ hash }, { $set: ly }, { upsert: true })
@@ -38,14 +37,13 @@ async function getUser(user) {
 async function get(user, hash) {
     let ly = await _get(hash)
     // if (ly && !ly.isPublic && ly.user !== user)
-    //     throw new Error(`/ly/${hash} is private`)
+    //     throw `/ly/${hash} is private`
     return { ly }
 }
 async function create(user, params) {
     let hash = params.hash || randAlphanum(7)
     let existing = await _get(hash)
-    if (existing)
-        throw new Error(`/ly/${hash} already exists`)
+    if (existing) throw `/ly/${hash} already exists`
     return {
         ly: await _update(user, hash, params)
     }
