@@ -8,25 +8,49 @@
     <link rel="stylesheet" type="text/css" href="/styles.css">
     <style>
       body {
-          background-color: rgb(244, 241, 232);
+        background-color: rgb(244, 241, 232);
       }
 
+      #canvas-container {
+        width: calc(100% - 1rem);
+        height: calc(100% - 1rem);
+        margin: .5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
       #canvas {
-          image-rendering: pixelated;
+        image-rendering: pixelated;
+        /* border: 0.5rem solid transparent; */
+        border-radius: 1.5rem;
+        /* border-radius: 50%; */
+        /* box-shadow: 0 0 .5rem .5rem #00000022; */
+        display: none;
       }
 
-      #controls {
+      #controls, #info {
         display: flex;
         flex-direction: column;
         position: absolute;
         top: 0;
-        right: 0;
         /* background: white; */
         padding: .3rem;
         border-radius: .3rem;
       }
-      #controls:not(.closed) {
+      #controls { right: 0 }
+      #info { left: 0 }
+      #controls:not(.closed), #info:not(.closed) {
         background: #ffffffee;
+      }
+      #info:not(.closed) {
+        width: 30rem;
+        max-width: 70%;
+      }
+      #info.closed #info-text {
+        display: none;
+      }
+      #controls.closed #inputs {
+        display: none;
       }
       #controls * {
         font-family: monospace;
@@ -35,7 +59,7 @@
         display: inline-block;
         min-width: 7rem;
       }
-      #controls button {
+      #controls button, #info button {
         -webkit-appearance: none;
         background: black;
         border: 2px solid black;
@@ -43,9 +67,6 @@
         border-radius: .3rem;
         padding: .2rem;
         cursor: pointer;
-      }
-      #controls.closed #inputs {
-        display: none;
       }
       #controls > *:not(:last-child) {
         margin-bottom: .3rem;
@@ -55,18 +76,60 @@
         margin: auto;
         margin-bottom: .3rem;
       }
+      #save-reset {
+        margin-top: .3rem;
+      }
+      .line {
+        display: flex;
+        margin-top: .1rem;
+        margin-bottom: .1rem;
+      }
+      .line :not(:last-child) {
+        margin-right: .3rem;
+      }
+      .line > * {
+        flex-grow: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .line label {
+        min-width: 0 !important;
+      }
     </style>
   </head>
   <body>
-    <canvas id="canvas"></canvas>
+    <div id="canvas-container">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="info" class="closed">
+      <button id="info-toggle">?</button>
+      <div id="info-text">
+        <p>Based on prior work simulating slime mold. Agents use sensors to detect local 'scent', follow the strongest scent, and deposit scent</p>
+        <p>paper:
+          <a href="https://uwe-repository.worktribe.com/output/980579">
+            Characteristics of pattern formation and evolution in approximations of physarum transport networks</a>
+          <i>Jeff Jones</i></p>
+        <p>quick website write-up:
+          <a href="https://sagejenson.com/physarum">
+            physarum</a>
+          <i>Sage Jenson</i></p>
+        <p>video:
+          <a href="https://www.youtube.com/watch?v=X-iSQQgOd1A">
+            Coding Adventure: Ant and Slime Simulations</a>
+          <i>Sebastian Lague</i></p>
+
+        <br/>
+        <p>note – for now there isn't any parallel compute option for the web :/ maybe one day</p>
+        <p>so performance isn't the best, it's just a web demo</p>
+      </div>
+    </div>
 
     <div id="controls" class="closed">
-      <button id="toggle">show inputs</button>
+      <button id="controls-toggle">show inputs</button>
       <div id="inputs">
         <div id="examples">
-          <!-- <button id="1">1</button>
-          <button id="2">2</button>
-          <button id="3">3</button> -->
           <button id="randomize">randomize</button>
         </div>
         <div><label>speed</label><input id="speed" type="number"/></div>
@@ -77,12 +140,27 @@
         <div><label>spread</label><input id="diffuse" type="number"/></div>
         <div><label>wrap</label><input id="wrap" type="checkbox"/></div>
         <div><label>avoid</label><input id="avoid" type="checkbox"/></div>
+        <div><label>circular</label><input id="circular" type="checkbox"/></div>
+        <div><label>custom colors</label><input id="colors" type="checkbox"/></div>
+        <!-- <div><label>red</label><input id="R" type="checkbox"/><input id="R_col" type="color" value='#ff0000'/></div>
+        <div><label>green</label><input id="G" type="checkbox"/><input id="G_col" type="color" value='#00ff00'/></div>
+        <div><label>blue</label><input id="B" type="checkbox"/><input id="B_col" type="color" value='#0000ff'/></div> -->
+        <div class='line'>
+          <div><label>R</label><input id="R" type="checkbox"/><input id="R_col" type="color" value='#ff0000'/></div>
+          <div><label>G</label><input id="G" type="checkbox"/><input id="G_col" type="color" value='#00ff00'/></div>
+          <div><label>B</label><input id="B" type="checkbox"/><input id="B_col" type="color" value='#0000ff'/></div>
+        </div>
         <div><label>count</label><input id="n" type="number"/></div>
+        <div id="reset-save" class='line'>
+          <button id="reset">reset</button>
+          <button id="save">save</button>
+        </div>
       </div>
       <button id="generate">regenerate</button>
     </div>
 
     <script src="/lib/utils.js"></script>
+    <script src="/lib/store.js"></script>
     <script src="script.js"></script>
     <script>
       let inputs = document.querySelectorAll('#controls input')
@@ -95,13 +173,28 @@
           input.addEventListener('change', e => {
             D[input.id] = input.checked
           })
+        } else {
+          input.addEventListener('change', e => {
+            D[input.id] = input.value
+          })
         }
       })
       updateInputs()
 
       document.querySelector('#generate').addEventListener('click', e => generate())
       document.querySelector('#randomize').addEventListener('click', e => randomize())
-      document.querySelector('#toggle').addEventListener('click', ({target: toggle}) => {
+      document.querySelector('#save').addEventListener('click', ({target: save}) => {
+        save.textContent = 'saved!'
+        setStored('slime-settings', D)
+        setTimeout(() => {
+          save.textContent = 'save'
+        }, 3000)
+      })
+      document.querySelector('#reset').addEventListener('click', ({target: reset}) => {
+        Object.assign(D, D_defaults)
+        updateInputs()
+      })
+      document.querySelector('#controls-toggle').addEventListener('click', ({target: toggle}) => {
         let controls = document.querySelector('#controls')
         if (toggle.textContent === 'show inputs') {
           controls.classList.remove('closed')
@@ -109,6 +202,16 @@
         } else {
           controls.classList.add('closed')
           toggle.textContent = 'show inputs'
+        }
+      })
+      document.querySelector('#info-toggle').addEventListener('click', ({target: toggle}) => {
+        let info = document.querySelector('#info')
+        if (toggle.textContent === '?') {
+          info.classList.remove('closed')
+          toggle.textContent = 'close'
+        } else {
+          info.classList.add('closed')
+          toggle.textContent = '?'
         }
       })
 
@@ -159,19 +262,19 @@
       //   fade: 1.25,
       //   diffuse: .5,
       // },
-      { // circles
-        speed: 145,
-        SA: 160,
-        SO: 6,
-        RA: 37,
-        n: 10000,
-        fade: 1.06,
-        diffuse: .75,
-      },
+      // { // circles
+      //   speed: 145,
+      //   SA: 160,
+      //   SO: 6,
+      //   RA: 37,
+      //   n: 10000,
+      //   fade: 1.06,
+      //   diffuse: .75,
+      // },
       { // swirls
         speed: 92,
         SA: 156,
-        SO: 15,
+        SO: 16,
         RA: 28,
         n: 7000,
         fade: 1.20,
@@ -186,13 +289,32 @@
         fade: 1.35,
         diffuse: .15,
       },
+      { // blobs
+        speed: 200,
+        SA: 90,
+        SO: 4,
+        RA: 100,
+        n: 1000,
+        fade: 1.022,
+        diffuse: .07,
+      },
+      // { // spagetti
+      //   speed: 50,
+      //   SA: 87,
+      //   SO: 17,
+      //   RA: 29,
+      //   n: 50,
+      //   fade: 1.028,
+      //   diffuse: .0137,
+      // },
       { // mobile squiggly cells
         speed: 100,
         SA: 45,
         SO: 5,
         RA: 15,
         n: 10000,
-        fade: 1.005,
+        // fade: 1.005, doesn't play well with custom colors
+        fade: 1.1,
         diffuse: 1,
       }]
       settings.forEach((setting, i) => {
@@ -222,10 +344,13 @@
 
       function updateInputs() {
         inputs.forEach(input => {
+          let value = D[input.id]
           if (input.type === 'number') {
-              input.value = D[input.id]
+            input.value = value
           } else if (input.type === 'checkbox') {
-              input.checked = D[input.id]
+            input.checked = value
+          } else {
+            input.value = value
           }
         })
       }
