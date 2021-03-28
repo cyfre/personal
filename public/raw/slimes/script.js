@@ -9,7 +9,7 @@ const HEIGHT = 180;
 const canvas = document.querySelector('#canvas');
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
-// canvas.style.filter = 'grayscale(30%)';
+canvas.style.filter = 'grayscale(30%)';
 
 const ctx = canvas.getContext('2d');
 
@@ -39,20 +39,21 @@ function getPix(x, y, chnl) {
             case CHANNEL.G: j = i-1; k = i+1; break;
             case CHANNEL.B: j = i-2; k = i-1; break;
         }
-        return Math.max(0, (img.data[i] || 0) - (img.data[j] || 0) - (img.data[k] || 0)) / 255
+        return Math.max(0, (img.data[i] || 0) - (img.data[j] || 0) - (img.data[k] || 0))
     } else {
-        return (img.data[i] || 0) / 255
+        return img.data[i] || 0
     }
 }
 function setPix(x, y, val, chnl) {
     let i = toPix(x, y, chnl)
     if (i === -1) return 0
-    return img.data[toPix(x, y, chnl)] = Math.round(val * 255)
+    return img.data[toPix(x, y, chnl)] = Math.min(255, val)
     // img.data[toPix(x, y, 0)] = Math.round(val * 255)
     // img.data[toPix(x, y, 1)] = Math.round(val * 255)
     // img.data[toPix(x, y, 2)] = Math.round(val * 255)
 }
 
+const dirs = {up: 0, down: 0, left: 0, right: 0};
 let timer, prevTime;
 let paused = false;
 
@@ -67,7 +68,6 @@ function init() {
     onWindowResize()
 
     canvas.addEventListener('pointerdown', e => { spawnEvent = e });
-    canvas.addEventListener('pointermove', e => { if (spawnEvent) spawnEvent = e });
     canvas.addEventListener('touchmove', e => { spawnEvent = e.touches[0] });
     canvas.addEventListener('pointerup', e => { spawnEvent = false });
 
@@ -141,14 +141,108 @@ class V {
 }
 
 let dots = []
-const D = { // thick-laned
+let D
+{
+D = { // thick-laned
     speed: 50,
     SA: 60,
     SO: 5,
     RA: 30,
-    n: 5000,
+    n: 10000,
     fade: 1.5,
     diffuse: .2,
+    avoid: true,
+}
+// D = { // 2-lane, spreads out
+//     speed: 50,
+//     SA: 60,
+//     SO: 5,
+//     RA: 15,
+//     n: 5000,
+//     fade: 1.1,
+//     diffuse: .5,
+// }
+// D = { // messy, dynamic
+//     speed: 100,
+//     SA: 60,
+//     SO: 5,
+//     RA: 10,
+//     n: 10000,
+//     fade: 1.005,
+//     diffuse: .95,
+// }
+// D = { // two-laned, messy
+//     speed: 50,
+//     SA: 60,
+//     SO: 5,
+//     RA: 10,
+//     n: 10000,
+//     fade: 1.5,
+//     diffuse: .1,
+// }
+// D = { // 1-lane, fast
+//     speed: 100,
+//     SA: 30,
+//     SO: 5,
+//     RA: 30,
+//     n: 10000,
+//     fade: 1.5,
+//     diffuse: .5,
+// }
+// D = { // 1-lane, fast
+//     speed: 200,
+//     SA: 30,
+//     SO: 5,
+//     RA: 30,
+//     n: 10000,
+//     fade: 1.05,
+//     diffuse: .5,
+// }
+// D = { // sparse, fast
+//     speed: 100,
+//     SA: 45,
+//     SO: 9,
+//     RA: 45,
+//     n: 1000,
+//     fade: 1.5,
+//     diffuse: .5,
+// }
+// D = { // thick cells
+//     speed: 50,
+//     SA: 45,
+//     SO: 9,
+//     RA: 45,
+//     n: 10000,
+//     fade: 1.5,
+//     diffuse: .1,
+// }
+// D = { // squiggly cells
+//     speed: 100,
+//     SA: 30,
+//     SO: 5,
+//     RA: 15,
+//     n: 10000,
+//     fade: 1.05,
+//     diffuse: .5,
+// }
+// D = { // 2-lane cells fill space
+//     speed: 42,
+//     SA: 60,
+//     SO: 7,
+//     RA: 10,
+//     n: 10000,
+//     fade: 1.25,
+//     diffuse: .5,
+// }
+// D = { // mobile squiggly cells
+//     speed: 100,
+//     SA: 45,
+//     SO: 5,
+//     RA: 15,
+//     n: 10000,
+//     fade: 1.005,
+//     diffuse: 1,
+// }
 }
 class Dot {
     constructor(x, y, vx, vy) {
@@ -186,6 +280,7 @@ class Dot {
             this.vel = V.polar(speed, ang + RA)
         }
 
+        this.vel = this.vel.norm().scale(Math.pow(getPix(this.pos.x, this.pos.y, this.chnl) + 1, 1/3) / 5)
         this.pos = this.pos.add(this.vel)
 
         if (D.wrap) {
@@ -206,7 +301,8 @@ class Dot {
     }
 
     draw() {
-        setPix(this.pos.x, this.pos.y, 1, this.chnl)
+        setPix(this.pos.x, this.pos.y, 5 + getPix(this.pos.x, this.pos.y, this.chnl), this.chnl)
+        // setPix(this.pos.x, this.pos.y, 5 + getPix(this.pos.x, this.pos.y), this.chnl)
     }
 }
 
@@ -267,6 +363,10 @@ function update(dt) {
     })
 
     ctx.putImageData(img, 0, 0)
+    // dots.forEach(dot => {
+    //     ctx.fillStyle = 'white'
+    //     ctx.fillRect(dot.pos.x, dot.pos.y, 1, 1)
+    // })
 }
 
 // animation loop: update & render scene

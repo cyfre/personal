@@ -22,8 +22,14 @@ function bounded(value, lower, upper) {
     return lower <= value && value <= upper;
 }
 
-function randi(n) {
-    return Math.floor(Math.random() * Math.floor(n));
+function randi(min, max) {
+    if (min === undefined) {
+        max = 1;
+        min = 0;
+    } else if (max === undefined) {
+        [min, max] = [0, min];
+    }
+    return Math.floor(Math.random() * Math.floor(max - min)) + min;
 }
 
 // rand() returns [0, 1]

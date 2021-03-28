@@ -42,17 +42,11 @@
         color: white;
         border-radius: .3rem;
         padding: .2rem;
-        cursor: pointer;
       }
       #controls.closed #inputs {
         display: none;
       }
       #controls > *:not(:last-child) {
-        margin-bottom: .3rem;
-      }
-      #examples {
-        width: fit-content;
-        margin: auto;
         margin-bottom: .3rem;
       }
     </style>
@@ -63,12 +57,6 @@
     <div id="controls" class="closed">
       <button id="toggle">show inputs</button>
       <div id="inputs">
-        <div id="examples">
-          <!-- <button id="1">1</button>
-          <button id="2">2</button>
-          <button id="3">3</button> -->
-          <button id="randomize">randomize</button>
-        </div>
         <div><label>speed</label><input id="speed" type="number"/></div>
         <div><label>sensor angle</label><input id="SA" type="number"/></div>
         <div><label>sensor offset</label><input id="SO" type="number"/></div>
@@ -88,19 +76,19 @@
       let inputs = document.querySelectorAll('#controls input')
       inputs.forEach(input => {
         if (input.type === 'number') {
+          input.value = D[input.id]
           input.addEventListener('change', e => {
+            console.log(input.value)
             D[input.id] = Number(input.value)
           })
         } else if (input.type === 'checkbox') {
+          input.checked = D[input.id]
           input.addEventListener('change', e => {
             D[input.id] = input.checked
           })
         }
       })
-      updateInputs()
-
       document.querySelector('#generate').addEventListener('click', e => generate())
-      document.querySelector('#randomize').addEventListener('click', e => randomize())
       document.querySelector('#toggle').addEventListener('click', ({target: toggle}) => {
         let controls = document.querySelector('#controls')
         if (toggle.textContent === 'show inputs') {
@@ -111,124 +99,6 @@
           toggle.textContent = 'show inputs'
         }
       })
-
-      let examples = document.querySelector('#examples')
-      let settings = [
-      { // thick-laned
-        speed: 50,
-        SA: 60,
-        SO: 5,
-        RA: 30,
-        n: 5000,
-        fade: 1.5,
-        diffuse: .2,
-      },
-      // { // two-laned, messy
-      //   speed: 50,
-      //   SA: 60,
-      //   SO: 5,
-      //   RA: 10,
-      //   n: 10000,
-      //   fade: 1.5,
-      //   diffuse: .1,
-      // },
-      { // thick cells
-        speed: 50,
-        SA: 45,
-        SO: 9,
-        RA: 45,
-        n: 10000,
-        fade: 1.5,
-        diffuse: .1,
-      },
-      // { // squiggly cells
-      //     speed: 100,
-      //     SA: 30,
-      //     SO: 5,
-      //     RA: 15,
-      //     n: 10000,
-      //     fade: 1.05,
-      //     diffuse: .5,
-      // },
-      // { // 2-lane cells fill space
-      //   speed: 42,
-      //   SA: 60,
-      //   SO: 7,
-      //   RA: 10,
-      //   n: 10000,
-      //   fade: 1.25,
-      //   diffuse: .5,
-      // },
-      { // circles
-        speed: 145,
-        SA: 160,
-        SO: 6,
-        RA: 37,
-        n: 10000,
-        fade: 1.06,
-        diffuse: .75,
-      },
-      { // swirls
-        speed: 92,
-        SA: 156,
-        SO: 15,
-        RA: 28,
-        n: 7000,
-        fade: 1.20,
-        diffuse: .91,
-      },
-      { // static brushes
-        speed: 135,
-        SA: 100,
-        SO: 8,
-        RA: 100,
-        n: 3000,
-        fade: 1.35,
-        diffuse: .15,
-      },
-      { // mobile squiggly cells
-        speed: 100,
-        SA: 45,
-        SO: 5,
-        RA: 15,
-        n: 10000,
-        fade: 1.005,
-        diffuse: 1,
-      }]
-      settings.forEach((setting, i) => {
-        let ex_i = document.createElement('button')
-        ex_i.textContent = i + 1
-        ex_i.addEventListener('click', e => {
-          Object.assign(D, setting)
-          generate()
-          updateInputs()
-        })
-        examples.append(ex_i, ' ')
-      })
-
-      function randomize() {
-        Object.assign(D, {
-            speed: randi(25, 200),
-            SA: randi(5, 180),
-            SO: randi(2, 20),
-            RA: randi(5, 180),
-            n: Math.round(Math.pow(10, rand(3) + 1)),
-            fade: 1 + Math.pow(10, -rand(3)),
-            diffuse: rand(1),
-        })
-        generate()
-        updateInputs()
-      }
-
-      function updateInputs() {
-        inputs.forEach(input => {
-          if (input.type === 'number') {
-              input.value = D[input.id]
-          } else if (input.type === 'checkbox') {
-              input.checked = D[input.id]
-          }
-        })
-      }
     </script>
   </body>
 </html>
