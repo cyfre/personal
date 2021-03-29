@@ -174,7 +174,7 @@ const D_defaults = { // thick-laned
     wrap: true,
     avoid: false,
     circular: false,
-    colors: true,
+    colors: false,
     R: true,
     R_col: '#ff0000',
     G: true,

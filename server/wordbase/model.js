@@ -187,14 +187,12 @@ async function accept(user, id) {
         id = entry.id;
     }
     console.log('accept', user, id);
+    C.invite().deleteOne({ id });
+
     let info = await _getInfo(user, id);
     console.log(info);
-    if (info.p1) {
-        C.invite().deleteOne({ id });
-        throw 'game already accepted';
-    }
+    if (info.p1) throw 'game already accepted';
     info.p1 = user;
-    console.log(info);
     info.lastUpdate = Date.now();
     _setInfo(info);
     _addGame(user, id);
