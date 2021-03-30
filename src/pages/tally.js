@@ -11,10 +11,11 @@ function toLocalISODate(date) {
 }
 
 let calendar = []
-let now = Date.now()
-let dayMs = 1000 * 60 * 60 * 24
+let today = new Date().getDate()
 for (let i = 0; i < 90; i++) {
-  calendar.push(new Date(now - dayMs*i))
+  let day = new Date()
+  day.setDate(today - i)
+  calendar.push(day)
 }
 
 let months = 'Jan Feb Mar Apr May Jun Jul Sep Oct Nov Dec'.split(' ')
@@ -89,8 +90,8 @@ export default () => {
       let currMonth = new Date().getMonth()
       if (term && tally && tally.terms[term]) {
         tally.terms[term].map(entry => {
-          // let dateString = entry.d
-          let dateString = entry.t ? toLocalISODate(new Date(entry.t)) : entry.d
+          let dateString = entry.d
+          // let dateString = entry.t ? toLocalISODate(new Date(entry.t)) : entry.d
           tallyCalendar[dateString] = (tallyCalendar[dateString] || []).concat(entry.d)
 
           let month = new Date(entry.d).getMonth()
