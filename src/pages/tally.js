@@ -6,6 +6,10 @@ import styled from 'styled-components';
 import { useE, useF, useAuth, useInterval, useEventListener } from '../lib/hooks';
 import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLink, InfoLabel, InfoLoginBlock } from '../components/Info'
 
+function toLocalISODate(date) {
+  return new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000)).toISOString().slice(0, 10)
+}
+
 let calendar = []
 let now = Date.now()
 let dayMs = 1000 * 60 * 60 * 24
@@ -35,7 +39,7 @@ export default () => {
   const handle = {
     load: () => {
       auth.user && api.get(`/tally`).then(data => {
-        // console.log(data)
+        console.log(data)
         setError('')
         setTally(data.tally)
         if (!term && !tally) {
@@ -43,9 +47,9 @@ export default () => {
         }
       }).catch(e => setError(e.error))
     },
-    tally: (time) => {
+    tally: (date) => {
       // console.log(time)
-      term && auth.user && api.post(`/tally/${term}/${time}`).then(data => {
+      term && auth.user && api.post(`/tally/${term}/${date}`).then(data => {
         // console.log(data)
         setError('')
         setTally(data.tally)
@@ -85,11 +89,11 @@ export default () => {
       let currMonth = new Date().getMonth()
       if (term && tally && tally.terms[term]) {
         tally.terms[term].map(entry => {
-          let date = new Date(entry.t)
-          let dateString = date.toDateString()
-          tallyCalendar[dateString] = (tallyCalendar[dateString] || []).concat(entry.t)
+          // let dateString = entry.d
+          let dateString = entry.t ? toLocalISODate(new Date(entry.t)) : entry.d
+          tallyCalendar[dateString] = (tallyCalendar[dateString] || []).concat(entry.d)
 
-          let month = date.getMonth()
+          let month = new Date(entry.d).getMonth()
           let monthEntry = tallyMonth[month] || {
             count: 0,
             total: month === currMonth ? new Date().getDate() : monthDays[month],
@@ -131,11 +135,11 @@ export default () => {
             {Array.from({ length: 6 - calendar[0].getDay() }).map((_, i) =>
               <div className='date spacer' key={i}></div>)}
             {calendar.map((date, i) => {
-              let dateString = date.toDateString()
+              let dateString = toLocalISODate(date)
               let dateTally = tallyCalendar[dateString]
               let dateMonth = tallyMonth[date.getMonth()] || { count: 0, total: 1 }
               return <div className={dateTally ? 'date tally' : 'date'} key={i}
-                onClick={() => handle.tally(dateTally ? dateTally[0] : date.valueOf())}>
+                onClick={() => handle.tally(dateTally ? dateTally[0] : dateString)}>
                 {date.getDate()}
                 {date.getDay() === 6 && date.getDate() < 8
                   ? <div className='month'>{months[date.getMonth()]}</div>
@@ -202,13 +206,17 @@ const Style = styled(InfoStyles)`
         margin-bottom: .75rem;
         margin-top: 0;
         overflow: scroll;
-        min-width: 24rem;
-        padding-right: 3rem;
         flex-direction: column-reverse;
         .scroller {
+          max-width: 25.1rem;
+          padding-right: 2rem;
           display: flex;
           flex-wrap: wrap-reverse;
           flex-direction: row-reverse;
+          .date {
+            width: calc(14.28% - .4rem);
+            height: calc(3.3rem - .4rem);
+          }
         }
       }
     }
@@ -241,7 +249,7 @@ const Style = styled(InfoStyles)`
   }
   .calendar {
     margin-top: .5rem;
-    max-width: 21rem;
+    // max-width: 21rem;
     display: flex;
     flex-wrap: wrap;
     flex-direction: row-reverse;
@@ -274,6 +282,7 @@ const Style = styled(InfoStyles)`
 
       position: relative;
       .month {
+        color: #000000dd;
         position: absolute;
         width: 0;
         right: -.5rem;

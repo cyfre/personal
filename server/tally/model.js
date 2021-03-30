@@ -7,7 +7,7 @@ const { randAlphanum } = require('../rand');
 const names = {
     tally: 'tally',
         // user: string
-        // terms: { [term]: { t: number }[] }
+        // terms: { [term]: { t: number, d: string }[] }
         // color: { [term]: string }
 }
 const C = entryMap(names, name => () => db.collection(name));
@@ -49,17 +49,16 @@ async function update(user, params) {
         tally: await _update(params)
     }
 }
-async function tally(user, term, time) {
-    time = Number(time)
+async function tally(user, term, date) {
     let tally = await _get(user)
     if (!tally.terms[term]) {
         tally.terms[term] = []
     }
-    if (tally.terms[term].find(entry => entry.t === time)) {
-        tally.terms[term] = tally.terms[term].filter(entry => entry.t !== time)
+    if (tally.terms[term].find(entry => entry.d === date)) {
+        tally.terms[term] = tally.terms[term].filter(entry => entry.d !== date)
     } else {
         tally.terms[term].push({
-            t: time
+            d: date
         })
     }
     _update(tally)
