@@ -111,7 +111,7 @@ export default () => {
     handle.load();
   })
   useF(term, () => {
-    window.history.replaceState(null, '/tally', term ? `/tally#${term}` : '/tally')
+    window.history.replaceState(null, '/tally', term ? `/tally/#${term}` : '/tally')
   })
   useF(term, tally, () => {
     handle.generateTallyCalendar()

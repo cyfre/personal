@@ -305,7 +305,7 @@ export const WordbaseGame = ({open, info, save, reload, setInfo, setSave}) => {
                 onClick={() => history.push('/notify')}>
                   /notify</span>
             </li>
-            <li>Sent in one email chain, and only if app is closed</li>
+            <li>Sent in one email thread, and only if app is closed</li>
             </ul>
           </div>
           :
