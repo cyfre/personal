@@ -310,6 +310,10 @@ function spawn() {
         let rect = canvas.getBoundingClientRect()
         let x = ((clientX - rect.x) / rect.width) * WIDTH
         let y = ((clientY - rect.y) / rect.height) * HEIGHT
+        if (D.wrap && !D.circular) {
+            x = (x*1.25 - WIDTH/8 + WIDTH) % WIDTH
+            y = (y*1.25 - HEIGHT/8 + HEIGHT) % HEIGHT
+        }
         dots.push(new Dot(x, y))
     }
 }
@@ -344,8 +348,9 @@ function update(dt) {
 
     dots.forEach(dot => dot.draw(newImg))
 
+    let outImg
     if (D.colors) {
-        let outImg = ctx.getImageData(0, 0, WIDTH, HEIGHT);
+        outImg = ctx.getImageData(0, 0, WIDTH, HEIGHT);
         let [[r1, r2, r3], [g1, g2, g3], [b1, b2, b3]] = [readRGB(D.R_col), readRGB(D.G_col), readRGB(D.B_col)]
         newImg.data.forEach((_, i) => {
             if (i % 4 === 0) {
@@ -358,9 +363,22 @@ function update(dt) {
                 outImg.data[i+2] = r3*cR + g3*cG + b3*cB
             }
         })
-        ctx.putImageData(outImg, 0, 0)
+
     } else {
-        ctx.putImageData(newImg, 0, 0)
+        outImg = newImg
+    }
+
+    if (D.wrap && !D.circular) {
+        canvas.width = 1.25*WIDTH;
+        canvas.height = 1.25*HEIGHT;
+        for (let i = -1; i < 2; i++)
+        for (let j = -1; j < 2; j++) {
+            ctx.putImageData(outImg, WIDTH/8 + i*WIDTH, HEIGHT/8 + j*HEIGHT)
+        }
+    } else {
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        ctx.putImageData(outImg, 0, 0)
     }
 
     img = newImg
