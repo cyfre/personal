@@ -76,7 +76,7 @@ const Util = () => {
     let today = toYearMonthDay(new Date())
     if (lastVisit !== today) {
       setSession(lastVisitKey, today)
-      api.post('i/views')
+      api.post('/counter/site/views')
     }
   })
   return <Fragment></Fragment>

@@ -10,11 +10,13 @@ import { InfoStyles, InfoBody, InfoSection, InfoLoginBlock } from '../components
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
   let auth = useAuth();
-  let [views, setViews] = useState(undefined);
+  let [counts, setCounts] = useState([]);
 
   const handle = {
-    load: () => {
-      api.get('i/views').then(({ value }) => setViews(value))
+    load: async () => {
+      setCounts(await Promise.all(
+        'site/views 42'
+        .split(' ').map(spacekey => api.get(`/counter/${spacekey}`))))
     },
   }
   useF(handle.load)
@@ -23,7 +25,10 @@ export default () => {
 
     <InfoBody>
     {auth.user !== 'cyrus' ? `you aren't cyrus, sorry :/` : <Fragment>
-      <InfoSection label='views'>{views || ''}</InfoSection>
+      {counts.map((counter, i) =>
+      <InfoSection key={i} label={`${counter.space === 'default' ? '' : counter.space + '/'}${counter.key}`}>
+        {counter.value}
+      </InfoSection>)}
     </Fragment>}
     </InfoBody>
   </InfoStyles>
