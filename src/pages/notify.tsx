@@ -89,7 +89,7 @@ export default () => {
           onKeyDown={e => e.key === 'Enter' && handle.email()}/>
           : <span onClick={handle.email}>{notify.email || '(add email for notifications)'}</span>}
         </InfoLine>
-        <p style={{fontSize:'.8rem', opacity:'.5'}}>notifications are sent in one email thread</p>
+        <p style={{fontSize:'.8rem', opacity:'.5'}}>notifications are sent in a single thread</p>
       </InfoSection>
       <InfoSection label='notifications'>
         {notifyProjects.map(page => {

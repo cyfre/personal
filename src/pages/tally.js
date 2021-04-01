@@ -1,14 +1,10 @@
 import React, { useState, useRef, Fragment } from 'react';
 import api from '../lib/api';
-import { randAlphanum } from '../lib/util';
+import { randAlphanum, toYearMonthDay } from '../lib/util';
 import { useRouteMatch, useHistory, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { useE, useF, useAuth, useInterval, useEventListener } from '../lib/hooks';
 import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLink, InfoLabel, InfoLoginBlock } from '../components/Info'
-
-function toLocalISODate(date) {
-  return new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000)).toISOString().slice(0, 10)
-}
 
 let calendar = []
 let today = new Date().getDate()
@@ -91,7 +87,7 @@ export default () => {
       if (term && tally && tally.terms[term]) {
         tally.terms[term].map(entry => {
           let dateString = entry.d
-          // let dateString = entry.t ? toLocalISODate(new Date(entry.t)) : entry.d
+          // let dateString = entry.t ? toYearMonthDay(new Date(entry.t)) : entry.d
           tallyCalendar[dateString] = (tallyCalendar[dateString] || []).concat(entry.d)
 
           let month = new Date(entry.d).getMonth()
@@ -136,7 +132,7 @@ export default () => {
             {Array.from({ length: 6 - calendar[0].getDay() }).map((_, i) =>
               <div className='date spacer' key={i}></div>)}
             {calendar.map((date, i) => {
-              let dateString = toLocalISODate(date)
+              let dateString = toYearMonthDay(date)
               let dateTally = tallyCalendar[dateString]
               let dateMonth = tallyMonth[date.getMonth()] || { count: 0, total: 1 }
               return <div className={dateTally ? 'date tally' : 'date'} key={i}

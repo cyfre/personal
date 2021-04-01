@@ -62,6 +62,10 @@ function requireUser(rq) {
     return rq.user
 }
 
+function parseParam(rq, param) {
+    return rq.params[param] ?? rq.body[param] ?? rq.query[param] ?? undefined
+}
+
 function genModelRoutes(model, routes) {
     if (routes === undefined) routes = express.Router();
 
@@ -97,5 +101,6 @@ module.exports = {
     genGet,
     jsonRes, J: jsonRes,
     requireUser, U: requireUser,
+    parseParam, P: parseParam,
     genModelRoutes
 }

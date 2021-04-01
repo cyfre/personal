@@ -29,3 +29,15 @@ export function clearStored(key) {
     window.localStorage.removeItem(key)
     document.cookie = `${key}=;expires=0`;
 }
+
+export function getSession(key) {
+    let str = window.sessionStorage.getItem(key);
+    return str ? JSON.parse(str) : undefined
+}
+export function setSession(key, value) {
+    window.sessionStorage.setItem(key, JSON.stringify(value))
+    return getSession(key)
+}
+export function clearSession(key) {
+    window.sessionStorage.removeItem(key)
+}

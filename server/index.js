@@ -39,9 +39,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/login', login.routes);
-let profileRoutes = require('./profile').routes
-app.use('/api/u', profileRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/((u)|profile)', require('./profile').routes);
 app.use('/api/notify', require('./notify').routes);
 app.use('/api/reset', require('./reset').routes);
 app.use('/api/wordbase', require('./wordbase').routes);
@@ -53,6 +51,7 @@ app.use('/api/ly', require('./ly').routes);
 app.use('/api/scores', require('./scores').routes);
 app.use('/api/chat', require('./chat').routes);
 app.use('/api/tally', require('./tally').routes);
+app.use('/api/((i)|counter)', require('./counter').routes);
 
 app.use('/ly', require('./ly/redirect').routes)
 

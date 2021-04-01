@@ -14,6 +14,9 @@ import { Header } from './components/Header'
 import { Main } from './components/Main'
 import { useE } from './lib/hooks'
 import { useIo } from './lib/io'
+import { getSession, getStored, setSession, setStored } from './lib/store'
+import { toYearMonthDay } from './lib/util'
+import api from './lib/api'
 
 const Style = styled.div`
   // background: #13112522
@@ -64,20 +67,25 @@ const Style = styled.div`
   }
 `
 
-const Notify = () => {
+const Util = () => {
   useNotify(useHistory());
-  return <Fragment></Fragment>
-}
-const Io = () => {
   useIo()
+  useF(() => {
+    let lastVisitKey = 'lastVisit'
+    let lastVisit = getSession(lastVisitKey)
+    let today = toYearMonthDay(new Date())
+    if (lastVisit !== today) {
+      setSession(lastVisitKey, today)
+      api.post('i/views')
+    }
+  })
   return <Fragment></Fragment>
 }
 
 const App = () => {
   return (
   <Router>
-    <Notify />
-    <Io />
+    <Util />
     <Switch>
       <Redirect exact path='/home' to='/' />
       <Route exact path='/(|projects|about)' component={Base} />

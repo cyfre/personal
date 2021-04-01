@@ -199,7 +199,7 @@ const UpperSection = ({outer, auth}: {
           if (success) {
             setCopied(`copied #${data.info.id}, send it!`)
           } else {
-            setCopied(`click invite to copy link`)
+            setCopied(`created invite, tap to copy link`)
           }
         })
     },

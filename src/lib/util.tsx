@@ -13,3 +13,7 @@ export const randAlphanum = n => {
   }
   return str;
 }
+
+export function toYearMonthDay(date: Date) {
+  return new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000)).toISOString().slice(0, 10)
+}

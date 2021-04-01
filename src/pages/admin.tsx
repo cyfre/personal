@@ -98,6 +98,7 @@ export default () => {
           ['/ly', 'url shortener'],
           ['/domains', ''],
           ['/tally', 'habit tracker'],
+          ['/counts', ''],
         ].map(e => ({
           labels: [e[1]],
           content: <Link to={e[0]}>{e[0]}</Link>,
