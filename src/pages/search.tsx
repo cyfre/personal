@@ -31,7 +31,8 @@ const _projects = {
     live: 'live chat',
     records: 'personal & global game scoreboards',
     tally: 'simple habit tracker',
-    slime: 'automata behavior visualization'
+    slime: 'automata behavior visualization',
+    coffee: 'buy me a coffee :-)',
 }
 // ''.split(' ').forEach(p => {
 //     if (!_projects[p]) _projects[p] = '' });

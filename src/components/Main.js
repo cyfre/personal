@@ -34,6 +34,7 @@ const redirects = [
     ['/project', '/raw'],
     ['/profile', '/u'],
     ['/wb', '/wordbase'],
+    ['/contact', '/about'],
 ].map(pair => (
     <Route path={pair[0]} key={pair.join()} render={routeProps =>
         <Redirect to={

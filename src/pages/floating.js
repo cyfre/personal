@@ -149,7 +149,7 @@ export default () => {
 
     return (
         <div id="canvasContainer" className="seamless"
-            style={{ height: '100%', width: '100%' }}>
+            style={{ height: '100%', width: '100%', background: 'black' }}>
             <canvas id="canvas"/>
         </div>
     )

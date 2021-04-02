@@ -32,7 +32,7 @@ const Style = styled.div`
 
   & .content, & .contact {
     border: none;
-    background: #090919; // #06060f
+    background: #010113; //#090919; // #06060f
     padding: .4rem .6rem;
     resize: none;
 
