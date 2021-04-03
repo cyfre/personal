@@ -36,7 +36,7 @@ const ProjectList = styled.div`
   }
 `
 
-const showcase = 'search wordbase graffiti terrain nonogram snakes snackman befruited turt insult slime floating speckle models'.split(' ')
+const showcase = 'search wordbase graffiti terrain nonogram snakes snackman befruited turt-smurts insult slime floating speckle models'.split(' ')
 
 export const Projects = () => (
   <Fragment>

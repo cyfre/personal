@@ -12,6 +12,7 @@ export default () => {
         'cyrusfreshman.com',
         'cfreshman.io',
         '00010110.page',
+        '0000011111100100.com',
     ]
     return <InfoStyles>
         <InfoBody>
