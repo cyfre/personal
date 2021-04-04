@@ -18,7 +18,7 @@ const _projects = {
     insult: "idk sometimes it's funny",
     floating: 'shifting Delaunay triangulation',
     models: 'simple 3D trees & things created in Blender',
-    domains: 'list of domains for this site',
+    // domains: 'list of domains for this site',
     u: ['user profile', ''],
     notify: 'manage page notifications',
     reset: 'change password',
