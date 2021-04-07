@@ -44,12 +44,13 @@ searchProjects.forEach(key => {
 export const projects = _projects;
 
 const tags = {
-    visual: 'cloud floating models terrain graffiti slime speckle',
+    all: '',
     game: 'befruited snackman snakes wordbase',
+    visual: 'cloud floating models terrain graffiti slime speckle',
+    'w/ others': 'chat graffiti live records speckle turt-smurts turt-smurts-2D u wordbase',
     utility: 'notify reset search',
     tool: 'tally',
     me: 'about coffee domains home projects',
-    'w/ others': 'chat graffiti live records speckle turt-smurts turt-smurts-2D u wordbase',
 }
 const projectTags = {}
 Object.keys(tags).forEach(key => {
@@ -104,13 +105,14 @@ export default () => {
     let searchRef = useRef();
     let history = useHistory();
     let [term, setTerm] = useState(decodeURIComponent(window.location.hash?.slice(1)) || '');
+    let [tag, setTag] = useState('all')
     let regex
     try {
         regex = term ? new RegExp(`(${term})`, 'gi') : ''
     } catch (_) {
         regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
     }
-    let calcResults = term => {
+    let calcResults = (term, tag) => {
         // let tagged = searchProjects
         //     .filter(p => (projectTags[p] || []).some(field => field === term))
         // return (tagged.length
@@ -127,7 +129,27 @@ export default () => {
         //             else if (bHas) return 1;
         //             else return a.localeCompare(b);
         //         }))
-        let results = searchProjects
+
+        // let results = searchProjects
+        //     .filter(p => [p].concat(projects[p]).some(field => field.match(regex)))
+        //     .sort((a, b) => {
+        //         if (a === term) return -1;
+        //         if (b === term) return 1;
+        //         let aHas = [a, projects[a][0]].some(field => field.match(regex));
+        //         let bHas = [b, projects[b][0]].some(field => field.match(regex));
+        //         if (aHas && bHas) return a.localeCompare(b);
+        //         else if (aHas) return -1;
+        //         else if (bHas) return 1;
+        //         else return a.localeCompare(b);
+        //     })
+        // let tagged = searchProjects
+        //     .filter(p => !results.includes(p) && (projectTags[p] || []).some(field => field === term))
+        // return results.concat(tagged)
+
+        return (tag === 'all'
+            ? searchProjects
+            : searchProjects.filter(p => (projectTags[p] || []).some(field => field === tag))
+        )
             .filter(p => [p].concat(projects[p]).some(field => field.match(regex)))
             .sort((a, b) => {
                 if (a === term) return -1;
@@ -139,16 +161,13 @@ export default () => {
                 else if (bHas) return 1;
                 else return a.localeCompare(b);
             })
-        let tagged = searchProjects
-            .filter(p => !results.includes(p) && (projectTags[p] || []).some(field => field === term))
-        return results.concat(tagged)
     }
-    let [results, setResults] = useState(calcResults(term));
+    let [results, setResults] = useState(calcResults(term, tag));
     let [tab, setTab] = useState(0);
 
     useF(() => (searchRef.current as HTMLInputElement).focus());
-    useF(term, () => {
-        setResults(calcResults(term));
+    useF(term, tag, () => {
+        setResults(calcResults(term, tag));
         window.history.replaceState(null, '/search',
             term ? `/search/#${encodeURIComponent(term)}` : '/search')
     })
@@ -176,6 +195,8 @@ export default () => {
             tab: (dir) => setTab((tab + dir + results.length) % results.length),
         }}/>
         <InfoBody>
+            <InfoSection className='tags'
+                labels={['', ...Object.keys(tags).map(tag => ({ text: tag, func: () => setTag(tag) }))]} />
             <InfoSection label='results' className='results'>
                 <SearchList {...{ regex, results, tab, setTerm }} />
             </InfoSection>
@@ -215,5 +236,6 @@ const Style = styled(InfoStyles)`
                 border: none;
             }
         }
+        .tags .badges :first-child { margin-left: 0 }
     }
 `
