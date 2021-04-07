@@ -88,7 +88,7 @@ const SearchEntry = ({page, regex, tabbed, setTerm}) => {
     <div className={tabbed ? 'entry tabbed' : 'entry'} ref={entryRef}>
         <Link className='title' to={`/${page}`} dangerouslySetInnerHTML={{__html:
             '/' + highlight(p[0] ? `${page}: ${p[0]}` : page)}}/>
-        {/* <InfoBadges labels={(projectTags[page] ?? []).map(tag => ({ text: tag, func: () => setTerm(tag) }))} /> */}
+        <InfoBadges labels={(projectTags[page] ?? []).map(tag => ({ text: tag, func: () => setTerm(tag) }))} />
         <div className='desc' dangerouslySetInnerHTML={{__html:
             highlight(projects[page][1]) }}></div>
     </div>
@@ -206,6 +206,7 @@ const Style = styled(InfoStyles)`
         .results {
             &:not(:focus-within) .tabbed .title, .title:hover, .title:focus-visible { text-decoration: underline; }
             &:not(:focus-within) .tabbed .desc, .entry:hover .desc, .entry:focus-within .desc, .entry:first-child .desc { display: inline-block; }
+            &:not(:focus-within) .tabbed .badges, .entry:hover .badges, .entry:focus-within .badges, .entry:first-child .badges { display: none; }
         }
         .badges {
             > * {

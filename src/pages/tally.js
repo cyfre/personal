@@ -205,14 +205,14 @@ const Style = styled(InfoStyles)`
         overflow: scroll;
         flex-direction: column-reverse;
         .scroller {
-          max-width: 25.1rem;
+          max-width: 24.75rem;
           padding-right: 2rem;
           display: flex;
           flex-wrap: wrap-reverse;
           flex-direction: row-reverse;
           .date {
             width: calc(14.28% - .4rem);
-            height: calc(3.3rem - .4rem);
+            height: calc(3.25rem - .4rem);
           }
         }
       }
