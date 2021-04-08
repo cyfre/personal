@@ -163,7 +163,7 @@ export default () => {
             })
     }
     let [results, setResults] = useState(calcResults(term, tag));
-    let [tab, setTab] = useState(0);
+    let [tab, setTab] = useState(-1);
 
     useF(() => (searchRef.current as HTMLInputElement).focus());
     useF(term, tag, () => {
@@ -177,11 +177,14 @@ export default () => {
             if (current) {
                 let search = (current as HTMLInputElement).value
                 setTerm(search.toLowerCase())
+                setTab( search ? 0 : -1 )
             }
-            setTab(0)
         },
         go: () => {
-            history.push(`/${results[tab] || (searchRef.current as HTMLInputElement).value || ''}`)
+            let selected = results[tab] || (searchRef.current as HTMLInputElement).value
+            if (selected) {
+                history.push(`/${selected}`)
+            }
         },
     }
 
