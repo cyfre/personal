@@ -60,7 +60,7 @@ Object.keys(tags).forEach(key => {
     })
 })
 
-const SearchEntry = ({page, regex, tabbed, setTerm}) => {
+const SearchEntry = ({page, regex, tabbed, setTerm, doTab}) => {
     let entryRef = useRef()
     let p = projects[page];
     // let reg = RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
@@ -86,18 +86,21 @@ const SearchEntry = ({page, regex, tabbed, setTerm}) => {
         }
     })
     return (
-    <div className={tabbed ? 'entry tabbed' : 'entry'} ref={entryRef}>
-        <Link className='title' to={`/${page}`} dangerouslySetInnerHTML={{__html:
-            '/' + highlight(p[0] ? `${page}: ${p[0]}` : page)}}/>
-        <InfoBadges labels={(projectTags[page] ?? []).map(tag => ({ text: tag, func: () => setTerm(tag) }))} />
-        <div className='desc' dangerouslySetInnerHTML={{__html:
-            highlight(projects[page][1]) }}></div>
+    <div className={tabbed ? 'entry tabbed' : 'entry'} ref={entryRef} onClick={doTab}>
+        <div className='entry-hover'>
+            <Link className='title' to={`/${page}`} dangerouslySetInnerHTML={{__html:
+                '/' + highlight(p[0] ? `${page}: ${p[0]}` : page)}}/>
+            <InfoBadges labels={(projectTags[page] ?? []).map(tag => ({ text: tag, func: () => setTerm(tag) }))} />
+            <div className='desc' dangerouslySetInnerHTML={{__html:
+                highlight(projects[page][1]) }}></div>
+        </div>
     </div>
     )
 }
-const SearchList = ({results, regex, tab, setTerm}) => <Fragment>
+const SearchList = ({results, regex, tab, setTerm, setTab}) => <Fragment>
     {results.map((p, i) =>
-        <SearchEntry page={p} regex={regex} key={i} tabbed={i === tab ? true : false} setTerm={setTerm} />)}
+        <SearchEntry page={p} regex={regex} key={i} tabbed={i === tab ? true : false} setTerm={setTerm}
+            doTab={() => setTab(i)} />)}
 </Fragment>
 
 // eslint-disable-next-line import/no-anonymous-default-export
@@ -201,7 +204,7 @@ export default () => {
             <InfoSection className='tags'
                 labels={['', ...Object.keys(tags).map(tag => ({ text: tag, func: () => setTag(tag) }))]} />
             <InfoSection label='results' className='results'>
-                <SearchList {...{ regex, results, tab, setTerm }} />
+                <SearchList {...{ regex, results, tab, setTerm, setTab }} />
             </InfoSection>
         </InfoBody>
     </Style>
@@ -209,7 +212,7 @@ export default () => {
 
 const Style = styled(InfoStyles)`
     .body {
-        .entry {
+        .entry-hover {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
@@ -229,8 +232,12 @@ const Style = styled(InfoStyles)`
         }
         .results {
             &:not(:focus-within) .tabbed .title, .title:hover, .title:focus-visible { text-decoration: underline; }
-            &:not(:focus-within) .tabbed .desc, .entry:hover .desc, .entry:focus-within .desc, .entry:first-child .desc { display: inline-block; }
-            &:not(:focus-within) .tabbed .badges, .entry:hover .badges, .entry:focus-within .badges, .entry:first-child .badges { display: none; }
+
+            &:not(:focus-within) .tabbed .desc, .entry-hover:hover .desc,
+            .entry-hover:focus-within .desc, .entry:first-child .desc { display: inline-block; }
+
+            &:not(:focus-within) .tabbed .badges, .entry-hover:hover .badges,
+            .entry-hover:focus-within .badges, .entry:first-child .badges { display: none; }
         }
         .badges {
             > * {
