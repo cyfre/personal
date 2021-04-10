@@ -54,15 +54,26 @@ export default () => {
     },
     new: () => {
       setTerm(newTermRef.current.value)
+      setCreate(false)
     },
     delete: () => {
-      term && auth.user && api.delete(`/tally/${term}`).then(data => {
-        // console.log(data)
-        setError('')
-        setTally(data.tally)
-        setTerm('')
-        setConfirm(false)
-      }).catch(e => setError(e.error))
+      if (term && auth.user) {
+        if (tally.terms[term]) {
+          api.delete(`/tally/${term}`).then(data => {
+            // console.log(data)
+            setError('')
+            setTally(data.tally)
+            setTerm('')
+            setConfirm(false)
+            setEdit(false)
+          }).catch(e => setError(e.error))
+        } else {
+          setError('')
+          setTerm('')
+          setConfirm(false)
+          setEdit(false)
+        }
+      }
     },
     rename: () => {
       let name = renameRef.current.value
