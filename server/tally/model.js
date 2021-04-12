@@ -39,6 +39,7 @@ async function create(user, term) {
     let tally = await _get(user)
     if (!tally.terms[term]) {
         tally.terms[term] = []
+        _update(tally)
     }
     return { tally }
 }

@@ -53,8 +53,13 @@ export default () => {
       }).catch(e => setError(e.error))
     },
     new: () => {
-      setTerm(newTermRef.current.value)
+      let newTerm = newTermRef.current.value
+      setTerm(newTerm)
       setCreate(false)
+      api.put(`/tally/${newTerm}`).then(data => {
+        setError('')
+        setTally(data.tally)
+      }).catch(e => setError(e.error))
     },
     delete: () => {
       if (term && auth.user) {
@@ -127,6 +132,12 @@ export default () => {
   useF(edit, () => {
     if (edit) {
       renameRef.current.value = term
+      renameRef.current.focus()
+    }
+  })
+  useF(create, () => {
+    if (create) {
+      newTermRef.current.focus()
     }
   })
 
