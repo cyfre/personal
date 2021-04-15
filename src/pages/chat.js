@@ -11,7 +11,7 @@ export default () => {
   const auth = useAuth()
   const inputRef = useRef()
   const [profile, setProfile] = useState()
-  const [other, setOther] = useState(window.location.hash.slice(1) || '')
+  const [other, setOther] = useState(window.location.hash.slice(2) || '')
   const [chatUser, setChatUser] = useState()
   const [unread, setUnread] = useState()
   // const [unreadCount, setUnreadCount] = useState(0)
@@ -132,7 +132,7 @@ export default () => {
     if (other && profile && !profile.friends.includes(other)) {
       setOther(false)
     } else {
-      window.history.replaceState(null, '/chat', `/chat${other ? `/#${other}` : ''}`)
+      window.history.replaceState(null, '/chat', `/chat${other ? `/#/${other}` : ''}`)
       other && handle.switchChat(other)
     }
   })

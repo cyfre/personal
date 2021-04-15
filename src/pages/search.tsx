@@ -107,7 +107,7 @@ const SearchList = ({results, regex, tab, setTerm, setTab}) => <Fragment>
 export default () => {
     let searchRef = useRef();
     let history = useHistory();
-    let [term, setTerm] = useState(decodeURIComponent(window.location.hash?.slice(1)) || '');
+    let [term, setTerm] = useState(decodeURIComponent(window.location.hash?.slice(2)) || '');
     let [tag, setTag] = useState('all')
     let regex
     try {
@@ -172,7 +172,7 @@ export default () => {
     useF(term, tag, () => {
         setResults(calcResults(term, tag));
         window.history.replaceState(null, '/search',
-            term ? `/search/#${encodeURIComponent(term)}` : '/search')
+            term ? `/search/#/${encodeURIComponent(term)}` : '/search')
     })
     const handle = {
         search: () => {

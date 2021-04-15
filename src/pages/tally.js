@@ -22,7 +22,7 @@ let monthDays = `31 ${isLeap(new Date().getFullYear()) ? '29' : '28'} 31 30 31 3
 
 export default () => {
   let auth = useAuth()
-  let [term, setTerm] = useState(window.decodeURIComponent(window.location.hash?.slice(1)) || '');
+  let [term, setTerm] = useState(window.decodeURIComponent(window.location.hash?.slice(2)) || '');
   let [tally, setTally] = useState(undefined)
   let [tallyCalendar, setTallyCalendar] = useState({})
   let [tallyMonth, setTallyMonth] = useState({})
@@ -123,7 +123,7 @@ export default () => {
     handle.load();
   })
   useF(term, () => {
-    window.history.replaceState(null, '/tally', term ? `/tally/#${term}` : '/tally')
+    window.history.replaceState(null, '/tally', term ? `/tally/#/${term}` : '/tally')
   })
   useF(term, tally, () => {
     handle.generateTallyCalendar()
