@@ -1,14 +1,13 @@
 import React, { useState, useRef, Fragment } from 'react';
 import api from '../lib/api';
-import { randAlphanum, toYearMonthDay } from '../lib/util';
-import { useRouteMatch, useHistory, Link } from 'react-router-dom';
+import { toYearMonthDay } from '../lib/util';
 import styled from 'styled-components';
-import { useE, useF, useAuth, useInterval, useEventListener } from '../lib/hooks';
-import { InfoStyles, InfoBody, InfoSection, InfoUser, InfoLine, InfoLink, InfoLabel, InfoLoginBlock } from '../components/Info'
+import { useF, useAuth, useEventListener } from '../lib/hooks';
+import { InfoStyles, InfoBody, InfoSection, InfoLine, InfoLabel, InfoLoginBlock } from '../components/Info'
 
 let calendar = []
 let today = new Date().getDate()
-for (let i = 0; i < 90; i++) {
+for (let i = 0; i < 180; i++) {
   let day = new Date()
   day.setDate(today - i)
   calendar.push(day)
