@@ -48,11 +48,11 @@ function jsonRes(func) {
                 })
                 .catch(error => {
                     console.log('[ERROR]', error);
-                    res.json({ error: error.message })
+                    res.json({ error: error.message ?? error })
                 });
         } catch (error) {
             console.log('[ERROR]', error);
-            res.json({ error: error.message })
+            res.json({ error: error.message ?? error })
         }
     }
 }

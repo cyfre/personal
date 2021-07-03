@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { useTitle, useTimeout, useInterval, useEventListener, useF, useE } from '../lib/hooks';
+import { setIcon } from '../lib/util';
 
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -158,10 +159,11 @@ const Embedded = ({ name }) => {
     useE(loaded, () => {
         let icon = ifr.current.contentWindow.window.document.querySelector('head link[rel=icon]');
         if (icon) {
-            document.querySelector('head [rel=icon]').href = icon.href
+            let app = ifr.current.contentWindow.window.document.querySelector('head link[rel=apple-touch-icon-precomposed]');
+            setIcon(icon.href, app?.href);
         }
         return () => {
-            document.querySelector('head [rel=icon]').href = '/profile.jpeg'
+            setIcon();
         }
     })
 

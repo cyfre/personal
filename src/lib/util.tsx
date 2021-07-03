@@ -17,3 +17,8 @@ export const randAlphanum = n => {
 export function toYearMonthDay(date: Date) {
   return new Date(date.getTime() - (date.getTimezoneOffset() * 60 * 1000)).toISOString().slice(0, 10)
 }
+
+export function setIcon(href: String = '/icon.png', app?: String) {
+  document.querySelector('head [rel=icon]')['href'] = href
+  document.querySelector('head [rel=apple-touch-icon-precomposed]')['href'] = app ?? href
+}

@@ -40,7 +40,7 @@ export default () => {
         auth.user && api.post('profile/checkin/wordbase')
         open(window.location.hash.slice(1))
     });
-    useIcon('/raw/wordbase/favicon.png')
+    useIcon('/raw/wordbase/favicon256.png')
     useManifest({
         name: `/wordbase`,
         display: `standalone`,
@@ -101,7 +101,7 @@ export default () => {
     // );
 }
 
-const dividerWidth = '0rem'
+const dividerWidth = '1px'
 const Style = styled.div`
     width: 100%; height: 100%;
     max-width: 77vh;
@@ -121,7 +121,7 @@ const Style = styled.div`
         right: 0;
     }
     .divider {
-        background: black;
+        background: transparent;
         width: ${dividerWidth};
         left: -${dividerWidth};
     }

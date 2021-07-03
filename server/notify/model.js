@@ -104,8 +104,7 @@ async function send(users, app, text, link='') {
     text = `${text} – ${link || `freshman.dev/${app}`}`
     let isSingle = typeof users === 'string'
     let results = await Promise.all((isSingle ? [users] : users).map(async user => {
-        let { notify } = await get(user)
-        let { msg } = notify
+        let { notify, notify: { msg } } = await get(user)
 
         msg[app] = (msg[app] || []).concat(text)
 

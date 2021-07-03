@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth, addAuthTrigger, removeAuthTrigger } from './auth';
+import { setIcon } from './util';
 
 // reference here: https://rangle.io/blog/simplifying-controlled-inputs-with-hooks/
 
@@ -61,12 +62,11 @@ export const useLink = (href, rel) => {
     });
 }
 
-let icon = document.querySelector('head [rel=icon]')
-export const useIcon = (href) => {
+export const useIcon = (href, app) => {
     useE(() => {
-        icon.href = href
+        setIcon(href, app);
         return () => {
-            icon.href = '/profile.jpeg'
+            setIcon();
         }
     });
 }

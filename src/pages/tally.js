@@ -2,12 +2,13 @@ import React, { useState, useRef, Fragment } from 'react';
 import api from '../lib/api';
 import { toYearMonthDay } from '../lib/util';
 import styled from 'styled-components';
-import { useF, useAuth, useEventListener } from '../lib/hooks';
+import { useF, useAuth, useEventListener, useManifest } from '../lib/hooks';
 import { InfoStyles, InfoBody, InfoSection, InfoLine, InfoLabel, InfoLoginBlock } from '../components/Info'
 
 let calendar = []
 let today = new Date().getDate()
-for (let i = 0; i < 180; i++) {
+let count = 183 + new Date().getDay()
+for (let i = 0; i < count; i++) {
   let day = new Date()
   day.setDate(today - i)
   calendar.push(day)
@@ -139,6 +140,11 @@ export default () => {
       newTermRef.current.focus()
     }
   })
+  useManifest({
+    name: `/tally`,
+    display: `standalone`,
+    start_url: `${window.origin}/tally`,
+  })
 
   return (
   <Style>
@@ -156,7 +162,11 @@ export default () => {
               let dateString = toYearMonthDay(date)
               let dateTally = tallyCalendar[dateString]
               let dateMonth = tallyMonth[date.getMonth()] || { count: 0, total: 1 }
-              return <div className={dateTally ? 'date tally' : 'date'} key={i}
+              return <div className={[
+                'date',
+                dateTally ? 'tally' : '',
+                date.getMonth()%2 ? 'odd' : ''
+              ].join(' ')} key={i}
                 onClick={() => handle.tally(dateTally ? dateTally[0] : dateString)}>
                 {date.getDate()}
                 {date.getDay() === 6 && date.getDate() < 8
@@ -288,13 +298,16 @@ const Style = styled(InfoStyles)`
         // box-shadow: 0px 2px 4px 1px #00000022;
         border: .12rem solid transparent;
         background: #0000000d;
+        &.odd {
+          background: #00000019;
+        }
       }
 
       cursor: pointer;
       font-size: .8rem;
       color: #000000dd;
       &.tally {
-        background: #0175ff;
+        background: #0175ff !important;
         color: white;
       }
 

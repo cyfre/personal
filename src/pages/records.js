@@ -161,7 +161,7 @@ const Style = styled(InfoStyles)`
     > * {
       min-height: 42%;
     }
-    *, .entry-line .entry.link {
+    *, .entry-line > *:not(.button), .entry-line .entry.link {
       color: white;
       color: #67e3ff; // blue
       color: #74f77f; // green 67ff74 99ff99

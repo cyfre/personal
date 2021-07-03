@@ -64,6 +64,17 @@ const Style = styled.div`
     width: calc(100% - 0.6rem);
     height: calc(100% - 0.6rem);
     margin-top: 0.3rem;
+    // &.standalone {
+    //   margin-top: 0.9rem;
+    //   height: calc(100% - 4rem);
+    //   &::after {
+    //     top: -.9rem;
+    //     height: calc(100% + 10rem);
+    //   }
+    // }
+    &.standalone {
+      height: calc(100% - 4.2rem);
+    }
   }
 `
 
@@ -90,7 +101,7 @@ const App = () => {
       <Redirect exact path='/home' to='/' />
       <Route exact path='/(|projects|about)' component={Base} />
       <Route path='*'>
-        <Style id='index'>
+        <Style id='index' className={window.navigator.standalone ? 'standalone' : ''}>
           <Header />
           <Main />
         </Style>
